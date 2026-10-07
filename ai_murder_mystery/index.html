@@ -2,12 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ai_murder_mystery</title>
+    <title>AI Murder Mystery</title>
   </head>
   <body>
-    <div id="app"></div>
+    <main id="app">
+      <h1>AI Murder Mystery</h1>
+      <p id="status">Checking your GPU...</p>
+      <progress id="progress" max="1" value="0"></progress>
+      <div id="chat-log"></div>
+      <form id="chat-form">
+        <input id="chat-input" type="text" placeholder="Ask the butler something..." autocomplete="off" disabled />
+        <button id="send-btn" type="submit" disabled>Ask</button>
+      </form>
+    </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

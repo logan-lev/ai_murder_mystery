@@ -1,60 +1,128 @@
-import './style.css'
-import heroImg from './assets/hero.png'
-import typescriptLogo from './assets/typescript.svg'
-import viteLogo from './assets/vite.svg'
-import { setupCounter } from './counter.ts'
+import "./style.css";
+import type { MLCEngine, ChatCompletionMessageParam } from "@mlc-ai/web-llm";
+import { checkWebGPU } from "./gpu";
+import { loadEngine, streamReply } from "./llm";
+import { BUTLER_PROMPT } from "./prompts";
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-<section id="center">
-  <div class="hero">
-    <img src="${heroImg}" class="base" width="170" height="179">
-    <img src="${typescriptLogo}" class="framework" alt="TypeScript logo"/>
-    <img src="${viteLogo}" class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/main.ts</code> and save to test <code>HMR</code></p>
-  </div>
-  <button id="counter" type="button" class="counter"></button>
-</section>
+// --- DOM ELEMENTS ---
+const statusEl = document.querySelector<HTMLParagraphElement>("#status")!;
+const progressEl = document.querySelector<HTMLProgressElement>("#progress")!;
+const chatLog = document.querySelector<HTMLDivElement>("#chat-log")!;
+const form = document.querySelector<HTMLFormElement>("#chat-form")!;
+const input = document.querySelector<HTMLInputElement>("#chat-input")!;
+const sendBtn = document.querySelector<HTMLButtonElement>("#send-btn")!;
 
-<div class="ticks"></div>
+// --- STATE ---
+let engine: MLCEngine | null = null;
 
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#documentation-icon"></use></svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank">
-          <img class="logo" src="${viteLogo}" alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://www.typescriptlang.org" target="_blank">
-          <img class="button-icon" src="${typescriptLogo}" alt="">
-          Learn more
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#social-icon"></use></svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li><a href="https://github.com/vitejs/vite" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>GitHub</a></li>
-      <li><a href="https://chat.vite.dev/" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#discord-icon"></use></svg>Discord</a></li>
-      <li><a href="https://x.com/vite_js" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#x-icon"></use></svg>X.com</a></li>
-      <li><a href="https://bsky.app/profile/vite.dev" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#bluesky-icon"></use></svg>Bluesky</a></li>
-    </ul>
-  </div>
-</section>
+const messages: ChatCompletionMessageParam[] = [
+  { role: "system", content: BUTLER_PROMPT }
+];
 
-<div class="ticks"></div>
-<section id="spacer"></section>
-`
+let isGenerating = false;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+// --- UI HELPERS ---
+function setStatus(text: string): void {
+  statusEl.textContent = text;
+}
+
+function setControlsEnabled(enabled: boolean): void {
+  input.disabled = !enabled;
+  sendBtn.disabled = !enabled;
+}
+
+function scrollToBottom(): void {
+  chatLog.scrollTop = chatLog.scrollHeight
+}
+
+// Adds "Speaker: Text" to the chat log and returns the text span, so streaming replies can keep updating it.
+function addLine(speaker: string, text = ""): HTMLSpanElement {
+  const line = document.createElement("p");
+  line.className = speaker === "You" ? "line-you" : "line-suspect";
+  
+  const name = document.createElement("strong");
+  name.textContent = `${speaker}: `;
+  
+  const body = document.createElement("span");
+  body.textContent = text;
+
+  line.append(name, body);
+  chatLog.append(line);
+  scrollToBottom();
+  return body;
+}
+
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+// --- STARTUP ---
+async function init(): Promise<void> {
+  setControlsEnabled(false);
+
+  const gpu = await checkWebGPU();
+  if (!gpu.ok) {
+    setStatus(gpu.reason);
+    progressEl.hidden = true;
+    return;
+  }
+
+  setStatus("Loading the model...");
+  
+  try {
+    engine = await loadEngine((text, progress) => {
+      setStatus(text);
+      progressEl.value = progress;
+    });
+  } catch (err) {
+    console.error(err);
+    setStatus(`Failed to load the model: ${errorMessage(err)}`);
+    return;
+  }
+
+  progressEl.hidden = true;
+  setStatus("Mr. Graves is ready to talk.");
+  setControlsEnabled(true);
+  input.focus();
+}
+
+// --- SENDING A MESSAGE ---
+form.addEventListener("submit", async (event) =>  {
+  event.preventDefault();
+
+  const text = input.value.trim();
+  if (!text || isGenerating || !engine) return;
+
+  addLine("You", text);
+  messages.push({ role: "user", content: text});
+  input.value = "";
+
+  isGenerating = true;
+  setControlsEnabled(false);
+  setStatus("Mr. Graves is thinking...");
+
+  const replyEl = addLine("Mr. Graves");
+  let shown = "";
+
+  try {
+    const full = await streamReply(engine, messages, (piece) => {
+      shown += piece;
+      replyEl.textContent = shown;
+      scrollToBottom();
+    });
+    messages.push({ role: "assistant", content: full });
+    setStatus("Mr. Graves is ready to talk.");
+  } catch (err) {
+    console.error(err);
+    // Remove the unanswered question so the history stays consistent.
+    messages.pop();
+    replyEl.textContent = "(no response)";
+    setStatus(`Something went wrong: ${errorMessage(err)}`);
+  } finally {
+    isGenerating = false;
+    setControlsEnabled(true);
+    input.focus();
+  }
+});
+
+init();
