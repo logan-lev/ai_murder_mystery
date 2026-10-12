@@ -3,6 +3,9 @@ import type { MLCEngine, ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 import { checkWebGPU } from "./gpu";
 import { loadEngine, streamReply } from "./llm";
 import { BUTLER_PROMPT } from "./prompts";
+import { runDevChecks } from "./dev-checks";
+
+if (import.meta.env.DEV) runDevChecks();
 
 // --- DOM ELEMENTS ---
 const statusEl = document.querySelector<HTMLParagraphElement>("#status")!;

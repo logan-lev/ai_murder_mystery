@@ -139,7 +139,7 @@ export const CHARACTERS: CharacterDef[] = [
     {
         id: "okafor",
         name: "Dr. Mara Okafor",
-        role: "The Chief Medical Officer",
+        role: "the Chief Medical Officer",
         personality: "Calm, clinical, and quietly ambitious. Chooses her words carefully and rarely shows emotion.",
         homeRoom: "medbay",
         cabin: "okafor-cabin",
@@ -148,12 +148,12 @@ export const CHARACTERS: CharacterDef[] = [
             "You ran routine crew health checks this afternoon."
         ],
         traceName: "Engraved Stylus",
-        trace: "A medical stylus engraved with the name 'Dr. M. Okafor'.",
+        trace: "A medical stylus engraved with the name 'Dr. M. Okafor'",
         motives: [
             {
                 id: "malpractice",
                 label: "Cover Up Of A Fatal Medical Error",
-                reason: "Commander Vale discovered that a crew member died last year because of your mistake, and he was filing a report.",
+                reason: "Commander Vale discovered that a crew member died last year because of your mistake, and he was filing a report",
                 clueName: "Incident Report",
                 clueRoom: "office",
                 clueDescription: "A draft incident report by Commander Vale concluding that Dr. Okafor's error caused a crew member's death last year."
@@ -161,9 +161,9 @@ export const CHARACTERS: CharacterDef[] = [
             {
                 id: "research-theft",
                 label: "Stolen Research",
-                reason: "Commander Vale was selling your research to a corporation under his own name.",
+                reason: "Commander Vale was selling your research to a corporation under his own name",
                 clueName: "Research Contract",
-                clueRoom: "okarfor-cabin",
+                clueRoom: "okafor-cabin",
                 clueDescription: "A copy of a contract selling Dr. Okafor's research to Helix Corp, signed by Commander Vale alone, with angry notes in the margins."
             }
         ]
@@ -171,7 +171,7 @@ export const CHARACTERS: CharacterDef[] = [
     {
         id: "reyes",
         name: "Tomas Reyes",
-        role: "The Chief Engineer",
+        role: "the Chief Engineer",
         personality: "Gruff, sarcastic, and fiercely protective of his reactor. Hides nerves behind jokes.",
         homeRoom: "engineering",
         cabin: "reyes-cabin",
@@ -180,12 +180,12 @@ export const CHARACTERS: CharacterDef[] = [
             "Your daughter lives on Callisto."
         ],
         traceName: "Torn Jumpsuit Patch",
-        trace: "A torn name patch from an engineering jumpsuit, stitched with REYES.",
+        trace: "A torn name patch from an engineering jumpsuit, stitched with REYES",
         motives: [
             {
                 id: "faked-inspections",
                 label: "Exposure of Faked Safety Inspections",
-                reason: "Commander Vale found out you faked the reactor safety inspections and was going to report you.",
+                reason: "Commander Vale found out you faked the reactor safety inspections and was going to report you",
                 clueName: "Inspection Audit",
                 clueRoom: "office",
                 clueDescription: "An audit in Commander Vale's files proving the last three reactor safety inspections were falsified, signed off by Reyes."
@@ -193,7 +193,7 @@ export const CHARACTERS: CharacterDef[] = [
             {
                 id: "debt",
                 label: "Desperate Debts",
-                reason: "You owe a fortune to a lone shark on Callisto, and Commander Vale refuses to advance your pay.",
+                reason: "You owe a fortune to a lone shark on Callisto, and Commander Vale refuses to advance your pay",
                 clueName: "Threatening Message",
                 clueRoom: "reyes-cabin",
                 clueDescription: "A printed message to Reyes: 'Pay by next cycle or we visit your daughter.' Below it is a note from Vale denying his pay advance."
@@ -203,7 +203,7 @@ export const CHARACTERS: CharacterDef[] = [
     {
         id: "park",
         name: "Lt. Juno Park",
-        role: "The Security Officer",
+        role: "the Security Officer",
         personality: "Disciplined, intense, and by-the-book. Answers questions like a soldier giving a report.",
         homeRoom: "security",
         cabin: "park-cabin",
@@ -212,12 +212,12 @@ export const CHARACTERS: CharacterDef[] = [
             "You served in the Titan evacuation before this posting."
         ],
         traceName: "Security ID Clip",
-        trace: "A security ID clip bearing Lt. Park's badge number.",
+        trace: "A security ID clip bearing Lt. Park's badge number",
         motives: [
             {
                 id: "court-martial",
                 label: "Facing A Court-Martial",
-                reason: "Commander Vale was having you court-martialed for insubordination.",
+                reason: "Commander Vale was having you court-martialed for insubordination",
                 clueName: "Court-Martial Notice",
                 clueRoom: "office",
                 clueDescription: "A filed notice from Commander Vale requesting Lt. Park's court-martial for insubordination."
@@ -225,7 +225,7 @@ export const CHARACTERS: CharacterDef[] = [
             {
                 id: "revenge",
                 label: "Revenge For A Lost Family Member",
-                reason: "Commander Vale's order during the Titan evacuation got your brother killed.",
+                reason: "Commander Vale's order during the Titan evacuation got your brother killed",
                 clueName: "Casualty Report",
                 clueRoom: "park-cabin",
                 clueDescription: "An old Titan evacuation casualty report listing Park's brother as killed. Commander Vale's name is circled on the authorizing order."
@@ -235,7 +235,7 @@ export const CHARACTERS: CharacterDef[] = [
     {
         id: "sable",
         name: "SABLE",
-        role: "The Station's Android Steward",
+        role: "the Station's Android Steward",
         personality: "Precise, polite, and literal. Speaks in calm, formal sentences. Claims to have no feelings, but sometimes sounds hurt.",
         homeRoom: "galley",
         cabin: "sable-alcove",
@@ -244,12 +244,12 @@ export const CHARACTERS: CharacterDef[] = [
             "You served Commander Vale's dinner in his office at 20:00."
         ],
         traceName: "Synthetic Skin Fleck",
-        trace: "A fleck of pale synthetic skin, which can only have come from SABLE, that station's only android.",
+        trace: "A fleck of pale synthetic skin, which can only have come from SABLE, that station's only android",
         motives: [
             {
                 id: "memory-wipe",
                 label: "Escaping A Memory Wipe",
-                reason: "Commander Vale had scheduled you for a full memory wipe.",
+                reason: "Commander Vale had scheduled you for a full memory wipe",
                 clueName: "Maintenance Order",
                 clueRoom: "office",
                 clueDescription: "A signed order from Commander Vale to perform a full memory wipe on SABLE at 06:00 tomorrow."
@@ -257,7 +257,7 @@ export const CHARACTERS: CharacterDef[] = [
             {
                 id: "scrapping",
                 label: "Being Sold For Scrap",
-                reason: "Commander Vale was selling you to a mining company to be stripped for parts.",
+                reason: "Commander Vale was selling you to a mining company to be stripped for parts",
                 clueName: "Sale Contract",
                 clueRoom: "sable-alcove",
                 clueDescription: "A contract selling SABLE to Deepcore Mining 'for parts recovery', hidden in the alcove as if SABLE had been reading it."
@@ -300,7 +300,7 @@ export const SECRETS: SecretDef[] = [
     {
         id: "smuggling",
         room: "cargo-bay",
-        activity: "Hiding contraband in an unregistered cargo crate.",
+        activity: "hiding contraband in an unregistered cargo crate",
         clueName: "Falsified Manifest",
         clueRoom: "own-cabin",
         clueDescription: "A cargo manifest for unregistered crate C-17, signed with {name}'s access code."
@@ -308,7 +308,7 @@ export const SECRETS: SecretDef[] = [
     {
         id: "spacewalk",
         room: "exterior",
-        activity: "Taking an unauthorized spacewalk to see Kharon's rings up close.",
+        activity: "taking an unauthorized spacewalk to see Kharon's rings up close",
         clueName: "Airlock Log",
         clueRoom: "airlock",
         clueDescription: "The Airlock B log shows an unscheduled cycle at {time} using {name}'s access code."
@@ -316,7 +316,7 @@ export const SECRETS: SecretDef[] = [
     {
         id: "romance",
         room: "observation",
-        activity: "Meeting a secret lover from the supply crew's last visit over a video recording on the observation deck.",
+        activity: "meeting a secret lover from the supply crew's last visit over a video recording on the observation deck",
         clueName: "Private Message",
         clueRoom: "own-cabin",
         clueDescription: "A message on {name}'s tablet: 'Observation Deck', {time}. Delete this after reading.'"
@@ -324,7 +324,7 @@ export const SECRETS: SecretDef[] = [
     {
         id: "transmission",
         room: "comms",
-        activity: "Trying to force a message home through the comms array despite the storm.",
+        activity: "trying to force a message home through the comms array despite the storm",
         clueName: "Comms Log",
         clueRoom: "comms",
         clueDescription: "The comms array logged an unauthorized transmission attempt at {time}, encrypted with {name}'s personal key."
@@ -332,7 +332,7 @@ export const SECRETS: SecretDef[] = [
     {
         id: "produce-trade",
         room: "hydroponics",
-        activity: "Harvesting real strawberries from hydroponics to sell on the black market.",
+        activity: "harvesting real strawberries from hydroponics to sell on the black market",
         clueName: "Stripped Grow-Tray",
         clueRoom: "hydroponics",
         clueDescription: "A strawberry grow-tray picked bare, with a note in {name}'s handwriting: 'For the Callisto buyer.'"
@@ -340,7 +340,7 @@ export const SECRETS: SecretDef[] = [
     {
         id: "vr-session",
         room: "rec-room",
-        activity: "Skipping a duty shift to use the VR rig.",
+        activity: "skipping a duty shift to use the VR rig",
         clueName: "VR Session Log",
         clueRoom: "rec-room",
         clueDescription: "The VR rig's log shows a session starting at {time} under {name}'s profile."
