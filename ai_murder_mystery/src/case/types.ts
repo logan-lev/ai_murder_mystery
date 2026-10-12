@@ -11,7 +11,7 @@ export interface Room {
 export interface Clue {
     id: ClueID;
     name: string;
-    room: RoomID;
+    roomID: RoomID;
     description: string;
 }
 
