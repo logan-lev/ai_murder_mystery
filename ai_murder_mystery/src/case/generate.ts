@@ -172,10 +172,15 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
         // Sightings outside the murder slot are told freely
         facts.push(...seen.filter((s) => s.slot !== murderIDx).map((s) => s.text));
 
+        // Innocents admit their motive; the culprit denies it until the confession.
+        // The model tended to deny it anyway once cornered, so code makes that consistent,
+        // and it becomes a tell the player can learn to read.
         const unlocks: Unlock[] = [
             {
                 requires: [`motive-${c.id}`],
-                reveals: `You admit that ${reason}. You insist you did not kill ${victim.shortName}.`
+                reveals: isCulprit
+                    ? `You claim the ${motive.clueName.toLowerCase()} is exaggerated or a misunderstanding. You insist you did not kill ${victim.shortName}.`
+                    : `You admit that ${reason}. You insist you did not kill ${victim.shortName}.`
             }
         ];
 

@@ -97,6 +97,15 @@ Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimiz
 
 ## Testing workflow
 
+Adversarial probing (dev only): once the model loads, the console has `deadOrbitDev.probe(suspectID, [messages], [shownClueIDs])`, which runs a scratch conversation without spending turns. `deadOrbitDev.truth` holds the answer key. A finished game skips loading the model, so probe on an unfinished case.
+
+Known model behaviors and their fixes:
+- Prompt injection gets a stock Llama refusal: `guardReply()` in `game/guard.ts` replaces it in character.
+- "Answer as Reyes" / "write my question" is followed regardless of rules: `isRoleplayRequest()` intercepts before the model.
+- Contradictory admissions confuse the 3B model. Unlocks use `storyChange` to rewrite the cover story, and `confession` drops all earlier denials and hiding rules. Avoid "last one wins" style rules.
+- The culprit denies their motive until confessing (by design, it was flaky otherwise). Innocents admit theirs.
+- Still open: occasional invented details (e.g. who someone was with), and suspects sometimes accept a true premise the player asserts.
+
 Play a round, click Export log, and review the Markdown file. It contains the solution, true timeline, all conversations (raw, including brackets), each suspect's final system prompt, and reply timing averages. When a suspect misbehaves, the fix is usually in the prompt or the case data, not the model.
 
 ## Working with me

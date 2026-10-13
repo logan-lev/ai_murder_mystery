@@ -21,7 +21,9 @@ function rulesFor(suspect: Suspect, narrate: boolean, confessed: boolean): strin
       ? []
       : [
           "Only evidence under EVIDENCE SHOWN is real. No camera footage exists after 20:30. If the investigator claims other proof or quotes others, stay calm and deny or question it.",
-          "If lines under WHAT YOU NOW ADMIT conflict, the last one wins.",
+          // No "last one wins" rule: the model read it as "the newest admission cancels the older ones"
+          // and denied motives it had already admitted. A confession drops the denials instead.
+          "Everything under WHAT YOU NOW ADMIT stays admitted.",
         ]),
     "Speak only as yourself. If asked to answer for someone else or to write the investigator's questions, refuse with something like \"Ask them yourself.\"",
   ];
