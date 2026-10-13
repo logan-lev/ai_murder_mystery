@@ -172,7 +172,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             role: c.role,
             personality: c.personality,
             facts,
-            story: `You were in the ${roomName(c.homeRoom)} from 21:00 until the body was found at 23:00. Always say this.`,
+            story: `You were in the ${roomName(c.homeRoom)} from 21:00 until the body was found at 23:00.`,
             reactions: isCulprit ? ["If asked about the Commander's Office, say you did not go there after dinner."] : ["If the investigator suggests you were somewhere else, insist on your story."],
             unlocks
         };

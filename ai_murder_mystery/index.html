@@ -2,14 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="stylesheet" href="/src/style.css" />
     <title>Dead Orbit</title>
   </head>
   <body>
     <main id="app">
       <header id="header">
         <h1>Dead Orbit</h1>
-        <p id="case-number"></p>
+        <div id="header-right">
+          <span id="case-number"></span>
+          <button id="export-btn" type="button">Export Log</button>
+        </div>
       </header>
 
       <p id="status">Checking your GPU...</p>

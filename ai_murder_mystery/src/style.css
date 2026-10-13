@@ -6,6 +6,7 @@
   --muted: #7f93ad;
   --accent: #4fd1c5;
   --you: #f6ad55;
+  --narration: #a78bfa;
 }
 
 * {
@@ -132,6 +133,23 @@ h1 {
   color: var(--muted);
 }
 
+#chat-log .reply {
+  margin-bottom: 0.75rem;
+}
+
+#chat-log .reply p {
+  margin: 0 0 0.2rem;
+}
+
+#chat-log .line-narration {
+  color: var(--narration);
+  font-style: italic;
+}
+
+#chat-log em.action {
+  color: var(--narration);
+}
+
 #chat-form {
   display: flex;
   gap: 0.5rem;
@@ -169,6 +187,33 @@ h1 {
 
 #chat-input:disabled,
 #send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+#export-btn {
+  padding: 0.35rem 0.75rem;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+#export-btn:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+#export-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

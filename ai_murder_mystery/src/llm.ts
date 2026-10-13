@@ -19,24 +19,53 @@ export async function loadEngine(
     });
 }
 
+export interface ReplyStats {
+  firstTokenMs: number;
+  totalMs: number;
+  tokens: number;
+}
+
+export interface ReplyResult {
+  text: string;
+  stats: ReplyStats;
+}
+
 export async function streamReply(
-    engine: MLCEngine,
-    messages: ChatCompletionMessageParam[],
-    onToken: (piece: string) => void
-): Promise<string> {
-    const stream = await engine.chat.completions.create({
-        messages,
-        stream: true,
-        temperature: 0.8,
-        max_tokens: 150
-    });
+  engine: MLCEngine,
+  messages: ChatCompletionMessageParam[],
+  onToken: (piece: string) => void,
+): Promise<ReplyResult> {
+  const start = performance.now();
+  const stream = await engine.chat.completions.create({
+    messages,
+    stream: true,
+    temperature: 0.8,
+    max_tokens: 150,
+  });
 
-    let full = "";
-    for await (const chunk of stream) {
-        const piece = chunk.choices[0]?.delta?.content ?? "";
-        full += piece;
-        onToken(piece);
-    }
+  let text = "";
+  let tokens = 0;
+  let firstTokenAt = 0;
+  for await (const chunk of stream) {
+    const piece = chunk.choices[0]?.delta?.content ?? "";
+    if (!piece) continue;
+    if (firstTokenAt === 0) firstTokenAt = performance.now();
+    tokens++;
+    text += piece;
+    onToken(piece);
+  }
 
-    return full;
+  const end = performance.now();
+  const firstAt = firstTokenAt || end;
+  const stats: ReplyStats = {
+    firstTokenMs: Math.round(firstAt - start),
+    totalMs: Math.round(end - start),
+    tokens,
+  };
+  const genSeconds = (end - firstAt) / 1000;
+  console.log(
+    `[llm] first token after ${stats.firstTokenMs} ms, ${tokens} tokens in ${stats.totalMs} ms` +
+      (genSeconds > 0 ? ` (${(tokens / genSeconds).toFixed(1)} tokens/s)` : ""),
+  );
+  return { text, stats };
 }

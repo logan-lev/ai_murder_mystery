@@ -1,4 +1,3 @@
-import "./style.css";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 import { checkWebGPU } from "./gpu";
 import { loadEngine, streamReply } from "./llm";
@@ -6,41 +5,43 @@ import { getSeed } from "./seed";
 import { generateCase } from "./case/generate";
 import type { SuspectID } from "./case/types";
 import { createGameState, buildMessages } from "./game/state";
+import { buildReport, downloadText, type ReplyStat } from "./game/export";
+import { parseReply, renderWithActions } from "./ui/reply";
 import { runDevChecks } from "./dev-checks";
 
-// --- CASE SETUP ---
+// ---------- Case setup ----------
 const seed = getSeed();
 const { case: theCase, truth } = generateCase(seed);
 const state = createGameState(theCase);
-
-
+const replyStats: ReplyStat[] = [];
 
 if (import.meta.env.DEV) {
   runDevChecks();
   console.log("Answer key (dev only):", truth);
 }
 
-// --- DOM ELEMENTS ---
+// ---------- DOM elements ----------
+const caseNumberEl = document.querySelector<HTMLElement>("#case-number")!;
+const exportBtn = document.querySelector<HTMLButtonElement>("#export-btn")!;
 const statusEl = document.querySelector<HTMLParagraphElement>("#status")!;
 const progressEl = document.querySelector<HTMLProgressElement>("#progress")!;
+const tabsEl = document.querySelector<HTMLElement>("#suspect-tabs")!;
 const chatLog = document.querySelector<HTMLDivElement>("#chat-log")!;
 const form = document.querySelector<HTMLFormElement>("#chat-form")!;
 const input = document.querySelector<HTMLInputElement>("#chat-input")!;
 const sendBtn = document.querySelector<HTMLButtonElement>("#send-btn")!;
-const caseNumberEl = document.querySelector<HTMLParagraphElement>("#case-number")!;
-const tabsEl = document.querySelector<HTMLElement>("#suspect-tabs")!;
 
-// --- STATE ---
+// ---------- Runtime state ----------
 let engine: MLCEngine | null = null;
 let isGenerating = false;
 
-// --- UI HELPERS ---
+// ---------- Helpers ----------
 function setStatus(text: string): void {
   statusEl.textContent = text;
 }
 
 function scrollToBottom(): void {
-  chatLog.scrollTop = chatLog.scrollHeight
+  chatLog.scrollTop = chatLog.scrollHeight;
 }
 
 function errorMessage(err: unknown): string {
@@ -51,24 +52,53 @@ function suspectName(id: SuspectID): string {
   return theCase.suspects.find((s) => s.id === id)?.name ?? id;
 }
 
-// Adds "Speaker: Text" to the chat log and returns the text span, so streaming replies can keep updating it.
-function addLine(speaker: string, text: string, className: string): HTMLSpanElement {
+// A single "Speaker: text" line. (Parenthesized actions) get styled.
+function addLine(speaker: string, text: string, className: string): void {
   const line = document.createElement("p");
   line.className = className;
-  
   const name = document.createElement("strong");
   name.textContent = `${speaker}: `;
-  
   const body = document.createElement("span");
-  body.textContent = text;
-
+  renderWithActions(body, text);
   line.append(name, body);
   chatLog.append(line);
   scrollToBottom();
-  return body;
 }
 
-// --- RENDERING ---
+// A suspect reply block: a narration line plus a speech line.
+// Returns an update function that re-renders the block from the raw text so far.
+function addSuspectReply(name: string): (raw: string) => void {
+  const block = document.createElement("div");
+  block.className = "reply";
+
+  const narrationEl = document.createElement("p");
+  narrationEl.className = "line-narration";
+
+  const speechLine = document.createElement("p");
+  speechLine.className = "line-suspect";
+  const nameEl = document.createElement("strong");
+  nameEl.textContent = `${name}: `;
+  const speechEl = document.createElement("span");
+  speechLine.append(nameEl, speechEl);
+
+  block.append(narrationEl, speechLine);
+  chatLog.append(block);
+
+  const update = (raw: string) => {
+    const { narration, speech } = parseReply(raw);
+    narrationEl.textContent = narration;
+    narrationEl.hidden = narration === "";
+    // Hide the speech line while only narration has arrived; show "…" before anything arrives
+    speechLine.hidden = speech === "" && narration !== "";
+    renderWithActions(speechEl, raw === "" ? "…" : speech);
+    scrollToBottom();
+  };
+
+  update("");
+  return update;
+}
+
+// ---------- Rendering ----------
 function renderTabs(): void {
   tabsEl.replaceChildren();
   for (const s of theCase.suspects) {
@@ -78,12 +108,12 @@ function renderTabs(): void {
     btn.disabled = !engine || isGenerating;
 
     const name = document.createElement("strong");
-    name.textContent = s.name
+    name.textContent = s.name;
     const role = document.createElement("small");
     role.textContent = s.role;
     btn.append(name, role);
 
-    btn.addEventListener("click", () => selectSuspects(s.id));
+    btn.addEventListener("click", () => selectSuspect(s.id));
     tabsEl.append(btn);
   }
 }
@@ -99,15 +129,13 @@ function renderChatLog(): void {
 
   const name = suspectName(id);
   const history = state.conversations[id];
-  
   if (history.length === 0) {
     addLine("Briefing", `You begin questioning ${name}.`, "line-intro");
   }
-  
   for (const msg of history) {
     const text = typeof msg.content === "string" ? msg.content : "";
     if (msg.role === "user") addLine("You", text, "line-you");
-    else if (msg.role === "assistant") addLine(name, text, "line-suspect");
+    else if (msg.role === "assistant") addSuspectReply(name)(text);
   }
 }
 
@@ -115,12 +143,15 @@ function updateControls(): void {
   const canChat = engine !== null && !isGenerating && state.activeSuspectID !== null;
   input.disabled = !canChat;
   sendBtn.disabled = !canChat;
-  input.placeholder = state.activeSuspectID ? `Question ${suspectName(state.activeSuspectID)}...` : "Choose a crew member to question...";
+  exportBtn.disabled = isGenerating;
+  input.placeholder = state.activeSuspectID
+    ? `Question ${suspectName(state.activeSuspectID)}...`
+    : "Choose a crew member to question...";
   renderTabs();
 }
 
-// --- ACTIONS ---
-function selectSuspects(id: SuspectID): void {
+// ---------- Actions ----------
+function selectSuspect(id: SuspectID): void {
   if (isGenerating) return;
   state.activeSuspectID = id;
   renderChatLog();
@@ -128,7 +159,12 @@ function selectSuspects(id: SuspectID): void {
   input.focus();
 }
 
-// --- STARTUP ---
+exportBtn.addEventListener("click", () => {
+  const report = buildReport(theCase, truth, state, replyStats);
+  downloadText(`dead-orbit-case-${seed}.md`, report);
+});
+
+// ---------- Startup ----------
 async function init(): Promise<void> {
   caseNumberEl.textContent = `Case #${seed}`;
   document.title = theCase.title;
@@ -143,7 +179,6 @@ async function init(): Promise<void> {
   }
 
   setStatus("Loading the model...");
-  
   try {
     engine = await loadEngine((text, progress) => {
       setStatus(text);
@@ -160,14 +195,13 @@ async function init(): Promise<void> {
   updateControls();
 }
 
-// --- SENDING A QUESTION ---
-form.addEventListener("submit", async (event) =>  {
+// ---------- Sending a question ----------
+form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  // Capture the suspect now, so the reply always goes to the right conversation.
+  // Capture the suspect now, so the reply always goes to the right conversation
   const suspectID = state.activeSuspectID;
   const text = input.value.trim();
-  
   if (!text || !engine || isGenerating || !suspectID) return;
 
   const name = suspectName(suspectID);
@@ -181,22 +215,21 @@ form.addEventListener("submit", async (event) =>  {
   updateControls();
   setStatus(`${name} is responding...`);
 
-  const replyEl = addLine(name, "", "line-suspect");
+  const update = addSuspectReply(name);
   let shown = "";
 
   try {
-    const full = await streamReply(engine, buildMessages(state, theCase, suspectID), (piece) => {
+    const result = await streamReply(engine, buildMessages(state, theCase, suspectID), (piece) => {
       shown += piece;
-      replyEl.textContent = shown;
-      scrollToBottom();
+      update(shown);
     });
-    
-    conversation.push({ role: "assistant", content: full });
+    conversation.push({ role: "assistant", content: result.text });
+    replyStats.push({ suspectID, ...result.stats });
     setStatus(`Questioning ${name}.`);
   } catch (err) {
     console.error(err);
-    conversation.pop();
-    replyEl.textContent = "(no response)";
+    conversation.pop(); // remove the unanswered question
+    update("(no response)");
     setStatus(`Something went wrong: ${errorMessage(err)}`);
   } finally {
     isGenerating = false;

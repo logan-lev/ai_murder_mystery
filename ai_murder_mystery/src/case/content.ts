@@ -14,6 +14,8 @@ export const SHARED_FACTS = [
     "Aboard the station tonight: Dr. Mara Okafor, Chief Medical Officer; Tomas Reyes, Chief Engineer; Lieutenant Juno Park, Security Officer; SABLE, the station's android steward. No one else is aboard.",
     "An ion storm has cut off communications, and no ship can dock until it passes.",
     "The storm knocked out all security cameras at 20:30. There is no camera footage of anything after that.",
+    "The body was discovered at 23:00 when Commander Vale missed the scheduled night check-in and the whole crew went to his office together.",
+    "SABLE is an android and is referred to as 'it'."
 ];
 
 export const ROOMS: Room[] = [
@@ -29,7 +31,7 @@ export const ROOMS: Room[] = [
     },
     {
         id: "engineering",
-        name: "Engineering",
+        name: "Engineering Bay",
         description: "The humming reactor core, tool racks, and walls of blinking panels."
     },
     {
