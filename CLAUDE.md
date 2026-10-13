@@ -25,15 +25,20 @@ src/
     generate.ts    generateCase(seed) -> { case, truth }
     validate.ts    validateCase() catches broken IDs and duplicates
   game/
-    prompt.ts      buildSuspectPrompt(case, suspect, shownClues)
-    state.ts       GameState, createGameState, searchRoom, showClue, buildMessages
-    accuse.ts      scoreAccusation()
-    export.ts      buildReport() + downloadText() for the "Export log" button
+    prompt.ts      buildSuspectPrompt(case, suspect, shownClues, narrate)
+    state.ts       GameState, TURN_LIMIT, action log, searchRoom, showClue, buildMessages
+    accuse.ts      scoreAccusation(), MAX_ACCUSE_EVIDENCE, RANKS
+    save.ts        localStorage: in-progress saves per seed, daily stats and streaks
+    share.ts       buildShareText() (spoiler-free emoji grid), clipboard copy
+    export.ts      buildReport() + downloadText() for the dev-only "Export log" button
   ui/
     reply.ts       parseReply() splits "[narration] speech"; renderWithActions() styles (actions)
+    dom.ts         el() element builder (textContent only), $(), formatCountdown()
+    results.ts     ending screen (verdict + true timeline) and stats dialog
   gpu.ts           WebGPU support check
-  llm.ts           loadEngine(), streamReply() (returns text + timing stats)
-  seed.ts          getSeed() reads ?case=N from the URL or picks one and writes it
+  llm.ts           loadEngine() (Web Worker + warm-up), streamReply(), fast-mode model choice
+  llm-worker.ts    WebLLM worker handler
+  seed.ts          getCaseInfo(): daily case (no param, seed hashed from the local day) or ?case=N practice
   dev-checks.ts    fuzz test (2000 seeds) + prompt lint, dev only
   main.ts          UI wiring and render functions
 ```
@@ -59,16 +64,11 @@ src/
 
 Suspects can open a reply with one bracketed third-person narration sentence, e.g. `[Reyes rubs his neck.]`, which the UI renders as an italic narrator line. The parser tolerates replies that ignore the format.
 
-Current state: the prompt asks for narration on every reply. Planned: a `narrate` flag on `buildSuspectPrompt` driven by `shouldNarrate()` in `main.ts` (first question to a suspect, player message contains an (action), or evidence is shown).
+`shouldNarrate()` in `main.ts` decides when: first question to a suspect, the player's message contains an (action), or evidence is shown. It sets the `narrate` flag on `buildSuspectPrompt`, which swaps the format rule.
 
 ## Performance notes
 
-Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimizations: ~7.7 s to first token, ~7 tokens/s, ~13 s per reply. Planned fixes (none applied yet at the checkpoint commit):
-
-- Warm-up request with `max_tokens: 1` after the engine loads
-- Condensed rules in `prompt.ts` with the `narrate` flag
-- `MAX_HISTORY` lowered from 12 to 8 in `state.ts`
-- Fallback option: a "Fast mode" toggle using `Llama-3.2-1B-Instruct-q4f16_1-MLC`
+Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimizations: ~7.7 s to first token, ~7 tokens/s, ~13 s per reply. Applied: warm-up request (`max_tokens: 1`), condensed rules with the `narrate` flag, `MAX_HISTORY` 8, engine in a Web Worker, WebLLM lazy-loaded, and a "Fast mode" setting using `Llama-3.2-1B-Instruct-q4f16_1-MLC`. First measurement after the fixes (in the Claude desktop browser pane, not yet on the M1): 3.8 s to first token, 15.8 tokens/s, 6.0 s per reply.
 
 ## Status and roadmap
 
@@ -76,12 +76,21 @@ Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimiz
 - [x] 2a: procedural case generator with validation and fuzz test
 - [x] 2b: prompt builder with unlock system
 - [x] 2c: seed in URL, multi-suspect tabs, per-suspect conversations, bracket narration, export log
-- [ ] Speed fixes above, then re-measure
-- [ ] 2d: room list, room descriptions, search button (`searchRoom`), evidence inventory
-- [ ] 2e: "Show" evidence to the active suspect (`showClue`), push a user message like `(The investigator shows you the X: description)`, narrate the reaction
-- [ ] 2f: accusation form (suspect, motive, evidence checkboxes), `scoreAccusation`, ending screen with rank and explanation, "New case" button
-- [ ] Stretch: leak guard (regenerate if a locked unlock's keywords appear), daily case seed, Web Worker for the engine, deploy to GitHub Pages, README with gameplay GIF
-- [ ] Before public deploy: hide the Export log button (`exportBtn.hidden = !import.meta.env.DEV`)
+- [x] Speed fixes above (re-measure on the M1)
+- [x] 2d: room list, room descriptions, search button (`searchRoom`), evidence inventory
+- [x] 2e: "Show" evidence to the active suspect (`showClue`), narrated reaction
+- [x] 2f: accusation dialog (suspect, motive, up to 3 evidence), `scoreAccusation`, ending screen with true timeline
+- [x] Daily mode: daily seed, 24-turn storm clock, saved progress, stats/streaks, share text, how-to-play, countdown
+- [x] Web Worker engine, GitHub Pages workflow, README, Export log hidden outside dev
+- [ ] Balance: one office search reveals both traces and every office-variant motive (see notes below)
+- [ ] Stretch: leak guard (regenerate if a locked unlock's keywords appear), README gameplay GIF, more content variety
+
+## Daily mode
+
+- No `?case` param means today's daily case: `dayNumber()` counts local days from `LAUNCH_DAY` (Daily #1 = 2026-10-13), `dailySeed()` hashes it. Don't change `LAUNCH_DAY` after going public.
+- Every search, question, or shown clue is one entry in `state.actions` and costs one turn. Turns left = `TURN_LIMIT - actions.length`. At zero the accusation dialog opens and can't be dismissed.
+- Saves are keyed by seed (`deadorbit:case:<seed>`). Only completed replies are saved, and trailing unanswered questions are dropped on load.
+- A finished or out-of-turns game skips the model download entirely.
 
 ## Testing workflow
 
