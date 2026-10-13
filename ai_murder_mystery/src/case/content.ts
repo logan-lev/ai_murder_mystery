@@ -57,7 +57,7 @@ export const ROOMS: Room[] = [
     {
         id: "observation",
         name: "Observation Deck",
-        description: "A dome of reinforced glass with breathtaking view of Kharon's rings."
+        description: "A dome of reinforced glass with a breathtaking view of Kharon's rings."
     },
     {
         id: "comms",
@@ -91,7 +91,7 @@ export const ROOMS: Room[] = [
     },
     {
         id: "sable-alcove",
-        name: "SABLE's Charging Alchove",
+        name: "SABLE's Charging Alcove",
         description: "A small recess with a charging cradle and a shelf of carefully arranged trinkets."
     }
 ];
@@ -195,7 +195,7 @@ export const CHARACTERS: CharacterDef[] = [
             {
                 id: "debt",
                 label: "Desperate Debts",
-                reason: "You owe a fortune to a lone shark on Callisto, and Commander Vale refuses to advance your pay",
+                reason: "you owe a fortune to a loan shark on Callisto, and Commander Vale refuses to advance your pay",
                 clueName: "Threatening Message",
                 clueRoom: "reyes-cabin",
                 clueDescription: "A printed message to Reyes: 'Pay by next cycle or we visit your daughter.' Below it is a note from Vale denying his pay advance."
@@ -246,7 +246,7 @@ export const CHARACTERS: CharacterDef[] = [
             "You served Commander Vale's dinner in his office at 20:00."
         ],
         traceName: "Synthetic Skin Fleck",
-        trace: "A fleck of pale synthetic skin, which can only have come from SABLE, that station's only android",
+        trace: "A fleck of pale synthetic skin, which can only have come from SABLE, the station's only android",
         motives: [
             {
                 id: "memory-wipe",
@@ -283,8 +283,8 @@ export const METHODS: MethodDef[] = [
         weaponName: "Plasma Cutter",
         weaponRoom: "engineering",
         hideRooms: ["cargo-bay", "airlock", "hydroponics"],
-        body: "Commander Vale lies beside his with a narrow scorch wound in his chest.",
-        hidden: "A plasma cutter from engineering, its tip still blackend, stuffed out of sight.",
+        body: "Commander Vale lies beside his desk with a narrow scorch wound in his chest.",
+        hidden: "A plasma cutter from engineering, its tip still blackened, stuffed out of sight.",
         confession: "You took a plasma cutter from engineering, used it on him in his office, and hid it in the {hideRoom}."
     },
     {
@@ -318,10 +318,10 @@ export const SECRETS: SecretDef[] = [
     {
         id: "romance",
         room: "observation",
-        activity: "meeting a secret lover from the supply crew's last visit over a video recording on the observation deck",
+        activity: "secretly recording a video message for a lover from the last supply crew on the observation deck",
         clueName: "Private Message",
         clueRoom: "own-cabin",
-        clueDescription: "A message on {name}'s tablet: 'Observation Deck', {time}. Delete this after reading.'"
+        clueDescription: "A message on {name}'s tablet: 'Observation Deck, {time}. Delete this after reading.'"
     },
     {
         id: "transmission",

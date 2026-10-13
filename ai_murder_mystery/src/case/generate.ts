@@ -50,7 +50,9 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
                 if (a.id === b.id) continue;
                 const room = timeline[a.id][s];
                 if (room === "exterior" || room !== timeline[b.id][s]) continue;
-                const carrying = b.id === culprit.id && s !== murderIDx ? ", carrying something wrapped in a cloth" : "";
+                // The culprit only has the weapon on them right before (fetching it) and right after (hiding it)
+                const hasWeapon = b.id === culprit.id && Math.abs(s - murderIDx) === 1;
+                const carrying = hasWeapon ? ", carrying something wrapped in a cloth" : "";
                 sightings.get(a.id)!.push({
                     slot: s,
                     text: `At ${SLOTS[s]} you saw ${b.name} in the ${roomName(room)}${carrying}.`
