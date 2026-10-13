@@ -15,7 +15,10 @@ const state = createGameState(theCase);
 
 
 
-if (import.meta.env.DEV) runDevChecks();
+if (import.meta.env.DEV) {
+  runDevChecks();
+  console.log("Answer key (dev only):", truth);
+}
 
 // --- DOM ELEMENTS ---
 const statusEl = document.querySelector<HTMLParagraphElement>("#status")!;
