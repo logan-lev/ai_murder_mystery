@@ -18,6 +18,11 @@ export interface Clue {
 export interface Unlock {
     requires: ClueID[];
     reveals: string;
+    // Replaces part of the suspect's cover story once unlocked, e.g. "At 22:00 you were actually in the airlock."
+    // Without this, "always stick to this story" outweighs the admission and the model reverts to the lie.
+    storyChange?: string;
+    // The suspect stops lying entirely: the cover story and scripted reactions are dropped from the prompt
+    confession?: boolean;
 }
 
 export interface Suspect {
@@ -26,6 +31,7 @@ export interface Suspect {
     role: string;
     personality: string;
     facts: string[];
+    post: string;
     story: string;
     reactions: string[];
     unlocks: Unlock[];

@@ -17,6 +17,7 @@ import { scoreAccusation, MAX_ACCUSE_EVIDENCE, type Accusation } from "./game/ac
 import { loadGame, saveGame, pruneSaves, loadStats, recordDailyResult, readFlag, writeFlag } from "./game/save";
 import { buildShareText, shareText } from "./game/share";
 import { buildReport, downloadText, type ReplyStat } from "./game/export";
+import { guardReply, isRoleplayRequest, roleplayRefusal } from "./game/guard";
 import { parseReply, renderWithActions } from "./ui/reply";
 import { el, $, formatCountdown } from "./ui/dom";
 import { renderEnd, renderStats, COUNTDOWN_CLASS } from "./ui/results";
@@ -125,10 +126,12 @@ function addLine(speaker: string, text: string, className: string): void {
 // for the model. On screen, the short version reads better.
 const SHOW_PREFIX = "(The investigator shows you the ";
 
-function addPlayerLine(text: string, suspectName: string): void {
-  if (text.startsWith(SHOW_PREFIX)) {
-    const clueName = text.slice(SHOW_PREFIX.length).split(":")[0];
-    chatLog.append(el("p", "line-show", `You show ${suspectName} the ${clueName}.`));
+function addPlayerLine(text: string, suspectID: SuspectID): void {
+  const clueName = text.startsWith(SHOW_PREFIX) ? text.slice(SHOW_PREFIX.length).split(":")[0] : "";
+  // A typed imitation of the show format renders as a normal line, not as real evidence
+  const reallyShown = theCase.clues.some((cl) => cl.name === clueName && state.shownClues[suspectID].has(cl.id));
+  if (reallyShown) {
+    chatLog.append(el("p", "line-show", `You show ${suspectName(suspectID)} the ${clueName}.`));
     scrollToBottom();
   } else {
     addLine("You", text, "line-you");
@@ -172,7 +175,7 @@ function renderChatLog(): void {
   if (history.length === 0) addLine("Briefing", `You begin questioning ${name}.`, "line-intro");
   for (const msg of history) {
     const text = typeof msg.content === "string" ? msg.content : "";
-    if (msg.role === "user") addPlayerLine(text, name);
+    if (msg.role === "user") addPlayerLine(text, id);
     else if (msg.role === "assistant") addSuspectReply(name)(text);
   }
 }
@@ -348,7 +351,7 @@ async function ask(suspectID: SuspectID, text: string, kind: ActionKind): Promis
   const conversation = state.conversations[suspectID];
   const narrate = shouldNarrate(suspectID, text, kind);
 
-  addPlayerLine(text, name);
+  addPlayerLine(text, suspectID);
   conversation.push({ role: "user", content: text });
   state.actions.push(kind);
 
@@ -361,11 +364,18 @@ async function ask(suspectID: SuspectID, text: string, kind: ActionKind): Promis
   let ok = true;
 
   try {
-    const result = await streamReply(engine, buildMessages(state, theCase, suspectID, narrate), (piece) => {
-      shown += piece;
-      update(shown);
-    });
-    conversation.push({ role: "assistant", content: result.text });
+    const others = theCase.suspects.filter((s) => s.id !== suspectID).map((s) => s.name);
+    const result =
+      kind === "question" && isRoleplayRequest(text, others)
+        ? { text: roleplayRefusal(name, narrate), stats: { firstTokenMs: 0, totalMs: 0, tokens: 0 } }
+        : await streamReply(engine, buildMessages(state, theCase, suspectID, narrate), (piece) => {
+            shown += piece;
+            update(shown);
+          });
+    // Saving the guarded text keeps a broken reply out of the history the model sees next turn
+    const reply = guardReply(result.text, name, narrate);
+    update(reply);
+    conversation.push({ role: "assistant", content: reply });
     replyStats.push({ suspectID, ...result.stats });
     setStatus(`Questioning ${name}.`);
   } catch (err) {
@@ -627,6 +637,10 @@ async function init(): Promise<void> {
   }
 
   engineStatus = "ready";
+  if (import.meta.env.DEV) {
+    const { installHarness } = await import("./dev-harness");
+    installHarness(() => engine, theCase, truth);
+  }
   progressEl.hidden = true;
   setStatus("Systems online. Choose a crew member to question.");
   renderStation();

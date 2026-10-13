@@ -187,14 +187,16 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
                 reveals: [
                     `You confess that at ${murderTime} you were actually ${secret.activity}. You lied because you would be in serious trouble.`,
                     ...atMurder,
-                ].join(" ")
+                ].join(" "),
+                storyChange: `At ${murderTime} you were ${secret.activity}.`
             });
         }
 
         if (isRedHerring(c.id)) {
             unlocks.push({
                 requires: [`trace-${c.id}`],
-                reveals: `You readily explain that you visited the ${sceneName} at ${SLOTS[0]}, and ${victim.shortName} was alive when you left.`
+                reveals: `You readily explain that you visited the ${sceneName} at ${SLOTS[0]}, and ${victim.shortName} was alive when you left.`,
+                storyChange: `At ${SLOTS[0]} you briefly visited the ${sceneName}. ${victim.shortName} was alive when you left.`
             });
         }
 
@@ -204,7 +206,8 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
                     requires: [`trace-${c.id}`],
                     // A lie: the culprit claims the same harmless early visit as the red herrings.
                     // The herrings saw each other at that time and can't place the culprit there.
-                    reveals: `You admit you went to the ${sceneName}, but claim it was a short visit at ${SLOTS[0]} and ${victim.shortName} was alive when you left. Stick to that time.`
+                    reveals: `You admit you went to the ${sceneName}, but claim it was a short visit at ${SLOTS[0]} and ${victim.shortName} was alive when you left. Stick to that time.`,
+                    storyChange: `At ${SLOTS[0]} you briefly visited the ${sceneName}. ${victim.shortName} was alive when you left. (Insist on this time.)`
                 },
                 {
                     requires: ["weapon"],
@@ -212,7 +215,8 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
                 },
                 {
                     requires: [`trace-${c.id}`, "weapon", `motive-${c.id}`],
-                    reveals: `Your composure breaks. You confess: ${reason}. ${fill(method.confession, vars)}`
+                    reveals: `Your composure breaks. You confess to killing ${victim.shortName}: ${reason}. ${fill(method.confession, vars)}`,
+                    confession: true
                 }
             );
         }
@@ -223,7 +227,9 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             role: c.role,
             personality: c.personality,
             facts,
-            story: `You were in the ${roomName(c.homeRoom)} from 21:00 until the body was found at 23:00.`,
+            post: roomName(c.homeRoom),
+            // "Alone" stops the model from inventing alibi witnesses
+            story: `You were working alone in the ${roomName(c.homeRoom)} from 21:00 until the body was found at 23:00.`,
             reactions: isCulprit
                 ? [`If asked about the ${sceneName}, say you did not go there tonight.`]
                 : ["If the investigator suggests you were somewhere else, insist on your story."],
