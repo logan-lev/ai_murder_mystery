@@ -1,6 +1,6 @@
 import type { Case } from "../case/types";
 import type { Truth } from "../case/generate";
-import { SLOTS, ROOMS } from "../case/content";
+import { SLOTS } from "../case/content";
 import { currentModelID, type ReplyStats } from "../llm";
 import type { GameState } from "./state";
 import { buildSuspectPrompt } from "./prompt";
@@ -13,7 +13,7 @@ export function buildReport(c: Case, truth: Truth, state: GameState, stats: Repl
   const suspectName = (id: string) => c.suspects.find((s) => s.id === id)?.name ?? id;
   const clueName = (id: string) => c.clues.find((cl) => cl.id === id)?.name ?? id;
   const roomName = (id: string) =>
-    id === "exterior" ? "Outside the station" : ROOMS.find((r) => r.id === id)?.name ?? id;
+    id === "exterior" ? "Outside the station" : c.rooms.find((r) => r.id === id)?.name ?? id;
 
   const out: string[] = [
     `# ${c.title}`,
@@ -39,11 +39,12 @@ export function buildReport(c: Case, truth: Truth, state: GameState, stats: Repl
     "",
     c.solution.explanation,
     "",
+    `- Victim: ${c.victim}, found in ${roomName(c.sceneRoomID)}`,
     `- Culprit: ${suspectName(truth.culpritID)}`,
     `- Method: ${truth.methodID}`,
     `- Weapon hidden in: ${roomName(truth.hideRoom)}`,
     `- Time of death: ${truth.murderTime}`,
-    `- Red herring: ${suspectName(truth.redHerringID)}`,
+    `- Red herrings: ${truth.redHerringIDs.map(suspectName).join(", ")}`,
     "",
     "### True timeline",
     "",
@@ -59,7 +60,7 @@ export function buildReport(c: Case, truth: Truth, state: GameState, stats: Repl
   );
 
   for (const s of c.suspects) {
-    const role = s.id === truth.culpritID ? "culprit" : "innocent";
+    const role = s.id === truth.culpritID ? "culprit" : truth.redHerringIDs.includes(s.id) ? "innocent, red herring" : "innocent";
     const shown = [...state.shownClues[s.id]].map(clueName);
     out.push("", `### ${s.name} (${role})`, "", `Evidence shown: ${shown.length > 0 ? shown.join(", ") : "none"}`, "");
 

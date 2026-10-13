@@ -33,7 +33,7 @@ export function writeFlag(key: string, value: boolean): void {
 // ---------- In-progress games ----------
 
 const SAVE_PREFIX = "deadorbit:case:";
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 2;
 
 // Sets don't survive JSON.stringify, so the saved shape uses arrays
 interface SavedGame {

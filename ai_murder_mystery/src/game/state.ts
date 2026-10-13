@@ -4,7 +4,7 @@ import type { Accusation, Verdict } from "./accuse";
 import { buildSuspectPrompt } from "./prompt";
 
 // Every search, question, or shown clue costs one turn. The storm clears when they run out.
-export const TURN_LIMIT = 24;
+export const TURN_LIMIT = 20;
 
 // Older turns are dropped from what the model sees. Fewer messages means less prefill per reply.
 // The system prompt (which holds every fact that matters) is always included in full.

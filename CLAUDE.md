@@ -21,7 +21,7 @@ src/
   case/
     types.ts       Case, Suspect, Clue, Unlock, Room, Motive types
     random.ts      seeded PRNG (mulberry32), pick, shuffle
-    content.ts     ingredients: setting, rooms, crew, motives, weapons, secrets
+    content.ts     ingredients: 8-character cast pool, station rooms, cabins, motives, weapons, secrets
     generate.ts    generateCase(seed) -> { case, truth }
     validate.ts    validateCase() catches broken IDs and duplicates
   game/
@@ -49,15 +49,18 @@ src/
 2. Secrets are absent from a prompt until unlocked. A suspect's prompt only includes an `Unlock.reveals` line once every clue in `Unlock.requires` has been shown to them. The model cannot leak what it was never told. Avoid even mentioning a secret's room or topic in locked prompts ("don't think of an elephant" problem).
 3. Prompts are rebuilt every turn. Conversations are stored without the system prompt; `buildMessages()` regenerates it from case data plus shown evidence.
 4. Evidence is held, not claimed. Suspects only treat clues listed under EVIDENCE SHOWN as real. Player bluffs (fake cameras, fake evidence) should be denied. The storm knocked out cameras at 20:30, which is a shared fact.
-5. Every case must be solvable. Each innocent's secret happens exactly during the murder slot, so everyone lies about the critical moment and innocents are cleared by uncovering their secret. The culprit's personal trace is at the scene. One random innocent (the red herring) also leaves a trace from a harmless earlier visit.
+5. Every case must be solvable. Each innocent's secret happens exactly during the murder slot, in a room that is neither their own post nor the scene, so everyone lies about the critical moment and innocents are cleared by uncovering their secret. The culprit's personal trace is at the scene. Two random innocents (red herrings) also leave traces from a harmless 21:00 visit, and they see each other there.
 6. Witnesses are emergent. Same room + same time slot in the simulated timeline produces sightings. Sightings during an innocent's secret slot are only revealed with that secret.
-7. The culprit's prompt does not say they are guilty until the final confession unlock.
+7. The culprit's prompt does not say they are guilty until the final confession unlock. When shown their trace, the culprit lies that they also visited at 21:00; the herrings' sightings (who they did and didn't see) expose the lie.
+8. Each case picks a victim (anyone with `canBeVictim`) and `SUSPECT_COUNT` suspects from `CHARACTERS`. The scene is the victim's `homeRoom`. Content templates must work for any victim: use `{victim}`, `{victimFull}`, `{scene}`, and pronoun keys (`{he}`, `{his}`, `{He}`...), never a hardcoded victim.
 
 ## Content conventions
 
-- Strings inserted mid-sentence (`role`, `trace`, `reason`, `activity`) start lowercase and have no trailing period. A `clause()` helper may strip trailing punctuation.
-- Room IDs must match `ROOMS` exactly. `validateCase()` and the dev-check prompt lint (flags `..`, `.,`, ` ,`, `{`, `}`) must stay clean.
-- The `Truth` object uses `culpritID`, `methodID`, `redHerringID` (capital ID). Match existing field names in `generate.ts` rather than renaming.
+- Strings inserted mid-sentence (`role`, `trace`, `reason`, `activity`) start lowercase (or with a `{victim}` placeholder) and have no trailing period.
+- Traces must not name their owner. They point to a job or a place, and the player infers who fits.
+- Motive clues go in the victim's cabin (`"victim-cabin"`) or the suspect's own cabin, never at the scene. A `clause()` helper may strip trailing punctuation.
+- Room IDs must match `STATION_ROOMS` or a character's `cabin.id` exactly. `validateCase()` and the dev-check prompt lint (flags `..`, `.,`, ` ,`, `{`, `}`) must stay clean.
+- The `Truth` object uses `victimID`, `culpritID`, `methodID`, `redHerringIDs` (capital ID). Match existing field names in `generate.ts` rather than renaming.
 - Insert model output with `textContent` or DOM nodes, never `innerHTML`.
 
 ## Narration
@@ -82,14 +85,14 @@ Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimiz
 - [x] 2f: accusation dialog (suspect, motive, up to 3 evidence), `scoreAccusation`, ending screen with true timeline
 - [x] Daily mode: daily seed, 24-turn storm clock, saved progress, stats/streaks, share text, how-to-play, countdown
 - [x] Web Worker engine, GitHub Pages workflow, README, Export log hidden outside dev
-- [ ] Balance: one office search reveals both traces and every office-variant motive (see notes below)
+- [x] Balance: seeded victim, 8-character pool with 5 suspects per case, 2 red herrings, unnamed traces, motives moved to cabins, culprit lies about visit time, 20 turns
 - [ ] Stretch: leak guard (regenerate if a locked unlock's keywords appear), README gameplay GIF, more content variety
 
 ## Daily mode
 
 - No `?case` param means today's daily case: `dayNumber()` counts local days from `LAUNCH_DAY` (Daily #1 = 2026-10-13), `dailySeed()` hashes it. Don't change `LAUNCH_DAY` after going public.
-- Every search, question, or shown clue is one entry in `state.actions` and costs one turn. Turns left = `TURN_LIMIT - actions.length`. At zero the accusation dialog opens and can't be dismissed.
-- Saves are keyed by seed (`deadorbit:case:<seed>`). Only completed replies are saved, and trailing unanswered questions are dropped on load.
+- Every search, question, or shown clue is one entry in `state.actions` and costs one turn (`TURN_LIMIT` = 20). Turns left = `TURN_LIMIT - actions.length`. At zero the accusation dialog opens and can't be dismissed.
+- Saves are keyed by seed (`deadorbit:case:<seed>`). Bump `SAVE_VERSION` in `save.ts` whenever the generator changes what a seed produces. Only completed replies are saved, and trailing unanswered questions are dropped on load.
 - A finished or out-of-turns game skips the model download entirely.
 
 ## Testing workflow

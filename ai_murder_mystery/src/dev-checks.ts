@@ -1,3 +1,4 @@
+import { SLOTS } from "./case/content";
 import { generateCase } from "./case/generate";
 import { validateCase } from "./case/validate";
 import { buildSuspectPrompt } from "./game/prompt";
@@ -12,6 +13,8 @@ export function runDevChecks(): void {
     const distinct = new Set<string>();
     const uniqueErrors = new Set<string>();
     let failures = 0;
+    const victims: Record<string, number> = {};
+    const culprits: Record<string, number> = {};
     for (let seed = 1; seed <= 2000; seed++) {
         const { case: fc, truth: ft } = generateCase(seed);
         const errors = validateCase(fc);
@@ -24,13 +27,31 @@ export function runDevChecks(): void {
             }
         }
 
+        // Solvability: at the time of death only the culprit is at the scene,
+        // and every innocent is somewhere unique (so each one's secret is the only thing that clears them)
+        const murderSlot = SLOTS.indexOf(ft.murderTime);
+        const atMurder = fc.suspects.map((s) => ft.timeline[s.id][murderSlot]);
+        if (fc.suspects.some((s) => s.id !== ft.culpritID && ft.timeline[s.id][murderSlot] === fc.sceneRoomID)) {
+            errors.push(`Seed ${seed}: an innocent was at the scene during the murder`);
+        }
+        if (new Set(atMurder).size !== atMurder.length) errors.push(`Seed ${seed}: two suspects share a room during the murder`);
+        for (const s of fc.suspects) {
+            if (s.id !== ft.culpritID && !fc.clues.some((cl) => cl.id === `secret-${s.id}`)) errors.push(`Seed ${seed}: ${s.id} has no secret clue`);
+            if (s.id !== ft.culpritID && ft.timeline[s.id][murderSlot] === ft.timeline[s.id][0] && !ft.redHerringIDs.includes(s.id)) {
+                errors.push(`Seed ${seed}: ${s.id}'s secret keeps them at their own post`);
+            }
+        }
+        victims[ft.victimID] = (victims[ft.victimID] ?? 0) + 1;
+        culprits[ft.culpritID] = (culprits[ft.culpritID] ?? 0) + 1;
+
         if (errors.length > 0) {
             failures++;
             errors.forEach((e) => uniqueErrors.add(e));
         }
-        distinct.add(JSON.stringify(ft.timeline) + ft.methodID + ft.hideRoom + fc.solution.motiveID);
+        distinct.add(ft.victimID + JSON.stringify(ft.timeline) + ft.methodID + ft.hideRoom + fc.solution.motiveID);
     }
     console.log(`Fuzz Test: 2000 seeds, ${failures} failures, ${distinct.size} distinct cases.`);
+    console.log("Victims across seeds:", victims, "Culprits across seeds:", culprits);
     if (uniqueErrors.size > 0) console.error("Unique Errors:", [...uniqueErrors]);
 
     // 3. Prompts for the culprit and one innocent, before and after evidence

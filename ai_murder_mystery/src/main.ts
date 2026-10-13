@@ -456,6 +456,7 @@ function openAccuse(forced: boolean): void {
     }),
   );
 
+  $<HTMLElement>("#accuse-who").textContent = `Who killed ${theCase.victim}?`;
   $<HTMLElement>("#accuse-evidence-legend").textContent = `Evidence (choose up to ${MAX_ACCUSE_EVIDENCE})`;
   const found = theCase.clues.filter((cl) => state.foundClueIDs.has(cl.id));
   const evidenceEl = $<HTMLElement>("#accuse-evidence");

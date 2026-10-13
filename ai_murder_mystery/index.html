@@ -57,7 +57,7 @@
 
     <dialog id="help-dialog">
       <h2>How to play</h2>
-      <p>Commander Vale is dead and one of his four crew killed him. There's a new case every day, and everyone gets the same one.</p>
+      <p>Someone aboard Erebus Station has been murdered, and one of the five crew members questioned did it. There's a new case every day with a new victim, and everyone gets the same one.</p>
       <ul>
         <li><strong>Search</strong> rooms for evidence.</li>
         <li><strong>Question</strong> the crew. Put actions in parentheses, like <em>(lean in)</em>.</li>
@@ -65,7 +65,7 @@
       </ul>
       <p>Every search, question, or piece of evidence you show costs one turn. When the storm clears, you have to make your accusation.</p>
       <p>You only get one accusation: the killer, their motive, and up to three pieces of evidence that prove it.</p>
-      <p class="hint">Tip: everyone lies about where they were when the Commander died, but only one of them is lying about murder. Find out what the others were hiding.</p>
+      <p class="hint">Tip: everyone lies about where they were at the time of death, but only one of them is lying about murder. Find out what the others were hiding. More than one person may have left a trace at the scene.</p>
       <p class="hint">The crew are played by an AI that runs entirely in your browser. The first visit downloads the model, which takes a while. After that it's cached.</p>
       <form method="dialog"><button class="primary-btn">Start investigating</button></form>
     </dialog>
@@ -75,7 +75,7 @@
         <h2>Make your accusation</h2>
         <p id="accuse-forced" class="hint" hidden>The storm has cleared. A ship is docking, and you have to name the killer now.</p>
         <fieldset>
-          <legend>Who killed Commander Vale?</legend>
+          <legend id="accuse-who">Who did it?</legend>
           <div id="accuse-suspects" class="choice-grid"></div>
         </fieldset>
         <fieldset>

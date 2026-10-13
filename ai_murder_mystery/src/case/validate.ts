@@ -20,6 +20,9 @@ export function validateCase(c: Case): string[] {
         }
     }
 
+    if (!roomIDs.has(c.sceneRoomID)) errors.push(`Unknown crime scene: "${c.sceneRoomID}"`);
+    if (suspectIDs.has(c.victimID)) errors.push(`The victim "${c.victimID}" is also a suspect.`);
+
     if (!suspectIDs.has(c.solution.culpritID)) errors.push(`Unknown Culprit: "${c.solution.culpritID}"`);
     if (!c.motives.some((m) => m.id === c.solution.motiveID)) errors.push(`Unknown Motive: "${c.solution.motiveID}"`);
 

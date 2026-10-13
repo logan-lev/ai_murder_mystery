@@ -1,13 +1,11 @@
 import type { Case } from "../case/types";
 import type { Truth } from "../case/generate";
-import { ROOMS, SLOTS } from "../case/content";
+import { SLOTS } from "../case/content";
 import { RANKS, type Verdict } from "../game/accuse";
 import { currentStreak, type Stats } from "../game/save";
 import { TURN_LIMIT, type GameState } from "../game/state";
 import type { CaseInfo } from "../seed";
 import { el } from "./dom";
-
-const roomName = (id: string) => (id === "exterior" ? "Outside (EVA)" : ROOMS.find((r) => r.id === id)?.name ?? id);
 
 // Elements with this class get their text refreshed every second by main.ts
 export const COUNTDOWN_CLASS = "countdown";
@@ -27,6 +25,7 @@ function resultRow(label: string, ok: boolean, detail: string): HTMLElement {
 
 // The reveal: where everyone really was. Innocents' secret rooms finally make sense here.
 function timelineTable(c: Case, truth: Truth): HTMLElement {
+    const roomName = (id: string) => (id === "exterior" ? "Outside (EVA)" : c.rooms.find((r) => r.id === id)?.name ?? id);
     const murderSlot = SLOTS.indexOf(truth.murderTime);
     const head = el("tr", "", "", [
         el("th", "", "Crew"),

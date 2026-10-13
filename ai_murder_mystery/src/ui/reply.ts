@@ -12,16 +12,17 @@ export function parseReply(raw: string): ParsedReply {
     return { narration: text.slice(1, end).trim(), speech: text.slice(end + 1).trim() };
 }
 
-// Fills an element with text, turning (parenthesized actions) into styled <em> elements.
-// The ")" is optional so an action still renders correctly while it's streaming in.
+// Fills an element with text, turning (parenthesized) or [bracketed] actions into styled <em> elements.
+// The model sometimes adds bracketed actions mid-reply even when the opening narration was skipped.
+// The closing ")" or "]" is optional so an action still renders correctly while it's streaming in.
 export function renderWithActions(el: HTMLElement, text: string): void {
   el.replaceChildren();
-  for (const part of text.split(/(\([^)]*\)?)/)) {
+  for (const part of text.split(/(\([^)]*\)?|\[[^\]]*\]?)/)) {
     if (!part) continue;
-    if (part.startsWith("(")) {
+    if (part.startsWith("(") || part.startsWith("[")) {
       const em = document.createElement("em");
       em.className = "action";
-      em.textContent = part.replace(/^\(|\)$/g, "");
+      em.textContent = part.replace(/^[([]|[)\]]$/g, "");
       el.append(em);
     } else {
       el.append(document.createTextNode(part));

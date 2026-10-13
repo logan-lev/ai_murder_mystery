@@ -41,6 +41,8 @@ export interface Case {
     title: string;
     setting: string;
     victim: string;
+    victimID: string;
+    sceneRoomID: RoomID;
     intro: string;
     sharedFacts: string[];
     rooms: Room[];
