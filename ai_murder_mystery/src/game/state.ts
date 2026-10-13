@@ -48,6 +48,7 @@ export function showClue(state: GameState, suspectID: SuspectID, clueID: ClueID)
 
 // The full message list to send for a suspect's next reply
 export function buildMessages(state: GameState, c: Case, suspectID: SuspectID): ChatCompletionMessageParam[] {
+    const MAX_HISTORY = 12
     const suspect = c.suspects.find((s) => s.id === suspectID);
     if (!suspect) throw new Error(`Unknown Suspect: "${suspectID}`);
     return [
@@ -55,6 +56,6 @@ export function buildMessages(state: GameState, c: Case, suspectID: SuspectID): 
             role: "system",
             content: buildSuspectPrompt(c, suspect, state.shownClues[suspectID])
         },
-        ...state.conversations[suspectID]
+        ...state.conversations[suspectID].slice(-MAX_HISTORY)
     ];
 }

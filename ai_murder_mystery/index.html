@@ -3,16 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Murder Mystery</title>
+    <title>Dead Orbit</title>
   </head>
   <body>
     <main id="app">
-      <h1>AI Murder Mystery</h1>
+      <header id="header">
+        <h1>Dead Orbit</h1>
+        <p id="case-number"></p>
+      </header>
+
       <p id="status">Checking your GPU...</p>
       <progress id="progress" max="1" value="0"></progress>
+
+      <nav id="suspect-tabs"></nav>
+
       <div id="chat-log"></div>
+
       <form id="chat-form">
-        <input id="chat-input" type="text" placeholder="Ask the butler something..." autocomplete="off" disabled />
+        <input id="chat-input" type="text" placeholder="Choose a crew member to question..." autocomplete="off" disabled />
         <button id="send-btn" type="submit" disabled>Ask</button>
       </form>
     </main>
