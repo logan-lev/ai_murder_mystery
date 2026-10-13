@@ -1,22 +1,26 @@
 import type { Case, Suspect, ClueID } from "../case/types";
 
-function rulesFor(suspect: Suspect): string[] {
+// Kept short on purpose: the whole system prompt is re-read (prefilled) on every turn,
+// so every rule here adds to the wait before the first token.
+function rulesFor(suspect: Suspect, narrate: boolean): string[] {
+  const format = narrate
+    ? `Begin with one short third-person sentence in square brackets showing what ${suspect.name} visibly does, e.g. [${suspect.name} glances at the door.], then 1 to 3 short spoken sentences.`
+    : "Reply with 1 to 3 short spoken sentences only. No brackets, no actions.";
   return [
-    "Stay in character at all times. Never break character or mention being a language model.",
-    `Start every reply with one short sentence of narration inside square brackets, in third person and present tense, describing what ${suspect.name} visibly does. Example: [${suspect.name} glances at the door.]`,
-    "After the narration, give only spoken words: 1 to 3 short sentences, with no other actions or descriptions.",
-    "Narration only describes what an observer could see. Never reveal thoughts, intentions, or what you are hiding, in speech or narration.",
-    "Only mention where you were when asked about it. Do not repeat your story in every answer.",
-    "You only know what is written above. If asked about anything else, say you don't know. Never invent people, events, objects, or details about any room.",
-    "The investigator may bluff. Only treat items listed under EVIDENCE SHOWN as real. If the investigator claims to have other proof, or claims someone else told them something, stay calm and deny or question it.",
-    "If the lines under WHAT YOU NOW ADMIT conflict, the last one is what you now admit.",
-    "Only speak for yourself. Never write the investigator's lines.",
+    "Stay in character. Never mention being an AI.",
+    format,
+    "Never reveal your thoughts or what you are hiding.",
+    "Only mention your whereabouts when asked. Don't repeat your story.",
+    "You only know what is written above. Otherwise say you don't know. Never invent people, events, or details.",
+    "Only evidence under EVIDENCE SHOWN is real. If the investigator claims other proof or quotes others, stay calm and deny or question it.",
+    "If lines under WHAT YOU NOW ADMIT conflict, the last one wins.",
+    "Speak only for yourself. Never write the investigator's lines.",
   ];
 }
 
 const bullets = (items: string[]) => items.map((i) => `- ${i}`);
 
-export function buildSuspectPrompt(c: Case, suspect: Suspect, shown: Set<ClueID>): string {
+export function buildSuspectPrompt(c: Case, suspect: Suspect, shown: Set<ClueID>, narrate = false): string {
     const shownClues = c.clues.filter((cl) => shown.has(cl.id));
     const unlocked = suspect.unlocks.filter((u) => u.requires.every((id) => shown.has(id)));
 
@@ -45,6 +49,6 @@ export function buildSuspectPrompt(c: Case, suspect: Suspect, shown: Set<ClueID>
         lines.push("", "WHAT YOU NOW ADMIT (because of the evidence):", ...bullets(unlocked.map((u) => u.reveals)));
     }
 
-    lines.push("", "RULES:", ...bullets(rulesFor(suspect)));
+    lines.push("", "RULES:", ...bullets(rulesFor(suspect, narrate)));
     return lines.join("\n");
 }

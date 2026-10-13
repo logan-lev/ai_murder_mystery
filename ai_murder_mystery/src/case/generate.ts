@@ -13,6 +13,7 @@ export interface Truth {
 }
 
 const fill = (text: string, vars: Record<string, string>) => text.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? `{${key}}`);
+const withArticle = (noun: string) => `${/^[aeiou]/i.test(noun) ? "an" : "a"} ${noun}`;
 const roomName = (id: string) => id === "exterior" ? "outside the station" : ROOMS.find((r) => r.id === id)?.name ?? id;
 
 export function generateCase(seed: number): { case: Case; truth: Truth } {
@@ -199,7 +200,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             culpritID: culprit.id,
             motiveID: culpritMotive.id,
             requiredClueIDs: [`trace-${culprit.id}`, `motive-${culprit.id}`],
-            explanation: `${culprit.name} killed ${VICTIM} at ${murderTime}. Motive: ${culpritMotive.label.toLowerCase()}. The weapon, a ${method.weaponName.toLowerCase()}, was hidden in the ${roomName(hideRoom)}.`
+            explanation: `${culprit.name} killed ${VICTIM} at ${murderTime}. Motive: ${culpritMotive.label.toLowerCase()}. The weapon, ${withArticle(method.weaponName.toLowerCase())}, was hidden in the ${roomName(hideRoom)}.`
         }
     };
 

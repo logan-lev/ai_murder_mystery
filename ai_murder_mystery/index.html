@@ -2,32 +2,128 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark" />
+    <meta name="description" content="A daily murder mystery on a space station. The suspects are played by an AI running in your browser." />
     <link rel="stylesheet" href="/src/style.css" />
     <title>Dead Orbit</title>
   </head>
   <body>
     <main id="app">
       <header id="header">
-        <h1>Dead Orbit</h1>
-        <div id="header-right">
+        <div id="brand">
+          <h1>Dead Orbit</h1>
           <span id="case-number"></span>
-          <button id="export-btn" type="button">Export Log</button>
+          <a id="daily-link" href="./" hidden>Today's case</a>
+        </div>
+        <div id="header-right">
+          <button id="help-btn" class="icon-btn" type="button" aria-label="How to play" title="How to play">?</button>
+          <button id="stats-btn" class="icon-btn" type="button" aria-label="Statistics" title="Statistics">&#9636;</button>
+          <button id="settings-btn" class="icon-btn" type="button" aria-label="Settings" title="Settings">&#9881;</button>
+          <button id="export-btn" class="text-btn" type="button" hidden>Export Log</button>
         </div>
       </header>
+
+      <section id="storm" aria-live="polite">
+        <div id="storm-label"></div>
+        <div id="storm-bar"><div id="storm-fill"></div></div>
+      </section>
 
       <p id="status">Checking your GPU...</p>
       <progress id="progress" max="1" value="0"></progress>
 
-      <nav id="suspect-tabs"></nav>
+      <div id="layout">
+        <aside id="station">
+          <h2>Station</h2>
+          <div id="room-list"></div>
+          <div id="room-detail"></div>
 
-      <div id="chat-log"></div>
+          <h2>Evidence <span id="evidence-count"></span></h2>
+          <ul id="evidence-list"></ul>
 
-      <form id="chat-form">
-        <input id="chat-input" type="text" placeholder="Choose a crew member to question..." autocomplete="off" disabled />
-        <button id="send-btn" type="submit" disabled>Ask</button>
-      </form>
+          <button id="accuse-btn" type="button">Make an accusation</button>
+        </aside>
+
+        <section id="interrogation">
+          <nav id="suspect-tabs"></nav>
+          <div id="chat-log" aria-live="polite"></div>
+          <form id="chat-form">
+            <input id="chat-input" type="text" placeholder="Choose a crew member to question..." autocomplete="off" maxlength="300" disabled />
+            <button id="send-btn" type="submit" disabled>Ask</button>
+          </form>
+        </section>
+      </div>
     </main>
+
+    <dialog id="help-dialog">
+      <h2>How to play</h2>
+      <p>Commander Vale is dead and one of his four crew killed him. There's a new case every day, and everyone gets the same one.</p>
+      <ul>
+        <li><strong>Search</strong> rooms for evidence.</li>
+        <li><strong>Question</strong> the crew. Put actions in parentheses, like <em>(lean in)</em>.</li>
+        <li><strong>Show</strong> evidence to a suspect to break their story.</li>
+      </ul>
+      <p>Every search, question, or piece of evidence you show costs one turn. When the storm clears, you have to make your accusation.</p>
+      <p>You only get one accusation: the killer, their motive, and up to three pieces of evidence that prove it.</p>
+      <p class="hint">Tip: everyone lies about where they were when the Commander died, but only one of them is lying about murder. Find out what the others were hiding.</p>
+      <p class="hint">The crew are played by an AI that runs entirely in your browser. The first visit downloads the model, which takes a while. After that it's cached.</p>
+      <form method="dialog"><button class="primary-btn">Start investigating</button></form>
+    </dialog>
+
+    <dialog id="accuse-dialog">
+      <form id="accuse-form">
+        <h2>Make your accusation</h2>
+        <p id="accuse-forced" class="hint" hidden>The storm has cleared. A ship is docking, and you have to name the killer now.</p>
+        <fieldset>
+          <legend>Who killed Commander Vale?</legend>
+          <div id="accuse-suspects" class="choice-grid"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Why?</legend>
+          <select id="accuse-motive" name="motive" required></select>
+        </fieldset>
+        <fieldset>
+          <legend id="accuse-evidence-legend">Evidence</legend>
+          <div id="accuse-evidence"></div>
+        </fieldset>
+        <p class="hint">You only get one accusation.</p>
+        <div class="dialog-actions">
+          <button id="accuse-cancel" class="text-btn" type="button">Keep investigating</button>
+          <button class="primary-btn danger" type="submit">Accuse</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="end-dialog">
+      <div id="end-content"></div>
+      <div class="dialog-actions">
+        <button id="end-close" class="text-btn" type="button">Close</button>
+        <button id="share-btn" class="primary-btn" type="button">Share result</button>
+      </div>
+    </dialog>
+
+    <dialog id="stats-dialog">
+      <div id="stats-content"></div>
+      <form method="dialog" class="dialog-actions"><button class="text-btn">Close</button></form>
+    </dialog>
+
+    <dialog id="settings-dialog">
+      <h2>Settings</h2>
+      <label class="toggle">
+        <input id="fast-mode" type="checkbox" />
+        <span>
+          <strong>Fast mode</strong>
+          <small>Uses a smaller AI model. Faster download and replies, but the crew act less convincingly.</small>
+        </span>
+      </label>
+      <p id="settings-reload" class="hint" hidden>Reload the page to switch models. Your progress is saved.</p>
+      <div class="dialog-actions">
+        <a class="text-btn" id="practice-link" href="#">Play a random practice case</a>
+        <form method="dialog"><button class="primary-btn">Done</button></form>
+      </div>
+    </dialog>
+
+    <div id="toast" role="status" hidden></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
