@@ -2,6 +2,7 @@ import type { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 import type { Case, Clue, ClueID, RoomID, SuspectID } from "../case/types";
 import type { Accusation, Verdict } from "./accuse";
 import { buildSuspectPrompt } from "./prompt";
+import { SLOTS } from "../case/content";
 
 // Every search, question, or shown clue costs one turn. The storm clears when they run out.
 export const TURN_LIMIT = 20;
@@ -23,15 +24,21 @@ export interface GameState {
     actions: ActionKind[];
     accusation: Accusation | null;
     verdict: Verdict | null;
+    // The player's own timeline board: for each suspect, a pinned room ID (or "") per time slot
+    board: Record<SuspectID, string[]>;
+    // 1 for the first try. Retries don't count toward stats and are labeled when shared.
+    attempt: number;
 }
 
 export function createGameState(c: Case): GameState {
     const conversations: Record<SuspectID, ChatCompletionMessageParam[]> = {};
     const shownClues: Record<SuspectID, Set<ClueID>> = {};
+    const board: Record<SuspectID, string[]> = {};
 
     for (const s of c.suspects) {
         conversations[s.id] = [];
         shownClues[s.id] = new Set();
+        board[s.id] = SLOTS.map(() => "");
     }
     return {
         selectedRoomID: null,
@@ -42,7 +49,9 @@ export function createGameState(c: Case): GameState {
         shownClues,
         actions: [],
         accusation: null,
-        verdict: null
+        verdict: null,
+        board,
+        attempt: 1
     };
 }
 

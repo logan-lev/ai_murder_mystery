@@ -29,6 +29,8 @@
         <div id="storm-bar"><div id="storm-fill"></div></div>
       </section>
 
+      <section id="coach" aria-live="polite" hidden></section>
+
       <p id="status">Checking your GPU...</p>
       <progress id="progress" max="1" value="0"></progress>
 
@@ -47,6 +49,7 @@
         <section id="interrogation">
           <nav id="suspect-tabs"></nav>
           <div id="chat-log" aria-live="polite"></div>
+          <div id="question-chips" hidden></div>
           <form id="chat-form">
             <input id="chat-input" type="text" placeholder="Choose a crew member to question..." autocomplete="off" maxlength="300" disabled />
             <button id="send-btn" type="submit" disabled>Ask</button>
@@ -68,7 +71,10 @@
       <h3>How to crack the case</h3>
       <ol id="help-guide" class="hint"></ol>
       <p class="hint">The crew are played by an AI that runs entirely in your browser. The first visit downloads the model, which takes a while. After that it's cached.</p>
-      <form method="dialog"><button class="primary-btn">Start investigating</button></form>
+      <div class="dialog-actions">
+        <a class="text-btn" id="help-tutorial" href="?tutorial">New here? Play the training case</a>
+        <form method="dialog"><button class="primary-btn">Start investigating</button></form>
+      </div>
     </dialog>
 
     <dialog id="accuse-dialog">
@@ -99,6 +105,7 @@
       <div id="end-content"></div>
       <div class="dialog-actions">
         <button id="end-close" class="text-btn" type="button">Close</button>
+        <button id="retry-btn" class="text-btn" type="button">Retry case</button>
         <button id="share-btn" class="primary-btn" type="button">Share result</button>
       </div>
     </dialog>
@@ -119,6 +126,7 @@
       </label>
       <p id="settings-reload" class="hint" hidden>Reload the page to switch models. Your progress is saved.</p>
       <div class="dialog-actions">
+        <a class="text-btn" href="?tutorial">Play the training case</a>
         <a class="text-btn" id="practice-link" href="#">Play a random practice case</a>
         <form method="dialog"><button class="primary-btn">Done</button></form>
       </div>

@@ -36,6 +36,10 @@ src/
     dom.ts         el() element builder (textContent only), $(), formatCountdown()
     results.ts     ending screen (verdict, "how you could have cracked it", true timeline) and stats dialog
     guide.ts       SOLVING_GUIDE: the "how to crack the case" steps shown in help and the Case File
+    board.ts       renderBoard(): the Timeline tab, where the player pins each suspect to a room per time slot
+  tutorial/
+    case.ts        hand-built training case (TUTORIAL_CASE/TRUTH), scripted QUESTIONS and SHOWS answers
+    coach.ts       Coach: step-by-step guide panel; steps advance from game-state checks or a Next button
   gpu.ts           WebGPU support check
   llm.ts           loadEngine() (Web Worker + warm-up), streamReply(), fast-mode model choice
   llm-worker.ts    WebLLM worker handler
@@ -91,6 +95,9 @@ Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimiz
 
 ## UI notes
 
+- `?tutorial` is the training case (saved under seed 0). It never calls the model: preset question chips replace the text box, and answers come from `tutorial/case.ts`. The model still downloads in the background so the first real case is ready. Keep the scripted answers, `howToSolve`, and the coach steps consistent if the training case changes.
+- The Timeline tab (`boardOpen`, with `activeSuspectID` null) shows `state.board`. Pins are the player's notes and are never scored.
+- Retry (end screen) resets the case in place with `attempt + 1`. Only attempt 1 of a daily records stats; shared retries are labeled "(retry N)".
 - The first tab is the Case File (`activeSuspectID === null`): briefing, solving guide, and every search result with full clue descriptions. Searching switches to it.
 - "Show to" buttons sit outside the collapsible evidence details so they're always visible, and are accent-filled when usable.
 - `Case.solution.howToSolve` is generated alongside the case and must stay in sync with the case logic (red herrings, witness sightings, motive and secret locations).

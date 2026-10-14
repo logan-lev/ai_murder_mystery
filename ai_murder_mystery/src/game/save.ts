@@ -47,6 +47,9 @@ interface SavedGame {
     actions: ActionKind[];
     accusation: Accusation | null;
     verdict: Verdict | null;
+    // Added after version 2 shipped, so older saves may not have them
+    board?: Record<string, string[]>;
+    attempt?: number;
 }
 
 export function saveGame(seed: number, state: GameState): void {
@@ -64,6 +67,8 @@ export function saveGame(seed: number, state: GameState): void {
         actions: state.actions,
         accusation: state.accusation,
         verdict: state.verdict,
+        board: state.board,
+        attempt: state.attempt,
     };
     writeJSON(SAVE_PREFIX + seed, saved);
 }
@@ -84,6 +89,7 @@ export function loadGame(seed: number, c: Case): GameState | null {
     state.actions = saved.actions ?? [];
     state.accusation = saved.accusation;
     state.verdict = saved.verdict;
+    state.attempt = saved.attempt ?? 1;
 
     for (const s of c.suspects) {
         const convo = saved.conversations[s.id] ?? [];
@@ -91,6 +97,10 @@ export function loadGame(seed: number, c: Case): GameState | null {
         while (convo.length > 0 && convo[convo.length - 1].role === "user") convo.pop();
         state.conversations[s.id] = convo;
         state.shownClues[s.id] = new Set((saved.shownClues[s.id] ?? []).filter((id) => clueIDs.has(id)));
+        const pins = saved.board?.[s.id];
+        if (pins && pins.length === state.board[s.id].length) {
+            state.board[s.id] = pins.map((id) => (id === "" || id === "exterior" || roomIDs.has(id) ? id : ""));
+        }
     }
     if (saved.activeSuspectID && state.conversations[saved.activeSuspectID]) {
         state.activeSuspectID = saved.activeSuspectID;

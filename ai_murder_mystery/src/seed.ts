@@ -8,7 +8,8 @@ const LAUNCH_DAY = Date.UTC(2026, 9, 13);
 
 export type CaseInfo =
     | { mode: "daily"; day: number; seed: number }
-    | { mode: "practice"; seed: number };
+    | { mode: "practice"; seed: number }
+    | { mode: "tutorial"; seed: 0 };
 
 // Days are counted in the player's local time zone, like Wordle: the new case arrives at their midnight.
 // Using Date.UTC on the local calendar date sidesteps daylight-saving days that are 23 or 25 hours long.
@@ -28,8 +29,11 @@ export function randomSeed(): number {
 }
 
 // No ?case means today's daily case. ?case=N is a practice case that doesn't count toward stats.
+// ?tutorial is the hand-built training case (saved under seed 0, which no real case uses).
 export function getCaseInfo(): CaseInfo {
-    const fromURL = Number(new URLSearchParams(window.location.search).get("case"));
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("tutorial")) return { mode: "tutorial", seed: 0 };
+    const fromURL = Number(params.get("case"));
     if (Number.isInteger(fromURL) && fromURL > 0 && fromURL <= MAX_SEED) {
         return { mode: "practice", seed: fromURL };
     }
@@ -38,16 +42,22 @@ export function getCaseInfo(): CaseInfo {
 }
 
 export function caseLabel(info: CaseInfo): string {
+    if (info.mode === "tutorial") return "Training";
     return info.mode === "daily" ? `Daily #${info.day}` : `Practice #${info.seed}`;
 }
 
 export function caseURL(info: CaseInfo): string {
     const base = `${window.location.origin}${window.location.pathname}`;
+    if (info.mode === "tutorial") return `${base}?tutorial`;
     return info.mode === "daily" ? base : `${base}?case=${info.seed}`;
 }
 
 export function practiceURL(seed = randomSeed()): string {
     return `${window.location.pathname}?case=${seed}`;
+}
+
+export function tutorialURL(): string {
+    return `${window.location.pathname}?tutorial`;
 }
 
 export function msUntilNextDay(now = new Date()): number {

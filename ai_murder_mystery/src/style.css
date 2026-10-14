@@ -16,6 +16,11 @@
   box-sizing: border-box;
 }
 
+/* Elements with their own display rule (flex, grid) would otherwise ignore the hidden attribute */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -842,4 +847,144 @@ select {
 
 #suspect-tabs {
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+
+/* ---------- Tutorial coach ---------- */
+#coach {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--panel-2);
+  border: 1px solid var(--you);
+  border-radius: 6px;
+}
+
+.coach-step {
+  margin: 0;
+  color: var(--you);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.coach-text {
+  margin: 0.25rem 0 0.5rem;
+}
+
+.coach-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.coach-actions:empty {
+  display: none;
+}
+
+/* Whatever the coach is pointing at pulses in the coach's color */
+.coach-target {
+  outline: 2px solid var(--you);
+  outline-offset: 2px;
+  animation: coach-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes coach-pulse {
+  50% {
+    outline-color: transparent;
+  }
+}
+
+/* ---------- Preset questions (tutorial) ---------- */
+#question-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+#question-chips .hint {
+  margin: 0;
+}
+
+.chip {
+  padding: 0.45rem 0.8rem;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chip:hover:not(:disabled) {
+  background: rgba(79, 209, 197, 0.12);
+}
+
+/* ---------- Timeline board ---------- */
+.board-intro {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.board {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.board th,
+.board td {
+  padding: 0.35rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.board thead th {
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.board tbody th {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.board .death-slot {
+  background: rgba(245, 101, 101, 0.1);
+}
+
+.board thead .death-slot {
+  color: var(--danger);
+}
+
+.board .victim-row th {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.pin,
+.pin-select {
+  display: inline-block;
+  width: 100%;
+  min-width: 7.5rem;
+  padding: 0.3rem 0.4rem;
+  background: var(--panel-2);
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.pin-select.pinned {
+  color: var(--text);
+  border: 1px solid var(--accent);
+}
+
+.pin.at-scene,
+.pin-select.at-scene {
+  color: var(--danger);
+  border: 1px solid var(--danger);
 }

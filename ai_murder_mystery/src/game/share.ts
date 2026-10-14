@@ -25,7 +25,7 @@ export function buildShareText(info: CaseInfo, state: GameState, verdict: Verdic
     for (let i = 0; i < icons.length; i += 8) rows.push(icons.slice(i, i + 8).join(""));
 
     return [
-        `Dead Orbit ${caseLabel(info)} 🛰️`,
+        `Dead Orbit ${caseLabel(info)}${state.attempt > 1 ? ` (retry ${state.attempt - 1})` : ""} 🛰️`,
         `${RANK_ICONS[verdict.rank] ?? ""} ${verdict.rank}`,
         `Killer ${mark(verdict.correctCulprit)} Motive ${mark(verdict.correctMotive)} Proof ${mark(verdict.hasEvidence)}`,
         ...rows,

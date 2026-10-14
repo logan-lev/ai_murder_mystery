@@ -11,6 +11,7 @@ import { el } from "./dom";
 export const COUNTDOWN_CLASS = "countdown";
 
 function nextCaseBlock(info: CaseInfo): HTMLElement {
+    if (info.mode === "tutorial") return el("p", "hint", "Training doesn't count toward your stats.");
     if (info.mode !== "daily") return el("p", "hint", "Practice cases don't count toward your stats.");
     return el("p", "next-case", "Next case in ", [el("strong", COUNTDOWN_CLASS)]);
 }

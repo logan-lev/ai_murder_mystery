@@ -1,6 +1,10 @@
 import { checkWebGPU } from "./gpu";
 import { loadEngine, streamReply, getModelChoice, setModelChoice, type Engine } from "./llm";
 import { getCaseInfo, caseLabel, dayNumber, dailySeed, msUntilNextDay, practiceURL } from "./seed";
+import { TUTORIAL_CASE, TUTORIAL_TRUTH, QUESTIONS, SHOWS, SHOW_FALLBACK, isAsked } from "./tutorial/case";
+import { Coach } from "./tutorial/coach";
+import { renderBoard } from "./ui/board";
+import { SLOTS } from "./case/content";
 import { generateCase } from "./case/generate";
 import type { ClueID, RoomID, SuspectID } from "./case/types";
 import {
@@ -26,12 +30,13 @@ import { runDevChecks } from "./dev-checks";
 
 // ---------- Case setup ----------
 const info = getCaseInfo();
-const { case: theCase, truth } = generateCase(info.seed);
+const isTutorial = info.mode === "tutorial";
+const { case: theCase, truth } = isTutorial ? { case: TUTORIAL_CASE, truth: TUTORIAL_TRUTH } : generateCase(info.seed);
 const state = loadGame(info.seed, theCase) ?? createGameState(theCase);
 const replyStats: ReplyStat[] = [];
 
 // Keep today's daily save even while playing a practice case
-pruneSaves(info.mode === "daily" ? [info.seed] : [info.seed, dailySeed(dayNumber())]);
+pruneSaves([info.seed, dailySeed(dayNumber()), 0]);
 
 if (import.meta.env.DEV) {
   runDevChecks();
@@ -57,6 +62,8 @@ const form = $<HTMLFormElement>("#chat-form");
 const input = $<HTMLInputElement>("#chat-input");
 const sendBtn = $<HTMLButtonElement>("#send-btn");
 const toastEl = $<HTMLElement>("#toast");
+const chipsEl = $<HTMLElement>("#question-chips");
+const coachEl = $<HTMLElement>("#coach");
 
 const helpDialog = $<HTMLDialogElement>("#help-dialog");
 const accuseDialog = $<HTMLDialogElement>("#accuse-dialog");
@@ -71,6 +78,16 @@ let engineStatus: "loading" | "ready" | "unsupported" | "failed" | "skipped" = "
 let isGenerating = false;
 let accuseForced = false;
 const newClueIDs = new Set<ClueID>(); // highlighted until the next search
+let boardOpen = false; // the Timeline tab is showing (activeSuspectID is null then)
+let boardVisited = false;
+
+const coach = isTutorial
+  ? new Coach(coachEl, {
+      daily: () => (window.location.href = window.location.pathname),
+      replay: () => retryCase(),
+    })
+  : null;
+const coachRender = () => coach?.render({ state, boardVisited });
 
 // ---------- Helpers ----------
 function setStatus(text: string): void {
@@ -104,7 +121,8 @@ const clueByID = (id: ClueID) => theCase.clues.find((cl) => cl.id === id);
 
 // Can the player still spend turns?
 const canAct = () => !isOver(state) && turnsLeft(state) > 0;
-const canTalk = () => engine !== null && !isGenerating && state.activeSuspectID !== null && canAct();
+// The tutorial's answers are scripted, so it never waits on the model
+const canTalk = () => (engine !== null || isTutorial) && !isGenerating && state.activeSuspectID !== null && canAct();
 
 // Narration costs tokens, so it's saved for moments that deserve a visible reaction:
 // meeting someone, or being confronted with evidence.
@@ -167,7 +185,9 @@ function renderChatLog(): void {
   const id = state.activeSuspectID;
 
   if (!id) {
-    renderCaseFile();
+    if (boardOpen) renderBoardView();
+    else renderCaseFile();
+    coachRender();
     return;
   }
 
@@ -189,7 +209,8 @@ function renderCaseFile(): void {
     el("ol", "", "", SOLVING_GUIDE.map((tip) => el("li", "", tip))),
   ]);
   guide.open = state.searchedRoomIDs.size === 0;
-  chatLog.append(guide);
+  // In training the coach teaches this step by step, and the full guide mentions secrets training doesn't have
+  if (!isTutorial) chatLog.append(guide);
 
   if (state.searchedRoomIDs.size === 0) {
     chatLog.append(el("p", "line-hint", "Search a room on the station panel, or open a crew member's tab to question them."));
@@ -204,6 +225,20 @@ function renderCaseFile(): void {
     chatLog.append(block);
   }
   scrollToBottom();
+}
+
+function renderBoardView(): void {
+  const container = el("div", "board-view");
+  chatLog.append(container);
+  renderBoard(container, theCase, state, {
+    // The body's description gives the time of death, so the column lights up once it's found
+    deathSlot: state.foundClueIDs.has("body") ? SLOTS.indexOf(truth.murderTime) : null,
+    onPin: (suspectID, slot, roomID) => {
+      state.board[suspectID][slot] = roomID;
+      persist();
+      coachRender();
+    },
+  });
 }
 
 // ---------- Station rendering ----------
@@ -300,21 +335,34 @@ function renderEvidence(): void {
 }
 
 function renderTabs(): void {
-  const caseTab = el("button", state.activeSuspectID === null ? "tab case-tab active" : "tab case-tab", "", [
+  const caseTab = el("button", state.activeSuspectID === null && !boardOpen ? "tab case-tab active" : "tab case-tab", "", [
     el("strong", "", "Case File"),
     el("small", "", `${state.foundClueIDs.size} clue${state.foundClueIDs.size === 1 ? "" : "s"} found`),
   ]);
   caseTab.type = "button";
+  caseTab.dataset.tab = "case";
   caseTab.disabled = isGenerating;
   caseTab.addEventListener("click", () => selectSuspect(null));
+
+  const boardTab = el("button", boardOpen ? "tab case-tab active" : "tab case-tab", "", [
+    el("strong", "", "Timeline"),
+    el("small", "", "Pin where everyone was"),
+  ]);
+  boardTab.type = "button";
+  boardTab.dataset.tab = "board";
+  boardTab.disabled = isGenerating;
+  boardTab.addEventListener("click", () => selectSuspect(null, true));
+
   tabsEl.replaceChildren(
     caseTab,
+    boardTab,
     ...theCase.suspects.map((s) => {
       const btn = el("button", s.id === state.activeSuspectID ? "tab active" : "tab", "", [
         el("strong", "", s.name),
         el("small", "", s.role),
       ]);
       btn.type = "button";
+      btn.dataset.tab = s.id;
       btn.disabled = isGenerating;
       btn.addEventListener("click", () => selectSuspect(s.id));
       return btn;
@@ -339,6 +387,41 @@ function updateControls(): void {
   accuseBtn.disabled = isGenerating;
   accuseBtn.textContent = isOver(state) ? "View result" : "Make an accusation";
   renderTabs();
+  renderChips();
+  coachRender();
+}
+
+// Tutorial only: preset questions replace the text box, so every answer is known in advance
+function renderChips(): void {
+  chipsEl.hidden = !isTutorial;
+  form.hidden = isTutorial;
+  if (!isTutorial) return;
+
+  const id = state.activeSuspectID;
+  if (!id) {
+    chipsEl.replaceChildren(el("p", "hint", "Open a crew member's tab to question them."));
+    return;
+  }
+  const shownToThem = state.shownClues[id];
+  const available = (QUESTIONS[id] ?? []).filter(
+    (q) =>
+      !isAsked(state, q.id) &&
+      (q.afterShown ?? []).every((clue) => shownToThem.has(clue)) &&
+      (q.afterAsked ?? []).every((qid) => isAsked(state, qid)),
+  );
+  if (available.length === 0) {
+    chipsEl.replaceChildren(el("p", "hint", `No more questions for ${suspectName(id)} right now. Try showing evidence.`));
+    return;
+  }
+  chipsEl.replaceChildren(
+    ...available.map((q) => {
+      const chip = el("button", "chip", q.text);
+      chip.type = "button";
+      chip.disabled = !canTalk();
+      chip.addEventListener("click", () => void ask(id, q.text, "question", q.answer));
+      return chip;
+    }),
+  );
 }
 
 function renderStation(): void {
@@ -370,13 +453,16 @@ function doSearch(id: RoomID): void {
   found.forEach((cl) => newClueIDs.add(cl.id));
   // Switch to the Case File so the new evidence and its description show up in the main log
   state.activeSuspectID = null;
+  boardOpen = false;
   renderChatLog();
   afterTurn();
 }
 
-function selectSuspect(id: SuspectID | null): void {
+function selectSuspect(id: SuspectID | null, board = false): void {
   if (isGenerating) return;
   state.activeSuspectID = id;
+  boardOpen = id === null && board;
+  if (boardOpen) boardVisited = true;
   persist();
   renderChatLog();
   renderEvidence();
@@ -386,8 +472,9 @@ function selectSuspect(id: SuspectID | null): void {
 }
 
 // Sends one player message to a suspect and streams the reply. Returns false if it failed.
-async function ask(suspectID: SuspectID, text: string, kind: ActionKind): Promise<boolean> {
-  if (!engine || isGenerating || !canAct()) return false;
+// In the tutorial, `scripted` is the fixed answer and the model is never called.
+async function ask(suspectID: SuspectID, text: string, kind: ActionKind, scripted?: string): Promise<boolean> {
+  if ((!engine && scripted === undefined) || isGenerating || !canAct()) return false;
 
   const name = suspectName(suspectID);
   const conversation = state.conversations[suspectID];
@@ -407,10 +494,14 @@ async function ask(suspectID: SuspectID, text: string, kind: ActionKind): Promis
 
   try {
     const others = theCase.suspects.filter((s) => s.id !== suspectID).map((s) => s.name);
+    const noStats = { firstTokenMs: 0, totalMs: 0, tokens: 0 };
+    if (scripted !== undefined) await new Promise((r) => setTimeout(r, 500)); // a beat, so it reads like a reply
     const result =
-      kind === "question" && isRoleplayRequest(text, others)
-        ? { text: roleplayRefusal(name, narrate), stats: { firstTokenMs: 0, totalMs: 0, tokens: 0 } }
-        : await streamReply(engine, buildMessages(state, theCase, suspectID, narrate), (piece) => {
+      scripted !== undefined
+        ? { text: scripted, stats: noStats }
+        : kind === "question" && isRoleplayRequest(text, others)
+        ? { text: roleplayRefusal(name, narrate), stats: noStats }
+        : await streamReply(engine!, buildMessages(state, theCase, suspectID, narrate), (piece) => {
             shown += piece;
             update(shown);
           });
@@ -446,7 +537,12 @@ async function showEvidence(clueID: ClueID): Promise<void> {
 
   // The suspect learns about the clue through the system prompt (EVIDENCE SHOWN, plus any unlocks).
   // This message is what gives the moment a beat in the conversation to react to.
-  const ok = await ask(suspectID, `${SHOW_PREFIX}${clue.name}: ${clue.description})`, "show");
+  const scripted = isTutorial
+    ? (SHOWS[suspectID] ?? []).find(
+        (s) => s.clueID === clueID && (s.afterShown ?? []).every((id) => state.shownClues[suspectID].has(id)),
+      )?.answer ?? SHOW_FALLBACK
+    : undefined;
+  const ok = await ask(suspectID, `${SHOW_PREFIX}${clue.name}: ${clue.description})`, "show", scripted);
   if (!ok) {
     state.shownClues[suspectID].delete(clueID);
     renderEvidence();
@@ -560,7 +656,8 @@ accuseForm.addEventListener("submit", (event) => {
   const verdict = scoreAccusation(theCase, accusation);
   state.accusation = accusation;
   state.verdict = verdict;
-  if (info.mode === "daily") recordDailyResult(info.day, verdict);
+  // Retries never touch stats (recordDailyResult also ignores a day it has already counted)
+  if (info.mode === "daily" && state.attempt === 1) recordDailyResult(info.day, verdict);
 
   accuseForced = false;
   accuseDialog.close();
@@ -579,6 +676,31 @@ function openEnd(): void {
 }
 
 $<HTMLButtonElement>("#end-close").addEventListener("click", () => endDialog.close());
+
+// Starts the same case over. Stats are untouched, and a shared retry result is labeled as one.
+function retryCase(): void {
+  const fresh = createGameState(theCase);
+  fresh.attempt = state.attempt + 1;
+  Object.assign(state, fresh);
+  saveGame(info.seed, state);
+  // A finished game skipped loading the model, so reload to fetch it (it's cached by now)
+  if (!isTutorial && engine === null && engineStatus === "skipped") {
+    window.location.reload();
+    return;
+  }
+  newClueIDs.clear();
+  boardOpen = false;
+  boardVisited = false;
+  coach?.reset();
+  endDialog.close();
+  renderChatLog();
+  renderStation();
+  setStatus(isTutorial ? "Training restarted." : "Case restarted. This try won't count toward your stats.");
+}
+
+const retryBtn = $<HTMLButtonElement>("#retry-btn");
+retryBtn.textContent = isTutorial ? "Replay training" : "Retry case";
+retryBtn.addEventListener("click", retryCase);
 
 $<HTMLButtonElement>("#share-btn").addEventListener("click", async () => {
   if (!state.verdict) return;
@@ -642,7 +764,8 @@ async function init(): Promise<void> {
   renderChatLog();
   renderStation();
 
-  if (!readFlag("seen-help")) {
+  // The coach replaces the help dialog in the tutorial
+  if (!isTutorial && !readFlag("seen-help")) {
     writeFlag("seen-help", true);
     helpDialog.showModal();
   }
@@ -672,7 +795,11 @@ async function init(): Promise<void> {
     return;
   }
 
-  setStatus("Loading the crew AI. You can search the station while it loads.");
+  setStatus(
+    isTutorial
+      ? "Training doesn't need the AI, so it's downloading in the background for your first real case."
+      : "Loading the crew AI. You can search the station while it loads.",
+  );
   try {
     engine = await loadEngine((text, progress) => {
       setStatus(text);
@@ -693,7 +820,7 @@ async function init(): Promise<void> {
     installHarness(() => engine, theCase, truth);
   }
   progressEl.hidden = true;
-  setStatus("Systems online. Choose a crew member to question.");
+  setStatus(isTutorial ? "The crew AI is ready for your first real case." : "Systems online. Choose a crew member to question.");
   renderStation();
 }
 
