@@ -33,7 +33,7 @@ export function writeFlag(key: string, value: boolean): void {
 // ---------- In-progress games ----------
 
 const SAVE_PREFIX = "deadorbit:case:";
-const SAVE_VERSION = 2;
+const SAVE_VERSION = 3;
 
 // Sets don't survive JSON.stringify, so the saved shape uses arrays
 interface SavedGame {
@@ -168,4 +168,33 @@ export function recordDailyResult(day: number, verdict: Verdict): Stats {
     }
     writeJSON(STATS_KEY, stats);
     return stats;
+}
+
+// Light read of a save for the home page, without generating the case
+export function peekSave(seed: number): { turnsUsed: number; verdict: Verdict | null } | null {
+    const saved = readJSON<SavedGame>(SAVE_PREFIX + seed);
+    if (!saved || saved.version !== SAVE_VERSION) return null;
+    return { turnsUsed: saved.actions?.length ?? 0, verdict: saved.verdict };
+}
+
+// ---------- Archive history ----------
+// One entry per daily case finished on its first attempt, today's or an archive day.
+// Separate from Stats: archive plays show up here but never touch streaks.
+
+const HISTORY_KEY = "deadorbit:history";
+
+export interface HistoryEntry {
+    rank: string;
+    solved: boolean;
+}
+
+export function loadHistory(): Record<number, HistoryEntry> {
+    return readJSON<Record<number, HistoryEntry>>(HISTORY_KEY) ?? {};
+}
+
+export function recordHistory(day: number, verdict: Verdict): void {
+    const history = loadHistory();
+    if (history[day]) return;
+    history[day] = { rank: verdict.rank, solved: verdict.correctCulprit };
+    writeJSON(HISTORY_KEY, history);
 }

@@ -36,7 +36,7 @@ const STEPS: Step[] = [
         done: ({ state }) => searched(state, "hydroponics"),
     },
     {
-        text: "Everything you find shows up here in the Case File, with its description. The body gives the time of death: 22:00. The other three items each point to a crew member. Can you tell whose is whose?",
+        text: "Everything you find shows up here in the Case File, with its description. The body gives the time of death: 22:00. It's information, not proof against anyone. The other three items each point to a crew member who was in this room tonight. Can you tell whose is whose?",
         target: "#chat-log",
     },
     {
@@ -90,7 +90,12 @@ const STEPS: Step[] = [
         done: ({ state }) => shown(state, "reyes", "motive-reyes"),
     },
     {
-        text: "Last piece: the weapon. Killers hide it after the murder. Search the Cargo Bay.",
+        text: "Last piece: the weapon. Killers hide it right after the murder, so ask who was around at 22:30. Open SABLE's tab and ask if it saw anyone else this evening.",
+        target: '[data-tab="sable"]',
+        done: ({ state }) => asked(state, "sable-saw"),
+    },
+    {
+        text: "SABLE saw Reyes in the Cargo Bay at 22:30, still holding something wrapped in a cloth. Search the Cargo Bay.",
         target: "#room-list",
         done: ({ state }) => searched(state, "cargo-bay"),
     },
@@ -100,7 +105,7 @@ const STEPS: Step[] = [
         done: ({ state }) => shown(state, "reyes", "weapon"),
     },
     {
-        text: "Make your accusation: pick Reyes and his motive, then the proof: the Coolant-Stained Glove (his trace) and the Inspection Audit (his motive).",
+        text: "Make your accusation. Pick Reyes, then one piece of evidence for each: Opportunity, the Coolant-Stained Glove (it puts him at the scene). Motive, the Inspection Audit. Means, the Neurotoxin Vial.",
         target: "#accuse-btn",
         done: ({ state }) => state.verdict !== null,
     },

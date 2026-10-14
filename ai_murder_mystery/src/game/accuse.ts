@@ -1,36 +1,45 @@
 import type { Case, ClueID, SuspectID } from "../case/types";
 
-// Without a cap, ticking every clue would always "prove" the case. Picking the right few is the skill.
-export const MAX_ACCUSE_EVIDENCE = 3;
-
 // Best to worst, used for the stats chart
 export const RANKS = ["Master Investigator", "Sharp Inspector", "Lucky Guess", "Case Unsolved"] as const;
 
+// The classic case for the prosecution: one piece of evidence for each.
+// Each slot has exactly one right answer, so there's nothing to gain from guessing broadly.
+export const PROOF_SLOTS = [
+    { key: "opportunity", label: "Opportunity", question: "What puts them at the scene?" },
+    { key: "motive", label: "Motive", question: "What gave them a reason?" },
+    { key: "means", label: "Means", question: "What did they use?" },
+] as const;
+
+export type ProofKey = (typeof PROOF_SLOTS)[number]["key"];
+export type Proof = Record<ProofKey, ClueID | "">;
+
 export interface Accusation {
     suspectID: SuspectID;
-    motiveID: string;
-    clueIDs: ClueID[];
+    proof: Proof;
 }
 
 export interface Verdict {
     correctCulprit: boolean;
-    correctMotive: boolean;
-    hasEvidence: boolean;
+    correctProof: Record<ProofKey, boolean>;
     rank: string;
     explanation: string;
 }
 
 export function scoreAccusation(c: Case, a: Accusation): Verdict {
     const correctCulprit = a.suspectID === c.solution.culpritID;
-    const correctMotive = a.motiveID === c.solution.motiveID;
-    const chosen = a.clueIDs.slice(0, MAX_ACCUSE_EVIDENCE);
-    const hasEvidence = c.solution.requiredClueIDs.every((id) => chosen.includes(id));
+    const correctProof = {
+        opportunity: a.proof.opportunity === c.solution.proof.opportunity,
+        motive: a.proof.motive === c.solution.proof.motive,
+        means: a.proof.means === c.solution.proof.means,
+    };
+    const proven = Object.values(correctProof).filter(Boolean).length;
 
     let rank: string;
     if (!correctCulprit) rank = "Case Unsolved";
-    else if (correctMotive && hasEvidence) rank = "Master Investigator";
-    else if (correctMotive || hasEvidence) rank = "Sharp Inspector";
+    else if (proven === 3) rank = "Master Investigator";
+    else if (proven === 2) rank = "Sharp Inspector";
     else rank = "Lucky Guess";
 
-    return { correctCulprit, correctMotive, hasEvidence, rank, explanation: c.solution.explanation };
+    return { correctCulprit, correctProof, rank, explanation: c.solution.explanation };
 }

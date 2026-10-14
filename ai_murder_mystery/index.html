@@ -9,12 +9,31 @@
     <title>Dead Orbit</title>
   </head>
   <body>
-    <main id="app">
+    <main id="home" hidden>
+      <header id="home-header">
+        <div>
+          <h1>Dead Orbit</h1>
+          <p class="tagline">A daily murder mystery aboard a space station. The suspects are played by an AI that runs in your browser.</p>
+        </div>
+        <div class="header-buttons">
+          <button id="home-help-btn" class="icon-btn" type="button" aria-label="How to play" title="How to play">?</button>
+          <button id="home-settings-btn" class="icon-btn" type="button" aria-label="Settings" title="Settings">&#9881;</button>
+        </div>
+      </header>
+      <section id="home-today" class="home-card"></section>
+      <div class="home-grid">
+        <section id="home-training" class="home-card"></section>
+        <section id="home-stats" class="home-card"></section>
+      </div>
+      <section id="home-archive" class="home-card"></section>
+    </main>
+
+    <main id="app" hidden>
       <header id="header">
         <div id="brand">
-          <h1>Dead Orbit</h1>
+          <a id="home-link" href="./"><h1>Dead Orbit</h1></a>
           <span id="case-number"></span>
-          <a id="daily-link" href="./" hidden>Today's case</a>
+          <a id="daily-link" href="./">Home</a>
         </div>
         <div id="header-right">
           <button id="help-btn" class="icon-btn" type="button" aria-label="How to play" title="How to play">?</button>
@@ -85,14 +104,8 @@
           <legend id="accuse-who">Who did it?</legend>
           <div id="accuse-suspects" class="choice-grid"></div>
         </fieldset>
-        <fieldset>
-          <legend>Why?</legend>
-          <select id="accuse-motive" name="motive" required></select>
-        </fieldset>
-        <fieldset>
-          <legend id="accuse-evidence-legend">Evidence</legend>
-          <div id="accuse-evidence"></div>
-        </fieldset>
+        <p class="hint">Back it up with one piece of evidence each for means, motive, and opportunity.</p>
+        <div id="accuse-proof"></div>
         <p class="hint">You only get one accusation.</p>
         <div class="dialog-actions">
           <button id="accuse-cancel" class="text-btn" type="button">Keep investigating</button>

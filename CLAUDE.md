@@ -27,8 +27,8 @@ src/
   game/
     prompt.ts      buildSuspectPrompt(case, suspect, shownClues, narrate)
     state.ts       GameState, TURN_LIMIT, action log, searchRoom, showClue, buildMessages
-    accuse.ts      scoreAccusation(), MAX_ACCUSE_EVIDENCE, RANKS
-    save.ts        localStorage: in-progress saves per seed, daily stats and streaks
+    accuse.ts      scoreAccusation(), PROOF_SLOTS (opportunity, motive, means), RANKS
+    save.ts        localStorage: in-progress saves per seed, daily stats and streaks, archive history
     share.ts       buildShareText() (spoiler-free emoji grid), clipboard copy
     export.ts      buildReport() + downloadText() for the dev-only "Export log" button
   ui/
@@ -45,7 +45,10 @@ src/
   llm-worker.ts    WebLLM worker handler
   seed.ts          getCaseInfo(): daily case (no param, seed hashed from the local day) or ?case=N practice
   dev-checks.ts    fuzz test (2000 seeds) + prompt lint, dev only
-  main.ts          UI wiring and render functions
+  main.ts          router: no URL params loads home.ts, anything else loads game.ts
+  home.ts          home page: today's case, training, stats, archive
+  game.ts          the game: UI wiring and render functions
+  ui/common.ts     help and settings dialogs shared by home and game
 ```
 
 ## Core design principles (do not break these)
@@ -102,9 +105,20 @@ Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimiz
 - "Show to" buttons sit outside the collapsible evidence details so they're always visible, and are accent-filled when usable.
 - `Case.solution.howToSolve` is generated alongside the case and must stay in sync with the case logic (red herrings, witness sightings, motive and secret locations).
 
+## Accusation
+
+The player names a suspect and picks one found clue for each slot: opportunity (the killer's trace at the scene), motive (their motive clue), means (the weapon). `Case.solution.proof` holds the right clue per slot. Rank: wrong killer is Case Unsolved; otherwise 3, 2, or fewer correct slots give Master, Sharp, or Lucky. The body is information, never proof.
+
+The weapon must always be findable by reasoning: the generator guarantees an innocent sees the killer at the hiding place right after the murder (an "errand" if nobody works there, picked with a separate RNG so earlier picks don't shift). The fuzz test checks this.
+
+## Routes
+
+- `/` home page. `?day=N` daily case N (today or archive; future days clamp to today). `?case=N` practice. `?tutorial` training.
+- Only today's daily (first attempt) updates stats and streaks. Any daily's first attempt is recorded in the archive history (`deadorbit:history`).
+
 ## Daily mode
 
-- No `?case` param means today's daily case: `dayNumber()` counts local days from `LAUNCH_DAY` (Daily #1 = 2026-10-13), `dailySeed()` hashes it. Don't change `LAUNCH_DAY` after going public.
+- Today's daily is `?day=<today>`: `dayNumber()` counts local days from `LAUNCH_DAY` (Daily #1 = 2026-10-13), `dailySeed()` hashes it. Don't change `LAUNCH_DAY` after going public.
 - Every search, question, or shown clue is one entry in `state.actions` and costs one turn (`TURN_LIMIT` = 20). Turns left = `TURN_LIMIT - actions.length`. At zero the accusation dialog opens and can't be dismissed.
 - Saves are keyed by seed (`deadorbit:case:<seed>`). Bump `SAVE_VERSION` in `save.ts` whenever the generator changes what a seed produces. Only completed replies are saved, and trailing unanswered questions are dropped on load.
 - A finished or out-of-turns game skips the model download entirely.

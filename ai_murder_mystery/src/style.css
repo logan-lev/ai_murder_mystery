@@ -988,3 +988,163 @@ select {
   color: var(--danger);
   border: 1px solid var(--danger);
 }
+
+/* ---------- Home page ---------- */
+#home {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
+
+#home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+#home-header h1 {
+  font-size: 2rem;
+}
+
+.tagline {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+}
+
+.header-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.home-card {
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.home-card h2 {
+  margin-bottom: 0.6rem;
+}
+
+#home-today {
+  border-color: var(--accent);
+}
+
+.home-title {
+  margin: 0.4rem 0 0.25rem !important;
+  color: var(--text) !important;
+  font-size: 1.3rem !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+.home-status {
+  margin: 0 0 1rem;
+  color: var(--muted);
+}
+
+.home-status.ok {
+  color: var(--ok);
+}
+
+.home-play {
+  display: inline-block;
+  font-size: 1.05rem;
+  text-decoration: none;
+}
+
+#home-training a {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.home-grid .home-card {
+  margin-bottom: 0;
+}
+
+.home-grid + .home-card {
+  margin-top: 1rem;
+}
+
+#home-stats .stat-row {
+  gap: 0.25rem;
+}
+
+#home-stats .stat strong {
+  font-size: 1.3rem;
+}
+
+.archive-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.archive-row {
+  display: grid;
+  grid-template-columns: 3.5rem 4.5rem 1fr;
+  gap: 0.5rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.archive-row:hover {
+  background: var(--panel-2);
+}
+
+.archive-day {
+  font-family: ui-monospace, Menlo, monospace;
+  color: var(--muted);
+}
+
+.archive-date {
+  color: var(--muted);
+}
+
+.archive-status {
+  color: var(--muted);
+}
+
+.archive-row.solved .archive-status {
+  color: var(--ok);
+}
+
+.archive-row.unsolved .archive-status {
+  color: var(--danger);
+}
+
+.home-more {
+  margin: 1rem 0 0;
+}
+
+#home-link {
+  text-decoration: none;
+}
+
+/* Accusation proof slots */
+#accuse-proof fieldset {
+  margin-bottom: 0.75rem;
+}
+
+#accuse-proof legend {
+  font-weight: 400;
+}
+
+@media (max-width: 760px) {
+  .home-grid {
+    grid-template-columns: 1fr;
+  }
+}

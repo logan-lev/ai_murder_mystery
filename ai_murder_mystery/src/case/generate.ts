@@ -1,4 +1,4 @@
-import type { Case, Clue, Suspect, Unlock, Room, RoomID, Motive } from "./types";
+import type { Case, Clue, Suspect, Unlock, Room, RoomID } from "./types";
 import {
     TITLE, SETTING, INTRO, SLOTS, SHARED_FACTS, STATION_ROOMS, CHARACTERS, METHODS, SECRETS,
     SUSPECT_COUNT, RED_HERRING_COUNT, type CharacterDef, type SecretDef
@@ -80,6 +80,16 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
     timeline[culprit.id][murderIDx + 1] = hideRoom;
     for (const c of innocents) timeline[c.id][murderIDx] = secrets.get(c.id)!.room;
     for (const c of redHerrings) timeline[c.id][0] = scene;
+
+    // The weapon must be findable by reasoning, not luck: someone sees the killer at the hiding place
+    // right after the murder. If nobody works there, an innocent's short errand puts them there.
+    // A separate RNG keeps every earlier pick (and so every existing case) unchanged.
+    const afterIDx = murderIDx + 1;
+    let errandRunner: CharacterDef | null = null;
+    if (!innocents.some((c) => timeline[c.id][afterIDx] === hideRoom)) {
+        errandRunner = pick(mulberry32(seed ^ 0x5eed5), innocents);
+        timeline[errandRunner.id][afterIDx] = hideRoom;
+    }
 
     // 6. Who saw each other in the same room at the same time
     const sightings = new Map<string, { slot: number; text: string }[]>(cast.map((c) => [c.id, []]));
@@ -236,7 +246,9 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             facts,
             post: roomName(c.homeRoom),
             // "Alone" stops the model from inventing alibi witnesses
-            story: `You were working alone in the ${roomName(c.homeRoom)} from 21:00 until the body was found at 23:00.`,
+            story: errandRunner?.id === c.id
+                ? `You were working alone in the ${roomName(c.homeRoom)} from 21:00 until the body was found at 23:00, apart from a quick trip to the ${roomName(hideRoom)} at ${SLOTS[afterIDx]}.`
+                : `You were working alone in the ${roomName(c.homeRoom)} from 21:00 until the body was found at 23:00.`,
             reactions: isCulprit
                 ? [`If asked about the ${sceneName}, say you did not go there tonight.`]
                 : ["If the investigator suggests you were somewhere else, insist on your story."],
@@ -244,9 +256,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
         };
     });
 
-    // 9. Accusation options and solution
-    // Only motives of people in this case, so the list doesn't hint at who's aboard
-    const motiveOptions: Motive[] = cast.flatMap((c) => c.motives.map((m) => ({ id: m.id, label: m.label })));
+    // 9. Solution
     const culpritMotive = motives.get(culprit.id)!;
 
     // 10. The reasoning path, built from the same data the suspects were given
@@ -262,9 +272,13 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
     ];
     for (const a of innocents) {
         for (const s of [murderIDx - 1, murderIDx + 1]) {
-            if (timeline[a.id][s] === timeline[culprit.id][s]) {
-                howToSolve.push(`${a.name} saw ${culprit.name} in the ${roomName(timeline[a.id][s])} at ${SLOTS[s]}, carrying something wrapped in a cloth.`);
-            }
+            if (timeline[a.id][s] !== timeline[culprit.id][s]) continue;
+            const where = roomName(timeline[a.id][s]);
+            howToSolve.push(
+                s === afterIDx
+                    ? `${a.name} saw ${culprit.name} in the ${where} at ${SLOTS[s]}, right after the murder, carrying something wrapped in a cloth. That's where the weapon was hidden.`
+                    : `${a.name} saw ${culprit.name} in the ${where} at ${SLOTS[s]}, carrying something wrapped in a cloth: the weapon, before the murder.`,
+            );
         }
     }
     howToSolve.push(
@@ -284,11 +298,9 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
         rooms,
         clues,
         suspects,
-        motives: motiveOptions,
         solution: {
             culpritID: culprit.id,
-            motiveID: culpritMotive.id,
-            requiredClueIDs: [`trace-${culprit.id}`, `motive-${culprit.id}`],
+            proof: { opportunity: `trace-${culprit.id}`, motive: `motive-${culprit.id}`, means: "weapon" },
             howToSolve,
             explanation: `${culprit.name} killed ${victim.name} in the ${sceneName} at ${murderTime}. Motive: ${culpritMotive.label.toLowerCase()}. The weapon, ${withArticle(method.weaponName.toLowerCase())}, was hidden in the ${roomName(hideRoom)}. ${redHerrings.map((c) => c.name).join(" and ")} left traces too, but only from a harmless visit at ${SLOTS[0]}.`
         }

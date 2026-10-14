@@ -7,7 +7,7 @@ Every day there's a new case, and everyone gets the same one. Search the station
 ```
 Dead Orbit Daily #1 🛰️
 🏅 Master Investigator
-Killer ✅ Motive ✅ Proof ✅
+Killer ✅ Means ✅ Motive ✅ Opportunity ✅
 🔦💬🧾💬🔦⬛💬🧾
 8/24 turns
 ```
@@ -30,7 +30,7 @@ npm run dev
 
 In dev mode, the answer key and a fuzz test log to the console, and an "Export Log" button downloads a full transcript with each suspect's system prompt.
 
-`?case=N` opens practice case N. No parameter means today's daily case.
+The home page links to today's case, the training case (`?tutorial`), and the archive (`?day=N`). `?case=N` opens practice case N.
 
 ## Deploying
 

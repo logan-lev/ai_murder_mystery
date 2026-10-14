@@ -39,11 +39,6 @@ export interface Suspect {
     unlocks: Unlock[];
 }
 
-export interface Motive {
-    id: string;
-    label: string;
-}
-
 export interface Case {
     id: string;
     title: string;
@@ -56,11 +51,10 @@ export interface Case {
     rooms: Room[];
     clues: Clue[];
     suspects: Suspect[];
-    motives: Motive[];
     solution: {
         culpritID: SuspectID;
-        motiveID: string;
-        requiredClueIDs: ClueID[];
+        // The right clue for each accusation slot
+        proof: { opportunity: ClueID; motive: ClueID; means: ClueID };
         explanation: string;
         // The chain of reasoning that cracks this case, shown on the ending screen
         howToSolve: string[];

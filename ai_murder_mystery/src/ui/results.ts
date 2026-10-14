@@ -1,7 +1,7 @@
 import type { Case } from "../case/types";
 import type { Truth } from "../case/generate";
 import { SLOTS } from "../case/content";
-import { RANKS, type Verdict } from "../game/accuse";
+import { RANKS, PROOF_SLOTS, type Verdict } from "../game/accuse";
 import { currentStreak, type Stats } from "../game/save";
 import { TURN_LIMIT, type GameState } from "../game/state";
 import type { CaseInfo } from "../seed";
@@ -13,6 +13,7 @@ export const COUNTDOWN_CLASS = "countdown";
 function nextCaseBlock(info: CaseInfo): HTMLElement {
     if (info.mode === "tutorial") return el("p", "hint", "Training doesn't count toward your stats.");
     if (info.mode !== "daily") return el("p", "hint", "Practice cases don't count toward your stats.");
+    if (!info.isToday) return el("p", "hint", "Archive cases show up in your archive, but don't count toward your streak.");
     return el("p", "next-case", "Next case in ", [el("strong", COUNTDOWN_CLASS)]);
 }
 
@@ -44,18 +45,19 @@ function timelineTable(c: Case, truth: Truth): HTMLElement {
 export function renderEnd(target: HTMLElement, c: Case, truth: Truth, info: CaseInfo, state: GameState, verdict: Verdict): void {
     const accusation = state.accusation;
     const name = (id: string) => c.suspects.find((s) => s.id === id)?.name ?? id;
-    const motive = (id: string) => c.motives.find((m) => m.id === id)?.label ?? id;
     const clue = (id: string) => c.clues.find((cl) => cl.id === id)?.name ?? id;
 
     const rows = accusation
         ? [
               resultRow("Killer", verdict.correctCulprit, `You named ${name(accusation.suspectID)}.`),
-              resultRow("Motive", verdict.correctMotive, motive(accusation.motiveID)),
-              resultRow(
-                  "Proof",
-                  verdict.hasEvidence,
-                  accusation.clueIDs.length > 0 ? accusation.clueIDs.map(clue).join(", ") : "No evidence",
-              ),
+              ...PROOF_SLOTS.map((slot) => {
+                  const picked = accusation.proof[slot.key];
+                  const right = c.solution.proof[slot.key];
+                  const detail = verdict.correctProof[slot.key]
+                      ? clue(picked)
+                      : `${picked ? clue(picked) : "Nothing chosen"} (it was the ${clue(right)})`;
+                  return resultRow(slot.label, verdict.correctProof[slot.key], detail);
+              }),
           ]
         : [];
 
@@ -66,7 +68,6 @@ export function renderEnd(target: HTMLElement, c: Case, truth: Truth, info: Case
         el("ul", "results", "", rows),
         el("h3", "", "What really happened"),
         el("p", "", verdict.explanation),
-        el("p", "hint", `Needed proof: ${c.solution.requiredClueIDs.map(clue).join(" and ")}.`),
         el("h3", "", "How you could have cracked it"),
         el("ul", "how-to-solve", "", c.solution.howToSolve.map((step) => el("li", "", step))),
         timelineTable(c, truth),
@@ -74,7 +75,7 @@ export function renderEnd(target: HTMLElement, c: Case, truth: Truth, info: Case
     );
 }
 
-export function renderStats(target: HTMLElement, stats: Stats, today: number): void {
+export function renderStats(target: HTMLElement, stats: Stats, today: number, showCountdown = true): void {
     const winPct = stats.played > 0 ? Math.round((stats.solved / stats.played) * 100) : 0;
     const tile = (value: number, label: string) => el("div", "stat", "", [el("strong", "", String(value)), el("small", "", label)]);
     const most = Math.max(1, ...RANKS.map((r) => stats.ranks[r] ?? 0));
@@ -99,6 +100,6 @@ export function renderStats(target: HTMLElement, stats: Stats, today: number): v
                 return el("div", "rank-row", "", [el("span", "rank-label", r), el("span", "bar-track", "", [bar])]);
             }),
         ),
-        el("p", "next-case", "Next case in ", [el("strong", COUNTDOWN_CLASS)]),
+        ...(showCountdown ? [el("p", "next-case", "Next case in ", [el("strong", COUNTDOWN_CLASS)])] : []),
     );
 }

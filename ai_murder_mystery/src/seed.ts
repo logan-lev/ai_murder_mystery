@@ -7,7 +7,8 @@ const DAY_MS = 86_400_000;
 const LAUNCH_DAY = Date.UTC(2026, 9, 13);
 
 export type CaseInfo =
-    | { mode: "daily"; day: number; seed: number }
+    // isToday: only today's case counts toward streaks; older days are the archive
+    | { mode: "daily"; day: number; seed: number; isToday: boolean }
     | { mode: "practice"; seed: number }
     | { mode: "tutorial"; seed: 0 };
 
@@ -28,8 +29,14 @@ export function randomSeed(): number {
     return Math.floor(Math.random() * MAX_SEED) + 1;
 }
 
-// No ?case means today's daily case. ?case=N is a practice case that doesn't count toward stats.
+// No parameters is the home page. ?day=N plays daily case N (today or the archive, never the future).
+// ?case=N is a practice case that doesn't count toward stats.
 // ?tutorial is the hand-built training case (saved under seed 0, which no real case uses).
+export function isHomeRoute(): boolean {
+    const params = new URLSearchParams(window.location.search);
+    return !params.has("tutorial") && !params.has("case") && !params.has("day");
+}
+
 export function getCaseInfo(): CaseInfo {
     const params = new URLSearchParams(window.location.search);
     if (params.has("tutorial")) return { mode: "tutorial", seed: 0 };
@@ -37,8 +44,23 @@ export function getCaseInfo(): CaseInfo {
     if (Number.isInteger(fromURL) && fromURL > 0 && fromURL <= MAX_SEED) {
         return { mode: "practice", seed: fromURL };
     }
-    const day = dayNumber();
-    return { mode: "daily", day, seed: dailySeed(day) };
+    const today = dayNumber();
+    const asked = Number(params.get("day"));
+    const day = Number.isInteger(asked) && asked >= 1 && asked <= today ? asked : today;
+    return { mode: "daily", day, seed: dailySeed(day), isToday: day === today };
+}
+
+export function dailyURL(day: number): string {
+    return `${window.location.pathname}?day=${day}`;
+}
+
+export function homeURL(): string {
+    return window.location.pathname;
+}
+
+// The calendar date a daily case belongs to, e.g. "Oct 13"
+export function dayDate(day: number): string {
+    return new Date(LAUNCH_DAY + (day - 1) * DAY_MS).toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 export function caseLabel(info: CaseInfo): string {
@@ -49,7 +71,9 @@ export function caseLabel(info: CaseInfo): string {
 export function caseURL(info: CaseInfo): string {
     const base = `${window.location.origin}${window.location.pathname}`;
     if (info.mode === "tutorial") return `${base}?tutorial`;
-    return info.mode === "daily" ? base : `${base}?case=${info.seed}`;
+    // Today's result links to the home page; an archive result links to that day's case
+    if (info.mode === "daily") return info.isToday ? base : `${base}?day=${info.day}`;
+    return `${base}?case=${info.seed}`;
 }
 
 export function practiceURL(seed = randomSeed()): string {

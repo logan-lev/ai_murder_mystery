@@ -46,6 +46,10 @@ export function runDevChecks(): void {
                 errors.push(`Seed ${seed}: ${s.id}'s secret keeps them at their own post`);
             }
         }
+        // The weapon's hiding place must be witnessed right after the murder
+        if (!fc.suspects.some((s) => s.id !== ft.culpritID && ft.timeline[s.id][murderSlot + 1] === ft.hideRoom)) {
+            errors.push(`Seed ${seed}: nobody can see where the weapon was hidden`);
+        }
         victims[ft.victimID] = (victims[ft.victimID] ?? 0) + 1;
         culprits[ft.culpritID] = (culprits[ft.culpritID] ?? 0) + 1;
 
@@ -53,7 +57,7 @@ export function runDevChecks(): void {
             failures++;
             errors.forEach((e) => uniqueErrors.add(e));
         }
-        distinct.add(ft.victimID + JSON.stringify(ft.timeline) + ft.methodID + ft.hideRoom + fc.solution.motiveID);
+        distinct.add(ft.victimID + JSON.stringify(ft.timeline) + ft.methodID + ft.hideRoom + fc.solution.proof.motive);
     }
     console.log(`Fuzz Test: 2000 seeds, ${failures} failures, ${distinct.size} distinct cases.`);
     console.log("Victims across seeds:", victims, "Culprits across seeds:", culprits);

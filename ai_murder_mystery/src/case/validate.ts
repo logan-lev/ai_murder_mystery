@@ -24,9 +24,7 @@ export function validateCase(c: Case): string[] {
     if (suspectIDs.has(c.victimID)) errors.push(`The victim "${c.victimID}" is also a suspect.`);
 
     if (!suspectIDs.has(c.solution.culpritID)) errors.push(`Unknown Culprit: "${c.solution.culpritID}"`);
-    if (!c.motives.some((m) => m.id === c.solution.motiveID)) errors.push(`Unknown Motive: "${c.solution.motiveID}"`);
-
-    for (const id of c.solution.requiredClueIDs) {
+    for (const id of Object.values(c.solution.proof)) {
         if (!clueIDs.has(id)) errors.push(`Solution needs an unknown clue: "${id}".`);
     }
 

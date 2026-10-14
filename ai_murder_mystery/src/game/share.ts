@@ -27,7 +27,7 @@ export function buildShareText(info: CaseInfo, state: GameState, verdict: Verdic
     return [
         `Dead Orbit ${caseLabel(info)}${state.attempt > 1 ? ` (retry ${state.attempt - 1})` : ""} 🛰️`,
         `${RANK_ICONS[verdict.rank] ?? ""} ${verdict.rank}`,
-        `Killer ${mark(verdict.correctCulprit)} Motive ${mark(verdict.correctMotive)} Proof ${mark(verdict.hasEvidence)}`,
+        `Killer ${mark(verdict.correctCulprit)} Means ${mark(verdict.correctProof.means)} Motive ${mark(verdict.correctProof.motive)} Opportunity ${mark(verdict.correctProof.opportunity)}`,
         ...rows,
         `${state.actions.length}/${TURN_LIMIT} turns`,
         caseURL(info),

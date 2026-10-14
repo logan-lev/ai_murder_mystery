@@ -66,16 +66,15 @@ export const TUTORIAL_CASE: Case = {
     rooms: ROOMS,
     clues: CLUES,
     suspects: [suspect("okafor", "Medbay"), suspect("reyes", "Engineering Bay"), suspect("sable", "Galley")],
-    motives: [...character("okafor").motives, ...character("reyes").motives, ...character("sable").motives].map((m) => ({ id: m.id, label: m.label })),
     solution: {
         culpritID: "reyes",
-        motiveID: "faked-inspections",
-        requiredClueIDs: ["trace-reyes", "motive-reyes"],
+        proof: { opportunity: "trace-reyes", motive: "motive-reyes", means: "weapon" },
         explanation: "Tomas Reyes killed Priya Nair in the Hydroponics Bay at 22:00. Motive: exposure of faked safety inspections. The weapon, a neurotoxin vial, was hidden in the Cargo Bay. Dr. Mara Okafor and SABLE left traces too, but only from a harmless visit at 21:00.",
         howToSolve: [
             "The Hydroponics Bay held three traces. Dr. Okafor and SABLE visited at 21:00 and saw each other there, so theirs were harmless.",
             "The coolant-stained glove pointed to Tomas Reyes, who claimed the same 21:00 visit, but neither visitor saw him there.",
-            "Dr. Okafor saw Reyes in the Medbay at 21:30, carrying something wrapped in a cloth: the neurotoxin.",
+            "Dr. Okafor saw Reyes in the Medbay at 21:30, carrying something wrapped in a cloth: the neurotoxin, before the murder.",
+            "SABLE saw Reyes in the Cargo Bay at 22:30, right after the murder, still holding it. That's where the weapon was hidden.",
             "Reyes's motive was in Nair's Cabin: the Inspection Audit.",
         ],
     },
@@ -92,7 +91,7 @@ export const TUTORIAL_TRUTH: Truth = {
     timeline: {
         okafor: ["hydroponics", "medbay", "medbay", "medbay"],
         reyes: ["engineering", "medbay", "hydroponics", "cargo-bay"],
-        sable: ["hydroponics", "galley", "galley", "galley"],
+        sable: ["hydroponics", "galley", "galley", "cargo-bay"],
     },
 };
 
@@ -157,6 +156,12 @@ export const QUESTIONS: Record<SuspectID, ScriptedQuestion[]> = {
             answer: "A spare part. I borrow things. That's all.",
             afterAsked: ["okafor-saw"]
         },
+        {
+            id: "reyes-cargo",
+            text: "SABLE saw you in the Cargo Bay at 22:30. What were you doing there?",
+            answer: "Looking for a coolant valve. Is that a crime now?",
+            afterAsked: ["sable-saw"]
+        },
     ],
     sable: [
         {
@@ -173,7 +178,7 @@ export const QUESTIONS: Record<SuspectID, ScriptedQuestion[]> = {
         {
             id: "sable-saw",
             text: "Did you see anyone else this evening?",
-            answer: "No one came to the Galley after 21:00."
+            answer: "At 22:30 I collected supplies from the Cargo Bay. Tomas Reyes was there, holding something wrapped in a cloth. He told me to mind my own business."
         },
     ],
 };
@@ -193,6 +198,7 @@ export const SHOWS: Record<SuspectID, ScriptedShow[]> = {
             answer: "[Reyes's shoulders sag.] All right. She was going to report the inspections, and I'd have lost everything. I took the vial from the Medbay, put it in her tea, and hid it in the Cargo Bay."
         },
         { clueID: "weapon", answer: "[Reyes barely looks at it.] Never seen it before." },
+        { clueID: "body", answer: "[Reyes looks away.] I don't need to see that." },
     ],
     sable: [
         { clueID: "trace-sable", answer: "[SABLE examines the fleck.] That is mine. I delivered tea to the Hydroponics Bay at 21:00. Dr. Okafor was also there. Priya was alive when I left." },
