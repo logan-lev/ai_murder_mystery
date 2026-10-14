@@ -63,5 +63,7 @@ export function stripFalseCallbacks(reply: string): string {
         // "As I mentioned earlier, I was..." -> "I was..."
         .replace(new RegExp(`(^|[.!?]\\s+|\\]\\s*)${CALLBACK},\\s*(\\w)`, "gi"), (_, before: string, first: string) => before + first.toUpperCase())
         // "...at 21:00, as I mentioned earlier." -> "...at 21:00."
-        .replace(new RegExp(`,?\\s*${CALLBACK}(?=[.,!?])`, "gi"), "");
+        .replace(new RegExp(`,?\\s*${CALLBACK}(?=[.,!?])`, "gi"), "")
+        // "...in the Observation Deck, if you remember." -> "...in the Observation Deck."
+        .replace(/,?\s*if you (?:remember|recall)(?=[.,!?])/gi, "");
 }

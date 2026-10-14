@@ -160,7 +160,8 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
     }
 
     // 8. Suspects
-    const aboard = cast.map((c) => `${c.name}, ${c.role}`).join("; ");
+    // Pronouns are listed because sighting facts name people without them, and the model guessed (often wrong)
+    const aboard = cast.map((c) => `${c.name} (${c.pronouns.he}), ${c.role}`).join("; ");
     const sharedFacts = [
         ...SHARED_FACTS.map((f) => fill(f, vars)),
         `Aboard the station tonight: ${aboard}. ${victim.shortName} is dead. No one else is aboard.`,
