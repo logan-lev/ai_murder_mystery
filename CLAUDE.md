@@ -125,6 +125,7 @@ The weapon must always be findable by reasoning: the generator guarantees an inn
 
 - Today's daily is `?day=<today>`: `dayNumber()` counts local days from `LAUNCH_DAY` (Daily #1 = 2026-10-13), `dailySeed()` hashes it. Don't change `LAUNCH_DAY` after going public.
 - Every search, question, or shown clue is one entry in `state.actions` and costs one turn (`TURN_LIMIT` = 20). Turns left = `TURN_LIMIT - actions.length`. At zero the accusation dialog opens and can't be dismissed.
+- Settings has "Delete all progress" (`deleteAllProgress()` in `save.ts`): removes every `deadorbit:` key except preferences in `KEEP_ON_RESET` (currently the model choice). New stored preferences should be added there; new progress keys need nothing.
 - Saves are keyed by seed (`deadorbit:case:<seed>`). Bump `SAVE_VERSION` in `save.ts` whenever the generator changes what a seed produces. Only completed replies are saved, and trailing unanswered questions are dropped on load.
 - A finished or out-of-turns game skips the model download entirely.
 

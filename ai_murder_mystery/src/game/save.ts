@@ -201,3 +201,22 @@ export function recordHistory(day: number, verdict: Verdict): void {
     history[day] = { rank: verdict.rank, solved: verdict.correctCulprit };
     writeJSON(HISTORY_KEY, history);
 }
+
+// ---------- Reset ----------
+
+// Everything the game stores is under "deadorbit:". Preferences listed here survive a reset;
+// all progress (case saves, stats, archive history, training and help flags) is removed.
+const KEEP_ON_RESET = new Set(["deadorbit:model"]);
+
+export function deleteAllProgress(): void {
+    try {
+        const doomed: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key?.startsWith("deadorbit:") && !KEEP_ON_RESET.has(key)) doomed.push(key);
+        }
+        doomed.forEach((key) => localStorage.removeItem(key));
+    } catch {
+        // Storage blocked: nothing was saved, so there's nothing to delete
+    }
+}

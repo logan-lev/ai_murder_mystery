@@ -156,6 +156,17 @@
         </span>
       </label>
       <p id="settings-reload" class="hint" hidden>Reload the page to switch models. Your progress is saved.</p>
+
+      <div class="danger-zone">
+        <strong>Delete all progress</strong>
+        <small>Erases every saved case, your stats and streaks, archive results, and training completion. Settings are kept.</small>
+        <button id="reset-btn" class="text-btn danger-btn" type="button">Delete all progress</button>
+        <div id="reset-confirm" class="reset-confirm" hidden>
+          <p>Are you sure? This can't be undone.</p>
+          <button id="reset-cancel" class="text-btn" type="button">Cancel</button>
+          <button id="reset-yes" class="primary-btn danger" type="button">Yes, delete everything</button>
+        </div>
+      </div>
       <div class="dialog-actions">
         <a class="text-btn" href="?tutorial">Play the training case</a>
         <a class="text-btn" id="practice-link" href="#">Play a random practice case</a>
