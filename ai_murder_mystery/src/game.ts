@@ -33,7 +33,18 @@ import { runDevChecks } from "./dev-checks";
 const info = getCaseInfo();
 const isTutorial = info.mode === "tutorial";
 const { case: theCase, truth } = isTutorial ? { case: TUTORIAL_CASE, truth: TUTORIAL_TRUTH } : generateCase(info.seed);
-const state = loadGame(info.seed, theCase) ?? createGameState(theCase);
+// Training restarts whenever the player leaves and comes back. Only a reload of the page resumes it,
+// so an accidental refresh doesn't throw away progress.
+const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+const resumeTraining = navigation?.type === "reload";
+const state = (isTutorial && !resumeTraining ? null : loadGame(info.seed, theCase)) ?? createGameState(theCase);
+
+// Back/forward can restore this page from memory with the old training still on it, so start over
+if (isTutorial) {
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) window.location.replace(window.location.href);
+  });
+}
 const replyStats: ReplyStat[] = [];
 
 // Keep today's daily save even while playing a practice case
@@ -655,6 +666,8 @@ accuseForm.addEventListener("submit", (event) => {
   const verdict = scoreAccusation(theCase, accusation);
   state.accusation = accusation;
   state.verdict = verdict;
+  // Remembered separately, since the training save itself is replaced on the next visit
+  if (isTutorial) writeFlag("training-done", true);
   // Retries never touch stats (recordDailyResult also ignores a day it has already counted)
   // Archive days go in the history but never touch streaks
   if (info.mode === "daily" && state.attempt === 1) {

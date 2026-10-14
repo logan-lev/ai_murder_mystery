@@ -1,6 +1,6 @@
 import { generateCase } from "./case/generate";
 import { dayNumber, dailySeed, dailyURL, dayDate, msUntilNextDay, tutorialURL, practiceURL } from "./seed";
-import { peekSave, loadHistory, loadStats } from "./game/save";
+import { peekSave, loadHistory, loadStats, readFlag } from "./game/save";
 import { TURN_LIMIT } from "./game/state";
 import { renderStats, COUNTDOWN_CLASS } from "./ui/results";
 import { el, $, formatCountdown } from "./ui/dom";
@@ -43,7 +43,7 @@ function renderToday(): void {
 }
 
 function renderTraining(): void {
-    const done = peekSave(0)?.verdict != null;
+    const done = readFlag("training-done");
     $<HTMLElement>("#home-training").replaceChildren(
         el("h2", "", "Training"),
         el("p", "", "New here? A guided case that walks through every tool: searching, questioning, the timeline board, and making an accusation. It takes about five minutes and needs no download."),
