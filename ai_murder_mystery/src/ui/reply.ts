@@ -29,3 +29,15 @@ export function renderWithActions(el: HTMLElement, text: string): void {
     }
   }
 }
+// A reply cut off by the token limit ends mid-word ("It was... pa"). This trims it back to the last
+// complete sentence, and drops a narration or action bracket that was opened but never closed.
+export function trimIncomplete(text: string): string {
+    let out = text;
+    const ends = [...out.matchAll(/[.!?…]["')\]]?(?=\s|$)/g)];
+    const last = ends[ends.length - 1];
+    if (last && last.index !== undefined) out = out.slice(0, last.index + last[0].length);
+    for (const [open, close] of [["[", "]"], ["(", ")"]]) {
+        if (out.lastIndexOf(open) > out.lastIndexOf(close)) out = out.slice(0, out.lastIndexOf(open));
+    }
+    return out.trimEnd();
+}

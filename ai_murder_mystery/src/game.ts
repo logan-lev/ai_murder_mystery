@@ -127,6 +127,8 @@ function errorMessage(err: unknown): string {
 
 const suspectName = (id: SuspectID) => theCase.suspects.find((s) => s.id === id)?.name ?? id;
 const roomName = (id: RoomID) => theCase.rooms.find((r) => r.id === id)?.name ?? id;
+// "the Galley" but "Park's Cabin", never "the Park's Cabin"
+const theRoom = (id: RoomID) => (roomName(id).includes("'s ") ? roomName(id) : `the ${roomName(id)}`);
 const clueByID = (id: ClueID) => theCase.clues.find((cl) => cl.id === id);
 
 // Can the player still spend turns?
@@ -227,7 +229,7 @@ function renderCaseFile(): void {
   }
   for (const roomID of state.searchedRoomIDs) {
     const found = theCase.clues.filter((cl) => cl.roomID === roomID);
-    const block = el("div", "discovery", "", [el("p", "discovery-title", `You search the ${roomName(roomID)}.`)]);
+    const block = el("div", "discovery", "", [el("p", "discovery-title", `You search ${theRoom(roomID)}.`)]);
     if (found.length === 0) block.append(el("p", "hint", "Nothing of interest here."));
     for (const cl of found) {
       block.append(el("div", newClueIDs.has(cl.id) ? "clue-card new" : "clue-card", "", [el("strong", "", cl.name), el("p", "", cl.description)]));

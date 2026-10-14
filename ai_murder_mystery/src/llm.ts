@@ -1,4 +1,5 @@
 import type { MLCEngineInterface, ChatCompletionMessageParam } from "@mlc-ai/web-llm";
+import { trimIncomplete } from "./ui/reply";
 
 export type Engine = MLCEngineInterface;
 
@@ -79,7 +80,9 @@ export async function streamReply(
   let text = "";
   let tokens = 0;
   let firstTokenAt = 0;
+  let cutOff = false;
   for await (const chunk of stream) {
+    if (chunk.choices[0]?.finish_reason === "length") cutOff = true;
     const piece = chunk.choices[0]?.delta?.content ?? "";
     if (!piece) continue;
     if (firstTokenAt === 0) firstTokenAt = performance.now();
@@ -100,5 +103,5 @@ export async function streamReply(
     `[llm] first token after ${stats.firstTokenMs} ms, ${tokens} tokens in ${stats.totalMs} ms` +
       (genSeconds > 0 ? ` (${(tokens / genSeconds).toFixed(1)} tokens/s)` : ""),
   );
-  return { text, stats };
+  return { text: cutOff ? trimIncomplete(text) : text, stats };
 }
