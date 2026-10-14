@@ -263,6 +263,7 @@ function renderRooms(): void {
       const classes = ["room-chip", searched ? "searched" : "", found ? "found" : "", r.id === state.selectedRoomID ? "selected" : ""];
       const btn = el("button", classes.filter(Boolean).join(" "), r.name);
       btn.type = "button";
+      btn.dataset.room = r.id;
       btn.title = searched ? (found ? "Searched: evidence found" : "Searched: nothing found") : "Not searched yet";
       btn.addEventListener("click", () => selectRoom(r.id));
       return btn;
@@ -272,6 +273,7 @@ function renderRooms(): void {
 
 function renderRoomDetail(): void {
   const id = state.selectedRoomID;
+  roomDetailEl.dataset.room = id ?? "";
   if (!id) {
     roomDetailEl.replaceChildren(el("p", "hint", "Pick a room to look around."));
     return;
@@ -324,6 +326,8 @@ function renderEvidence(): void {
             : `Show to ${suspectName(active)} (1 turn)`;
         const btn = el("button", "show-btn", label);
         btn.type = "button";
+        btn.dataset.clue = cl.id;
+        btn.dataset.for = active ?? "";
         btn.disabled = !canTalk() || alreadyShown;
         btn.addEventListener("click", () => showEvidence(cl.id));
         item.append(btn);
@@ -416,6 +420,7 @@ function renderChips(): void {
     ...available.map((q) => {
       const chip = el("button", "chip", q.text);
       chip.type = "button";
+      chip.dataset.q = q.id;
       chip.disabled = !canTalk();
       chip.addEventListener("click", () => void ask(id, q.text, "question", q.answer));
       return chip;
@@ -443,6 +448,7 @@ function selectRoom(id: RoomID): void {
   persist();
   renderRooms();
   renderRoomDetail();
+  coachRender();
 }
 
 function doSearch(id: RoomID): void {
@@ -595,23 +601,40 @@ function openAccuse(forced: boolean): void {
 
   $<HTMLElement>("#accuse-who").textContent = `Who killed ${theCase.victim}?`;
   const found = theCase.clues.filter((cl) => state.foundClueIDs.has(cl.id));
-  $<HTMLElement>("#accuse-proof").replaceChildren(
-    ...PROOF_SLOTS.map((slot) => {
-      const select = el("select");
-      select.name = slot.key;
-      const none = el("option", "", found.length > 0 ? "Choose evidence" : "You haven't found any evidence");
-      none.value = "";
-      select.append(
-        none,
-        ...found.map((cl) => {
-          const opt = el("option", "", cl.name);
-          opt.value = cl.id;
-          return opt;
+  // One row per clue, one radio column per proof slot: every option is visible at once,
+  // and each column (a radio group) holds exactly one pick
+  const proofEl = $<HTMLElement>("#accuse-proof");
+  if (found.length === 0) {
+    proofEl.replaceChildren(el("p", "hint", "You haven't found any evidence."));
+  } else {
+    const head = el("tr", "", "", [
+      el("th", "", "Evidence"),
+      ...PROOF_SLOTS.map((slot) => {
+        const th = el("th", "", "", [el("span", "", slot.label), el("small", "", slot.question)]);
+        th.scope = "col";
+        return th;
+      }),
+    ]);
+    const rows = found.map((cl) => {
+      const label = el("th", "", "", [el("span", "", cl.name), el("small", "", roomName(cl.roomID))]);
+      label.scope = "row";
+      label.title = cl.description;
+      return el("tr", "", "", [
+        label,
+        ...PROOF_SLOTS.map((slot) => {
+          const radio = el("input");
+          radio.type = "radio";
+          radio.name = slot.key;
+          radio.value = cl.id;
+          radio.setAttribute("aria-label", `${cl.name} as ${slot.label.toLowerCase()}`);
+          return el("td", "", "", [el("label", "proof-cell", "", [radio])]);
         }),
-      );
-      return el("fieldset", "", "", [el("legend", "", `${slot.label}: ${slot.question}`), select]);
-    }),
-  );
+      ]);
+    });
+    proofEl.replaceChildren(
+      el("div", "table-wrap", "", [el("table", "proof-grid", "", [el("thead", "", "", [head]), el("tbody", "", "", rows)])]),
+    );
+  }
 
   accuseDialog.showModal();
 }

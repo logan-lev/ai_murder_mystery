@@ -34,6 +34,7 @@ export function renderBoard(target: HTMLElement, c: Case, state: GameState, opts
             ...SLOTS.map((t, i) => {
                 const select = el("select", "pin-select");
                 select.setAttribute("aria-label", `${s.name} at ${t}`);
+                select.dataset.pin = `${s.id}-${i}`;
                 const unknown = el("option", "", "?");
                 unknown.value = "";
                 select.append(unknown, ...places.map((p) => {

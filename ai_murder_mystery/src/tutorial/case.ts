@@ -119,7 +119,7 @@ export const QUESTIONS: Record<SuspectID, ScriptedQuestion[]> = {
         {
             id: "okafor-where",
             text: "Where were you tonight?",
-            answer: "[Okafor folds her hands neatly.] In the Medbay, working, from 21:00 until we found her."
+            answer: "[Okafor folds her hands neatly.] In the Medbay, working, from 21:00 until we found Priya."
         },
         {
             id: "okafor-who-else",
@@ -185,17 +185,17 @@ export const QUESTIONS: Record<SuspectID, ScriptedQuestion[]> = {
 
 export const SHOWS: Record<SuspectID, ScriptedShow[]> = {
     okafor: [
-        { clueID: "trace-okafor", answer: "[Okafor glances at the stylus.] That's mine. I stopped by the Hydroponics Bay at 21:00 to check on Priya. She was alive, and in a foul mood, when I left." },
-        { clueID: "motive-okafor", answer: "[Okafor's jaw tightens.] Yes. Priya found out about my mistake last year and was going to report it. But I didn't kill her." },
+        { clueID: "trace-okafor", answer: "[Okafor glances at the stylus.] That's mine. I stopped by the Hydroponics Bay at 21:00 to check on Priya. Priya was alive, and in a foul mood, when I left." },
+        { clueID: "motive-okafor", answer: "[Okafor's jaw tightens.] Yes. Priya found out about my mistake last year and was going to report it. But I didn't kill Priya." },
         { clueID: "weapon", answer: "[Okafor frowns at the vial.] That's from my Medbay cabinet. Someone took it without signing it out." },
     ],
     reyes: [
-        { clueID: "trace-reyes", answer: "[Reyes stares at the glove.] Fine, that's mine. I dropped by the Hydroponics Bay at 21:00 to fix a pump. She was alive when I left." },
+        { clueID: "trace-reyes", answer: "[Reyes stares at the glove.] Fine, that's mine. I dropped by the Hydroponics Bay at 21:00 to fix a pump. Priya was alive when I left." },
         { clueID: "motive-reyes", answer: "[Reyes crosses his arms.] So the inspections were a little creative. That's not murder." },
         {
             clueID: "weapon",
             afterShown: ["trace-reyes", "motive-reyes"],
-            answer: "[Reyes's shoulders sag.] All right. She was going to report the inspections, and I'd have lost everything. I took the vial from the Medbay, put it in her tea, and hid it in the Cargo Bay."
+            answer: "[Reyes's shoulders sag.] All right. Priya was going to report the inspections, and I'd have lost everything. I took the vial from the Medbay, put it in Priya's tea, and hid it in the Cargo Bay."
         },
         { clueID: "weapon", answer: "[Reyes barely looks at it.] Never seen it before." },
         { clueID: "body", answer: "[Reyes looks away.] I don't need to see that." },

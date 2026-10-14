@@ -1148,3 +1148,73 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+/* Tutorial: action controls are locked except the ones the current coach step allows.
+   Tabs stay usable, since looking around can't put the steps out of order. */
+body.tutorial-locked :is(.room-chip, #room-detail button, .chip, .show-btn, .pin-select, #accuse-btn):not(.coach-allowed) {
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+/* Accusation: evidence rows x proof-slot columns */
+.proof-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.proof-grid th,
+.proof-grid td {
+  padding: 0.4rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.proof-grid thead th {
+  text-align: center;
+  font-weight: 600;
+}
+
+.proof-grid thead th:first-child,
+.proof-grid tbody th {
+  text-align: left;
+}
+
+.proof-grid th small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+
+.proof-grid tbody th span {
+  font-weight: 600;
+}
+
+.proof-grid td {
+  text-align: center;
+  width: 4.5rem;
+}
+
+/* The whole cell is clickable, not just the small radio */
+.proof-cell {
+  display: block;
+  padding: 0.3rem 0;
+  cursor: pointer;
+}
+
+.proof-grid tr:has(input:checked) th span {
+  color: var(--accent);
+}
+
+.proof-grid input[type="radio"] {
+  accent-color: var(--danger);
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+}
+
+#accuse-dialog {
+  width: min(640px, calc(100vw - 2rem));
+}

@@ -99,6 +99,7 @@ Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimiz
 ## UI notes
 
 - `?tutorial` is the training case (saved under seed 0). It never calls the model: preset question chips replace the text box, and answers come from `tutorial/case.ts`. The model still downloads in the background so the first real case is ready. Keep the scripted answers, `howToSolve`, and the coach steps consistent if the training case changes.
+- Training is locked step by step: `body.tutorial-locked` disables action controls (room chips, search, question chips, Show buttons, board pins, accuse) except those matching the current step's `allow` selectors, which get `.coach-allowed`. A capture-phase click guard in `Coach` also blocks keyboard activation. Keep `LOCKABLE` in `coach.ts` and the selector list in `style.css` in sync. Tabs are never locked.
 - The Timeline tab (`boardOpen`, with `activeSuspectID` null) shows `state.board`. Pins are the player's notes and are never scored.
 - Retry (end screen) resets the case in place with `attempt + 1`. Only attempt 1 of a daily records stats; shared retries are labeled "(retry N)".
 - The first tab is the Case File (`activeSuspectID === null`): briefing, solving guide, and every search result with full clue descriptions. Searching switches to it.
@@ -107,7 +108,7 @@ Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimiz
 
 ## Accusation
 
-The player names a suspect and picks one found clue for each slot: opportunity (the killer's trace at the scene), motive (their motive clue), means (the weapon). `Case.solution.proof` holds the right clue per slot. Rank: wrong killer is Case Unsolved; otherwise 3, 2, or fewer correct slots give Master, Sharp, or Lucky. The body is information, never proof.
+The player names a suspect and, in a grid of found clues (rows) by slots (radio columns), picks one clue for each slot: opportunity (the killer's trace at the scene), motive (their motive clue), means (the weapon). `Case.solution.proof` holds the right clue per slot. Rank: wrong killer is Case Unsolved; otherwise 3, 2, or fewer correct slots give Master, Sharp, or Lucky. The body is information, never proof.
 
 The weapon must always be findable by reasoning: the generator guarantees an innocent sees the killer at the hiding place right after the murder (an "errand" if nobody works there, picked with a separate RNG so earlier picks don't shift). The fuzz test checks this.
 

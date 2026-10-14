@@ -2,7 +2,7 @@ import type { Case, Suspect, ClueID } from "../case/types";
 
 // Kept short on purpose: the whole system prompt is re-read (prefilled) on every turn,
 // so every rule here adds to the wait before the first token.
-function rulesFor(suspect: Suspect, narrate: boolean, confessed: boolean): string[] {
+function rulesFor(c: Case, suspect: Suspect, narrate: boolean, confessed: boolean): string[] {
   const format = narrate
     ? `Begin with one short, complete third-person sentence in square brackets showing what ${suspect.shortName} visibly does, using "${suspect.pronouns.his}" for ${suspect.pronouns.his} body, e.g. [${suspect.shortName} rubs ${suspect.pronouns.his} temples.], then 1 to 3 short spoken sentences.`
     : "Reply with 1 to 3 short spoken sentences only. No brackets, no actions.";
@@ -16,6 +16,7 @@ function rulesFor(suspect: Suspect, narrate: boolean, confessed: boolean): strin
           "Never reveal your thoughts or what you are hiding.",
           "Only mention your whereabouts when asked. Don't repeat your story.",
         ]),
+    `Call ${c.victim} by name instead of "he" or "she", so it's clear who you mean.`,
     "You only know what is written above. Otherwise say you don't know. Never invent people, events, or details.",
     ...(confessed
       ? []
@@ -71,7 +72,7 @@ export function buildSuspectPrompt(c: Case, suspect: Suspect, shown: Set<ClueID>
         lines.push("", "WHAT YOU NOW ADMIT (because of the evidence):", ...bullets(admitted.map((u) => u.reveals)));
     }
 
-    lines.push("", "RULES:", ...bullets(rulesFor(suspect, narrate, confessed)));
+    lines.push("", "RULES:", ...bullets(rulesFor(c, suspect, narrate, confessed)));
     // Small models weight the end of the prompt most, so the confession instruction goes last
     if (confessed) {
         lines.push("", `IMPORTANT: The evidence has broken you. If asked what happened or whether you did it, admit that you killed ${c.victim} and say why and how.`);
