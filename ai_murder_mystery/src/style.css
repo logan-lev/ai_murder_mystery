@@ -156,32 +156,29 @@ button:disabled {
 
 /* ---------- Home page ---------- */
 #home {
-  position: relative;
   max-width: 760px;
   margin: 0 auto;
-  padding: 3rem 1rem;
+  padding: 1.25rem 1rem 3rem;
 }
 
-.home-corner {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  display: flex;
-  gap: 0.5rem;
-}
-
+/* Same arrangement as the case page header: title left, buttons right, tagline underneath */
 #home-header {
-  margin-bottom: 2.25rem;
-  text-align: center;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 1rem;
+  /* Room for the TODAY folder tab, which sticks up above its card */
+  margin-bottom: 3rem;
 }
 
-#home-header h1 {
-  font-size: 2.6rem;
+.header-buttons {
+  display: flex;
+  gap: 0.45rem;
 }
 
 .tagline {
-  max-width: 34rem;
-  margin: 0.5rem auto 0;
+  grid-column: 1 / -1;
+  margin: 0.6rem 0 0;
   color: var(--muted);
   font-size: 1.05rem;
 }
@@ -1271,12 +1268,9 @@ select {
 
 /* ---------- Phones ---------- */
 @media (max-width: 760px) {
-  #home {
-    padding-top: 3.5rem;
-  }
-
   #home-header h1 {
-    font-size: 2rem;
+    font-size: 1.5rem;
+    white-space: nowrap;
   }
 
   .home-grid {
