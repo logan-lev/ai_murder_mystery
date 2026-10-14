@@ -19,7 +19,7 @@
       </div>
       <header id="home-header">
         <h1>Dead Orbit</h1>
-        <p class="tagline">A daily murder mystery aboard a space station. The suspects are played by an AI that runs in your browser.</p>
+        <p class="tagline">A daily murder mystery aboard a space station. The suspects are played by an AI that runs in your browser. You are the detective catching the killer and airing out dirty secrets.</p>
       </header>
       <section id="home-today" class="home-card"></section>
       <section id="home-archive" class="home-card"></section>
@@ -31,10 +31,8 @@
 
     <main id="app" hidden>
       <header id="header">
-        <div id="brand">
-          <a id="home-link" href="./"><h1>Dead Orbit</h1></a>
-          <span id="case-number"></span>
-        </div>
+        <a id="home-link" href="./"><h1>Dead Orbit</h1></a>
+        <span id="case-number"></span>
         <div id="header-right">
           <a id="daily-link" class="icon-btn" href="./" aria-label="Home" title="Home">&#8962;</a>
           <button id="help-btn" class="icon-btn" type="button" aria-label="How to play" title="How to play">?</button>
@@ -109,7 +107,7 @@
       <p>You only get one accusation: the killer, their motive, and up to three pieces of evidence that prove it.</p>
       <h3>How to crack the case</h3>
       <ol id="help-guide" class="hint"></ol>
-      <p class="hint">The crew are played by an AI that runs entirely in your browser. The first visit downloads the model, which takes a while. After that it's cached.</p>
+      <p class="hint">The crew are played by an AI that runs entirely in your browser.</p>
       <div class="dialog-actions">
         <a class="text-btn" id="help-tutorial" href="?tutorial">New here? Play the training case</a>
         <form method="dialog"><button class="primary-btn">Start investigating</button></form>
@@ -154,7 +152,7 @@
         <input id="fast-mode" type="checkbox" />
         <span>
           <strong>Fast mode</strong>
-          <small>Uses a smaller AI model. Faster download and replies, but the crew act less convincingly.</small>
+          <small>Uses a smaller AI model. Quicker replies, but the crew act less convincingly.</small>
         </span>
       </label>
       <p id="settings-reload" class="hint" hidden>Reload the page to switch models. Your progress is saved.</p>

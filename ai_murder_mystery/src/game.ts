@@ -227,8 +227,9 @@ function renderConversation(id: SuspectID): void {
   scrollToBottom();
 }
 
+// Newest finds are at the bottom; before any search, stay at the top so the briefing reads from the start
 function scrollLogToBottom(): void {
-  searchLogEl.scrollTop = searchLogEl.scrollHeight;
+  searchLogEl.scrollTop = state.searchedRoomIDs.size > 0 ? searchLogEl.scrollHeight : 0;
 }
 
 // The Station tab's log: the briefing, how to solve, and everything found, in the order it was found
@@ -829,21 +830,20 @@ async function init(): Promise<void> {
     return;
   }
 
-  setStatus(
-    isTutorial
-      ? "Training doesn't need the AI, so it's downloading in the background for your first real case."
-      : "Loading the crew AI. You can search the station while it loads.",
-  );
+  // Player-facing loading text stays in-world. WebLLM's own progress messages talk about fetching
+  // and caching hundreds of megabytes, which reads as a reason to leave.
+  const waking = isTutorial ? "The crew is getting ready for your first real case." : "Waking up the crew. You can search the station meanwhile.";
+  setStatus(waking);
   try {
-    engine = await loadEngine((text, progress) => {
-      setStatus(text);
+    engine = await loadEngine((_text, progress) => {
+      if (!isTutorial) setStatus(`${waking} ${Math.round(progress * 100)}%`);
       progressEl.value = progress;
     });
   } catch (err) {
     console.error(err);
     engineStatus = "failed";
     progressEl.hidden = true;
-    setStatus(`Failed to load the model: ${errorMessage(err)}`);
+    setStatus(`The crew couldn't be woken up (${errorMessage(err)}). You can still search and accuse.`);
     updateControls();
     return;
   }

@@ -364,19 +364,17 @@ button:disabled {
   padding: 1.25rem 1rem 2rem;
 }
 
+/* Three columns: title left, the case centered on the page, buttons right.
+   The two outer columns are equal widths, so the middle one sits at the true center. */
 #header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
-  flex-wrap: wrap;
 }
 
-#brand {
-  display: flex;
-  align-items: baseline;
-  gap: 1rem;
-  flex-wrap: wrap;
+#home-link {
+  justify-self: start;
 }
 
 #home-link {
@@ -385,13 +383,16 @@ button:disabled {
 }
 
 #case-number {
-  font-family: var(--font-mono);
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-family: var(--font-type);
+  font-size: 1.4rem;
+  letter-spacing: 0.06em;
+  text-align: center;
+  white-space: nowrap;
 }
 
 #header-right {
   display: flex;
+  justify-self: end;
   align-items: center;
   gap: 0.45rem;
 }
@@ -1284,6 +1285,40 @@ select {
 
   #app {
     padding: 1rem 0.6rem 2rem;
+  }
+
+  /* Not enough width for three columns: title and buttons on one row, the case centered below */
+  #header {
+    grid-template-columns: auto 1fr;
+    row-gap: 0.4rem;
+  }
+
+  #case-number {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  #home-link h1 {
+    font-size: 1.25rem;
+    white-space: nowrap;
+  }
+
+  #header {
+    column-gap: 0.5rem;
+  }
+
+  #header-right {
+    gap: 0.3rem;
+  }
+
+  #header-right .icon-btn {
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+
+  #export-btn {
+    padding: 0.25rem 0.45rem;
+    font-size: 0.78rem;
   }
 
   h1 {

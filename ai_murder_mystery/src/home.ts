@@ -46,7 +46,7 @@ function renderTraining(): void {
     const done = readFlag("training-done");
     $<HTMLElement>("#home-training").replaceChildren(
         el("h2", "", "Training"),
-        el("p", "", "New here? A guided case that walks through every tool: searching, questioning, catching lies, uncovering secrets, the timeline board, and making an accusation. It takes about five minutes and needs no download."),
+        el("p", "", "New here? A guided case that walks through every tool: searching, questioning, catching lies, uncovering secrets, the timeline board, and making an accusation. It takes about five minutes."),
         done ? el("p", "home-status ok", "Completed") : el("p", "home-status", "Recommended before your first case"),
         link(done ? "text-btn" : "primary-btn", done ? "Replay training" : "Start training", tutorialURL()),
     );
