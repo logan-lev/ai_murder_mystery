@@ -572,7 +572,8 @@ form.addEventListener("submit", (event) => {
   event.preventDefault();
   // Capture the suspect now, so the reply always goes to the right conversation
   const suspectID = state.activeSuspectID;
-  const text = input.value.trim();
+  // maxlength only limits typing; a pasted or scripted value can still be longer
+  const text = input.value.trim().slice(0, input.maxLength > 0 ? input.maxLength : 300);
   if (!text || !suspectID || !canTalk()) return;
   // Free-form actions let the player narrate things the case never contained, so speech only
   if (/[()[\]]/.test(text)) {

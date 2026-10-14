@@ -1242,3 +1242,18 @@ body.tutorial-locked :is(.room-chip, #room-detail button, .chip, .show-btn, .pin
     scroll-margin-top: 13rem;
   }
 }
+
+@media (max-width: 760px) {
+  .proof-grid td {
+    width: 3.1rem;
+    padding: 0.3rem 0.15rem;
+  }
+
+  .proof-grid th {
+    padding: 0.3rem 0.25rem;
+  }
+
+  .proof-grid thead th small {
+    display: none;
+  }
+}
