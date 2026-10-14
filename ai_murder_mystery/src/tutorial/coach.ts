@@ -76,7 +76,13 @@ const STEPS: Step[] = [
         done: ({ state }) => shown(state, "okafor", "trace-okafor"),
     },
     {
-        text: "Caught in a small lie: she visited the scene at 21:00. Ask her who else was there.",
+        text: "Caught in a lie: she told you she never left the Medbay, but she visited the scene at 21:00. Ask her why she lied.",
+        target: "#question-chips",
+        allow: question("okafor-why-lie"),
+        done: ({ state }) => asked(state, "okafor-why-lie"),
+    },
+    {
+        text: "Innocent people lie too, usually to protect themselves. A lie isn't proof of murder; it tells you there's something to find. Now ask Okafor who else was there at 21:00.",
         target: "#question-chips",
         allow: question("okafor-who-else"),
         done: ({ state }) => asked(state, "okafor-who-else"),
@@ -104,6 +110,30 @@ const STEPS: Step[] = [
         target: '[data-tab="board"]',
         allow: pin("reyes", 1),
         done: ({ state }) => pinned(state, "reyes", 1, "medbay"),
+    },
+    {
+        text: "Every case has one more layer. At the time of death, 22:00, everyone claims to have been at their post, and innocents are often hiding something about it. Open SABLE's tab and ask where exactly it was at 22:00.",
+        target: '[data-tab="sable"]',
+        allow: question("sable-2200"),
+        done: ({ state }) => asked(state, "sable-2200"),
+    },
+    {
+        text: "\"Mostly\" is a tell. Secrets leave evidence too, often in the person's own cabin. Search SABLE's Charging Alcove.",
+        target: "#room-list",
+        allow: room("sable-alcove"),
+        done: ({ state }) => searched(state, "sable-alcove"),
+    },
+    {
+        text: "A recording made from the Observation Deck at 22:00, when SABLE claimed to be in the Galley. Show SABLE the Ring Recording.",
+        target: "#evidence-list",
+        allow: showTo("sable", "secret-sable"),
+        done: ({ state }) => shown(state, "sable", "secret-sable"),
+    },
+    {
+        text: "That's a secret. SABLE lied about 22:00, but it was on the Observation Deck, nowhere near the Hydroponics Bay. Proving an innocent's secret clears them. Pin SABLE to the Observation Deck at 22:00.",
+        target: '[data-tab="board"]',
+        allow: pin("sable", 2),
+        done: ({ state }) => pinned(state, "sable", 2, "observation"),
     },
     {
         text: "Now find a motive. Motives hide in cabins: the victim's records, or a suspect's belongings. Search Nair's Cabin.",
@@ -258,7 +288,7 @@ export class Coach {
     }
 
     private finalText(state: GameState): string {
-        const wrap = "Real cases have five suspects, you type your own questions to an AI, and innocent crew also hide secrets about where they were at the time of death. Evidence of a secret clears them.";
+        const wrap = "Real cases have five suspects and you type your own questions to an AI. Every innocent hides a secret like SABLE's about the time of death, and proving it clears them.";
         if (!state.verdict || this.solved(state)) return `That's the whole loop. ${wrap}`;
         if (!state.verdict.correctCulprit) return "Not quite: Tomas Reyes was the killer. His glove put him at the scene, Okafor and SABLE never saw him there at 21:00, and both saw him carrying the vial. Replay training to try it again.";
         return "You got the killer, but not all of the proof. Opportunity was the Coolant-Stained Glove, motive the Inspection Audit, and means the Neurotoxin Vial. Replay training to try it again, or move on to a real case.";
