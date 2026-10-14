@@ -1,5 +1,4 @@
 import { getModelChoice, setModelChoice } from "../llm";
-import { practiceURL } from "../seed";
 import { deleteAllProgress } from "../game/save";
 import { SOLVING_GUIDE } from "./guide";
 import { el, $ } from "./dom";
@@ -22,10 +21,6 @@ export function wireSettings(buttonSelector = "#settings-btn"): void {
   fastMode.addEventListener("change", () => {
     setModelChoice(fastMode.checked ? "fast" : "standard");
     $<HTMLElement>("#settings-reload").hidden = false;
-  });
-  $<HTMLAnchorElement>("#practice-link").addEventListener("click", (event) => {
-    event.preventDefault();
-    window.location.href = practiceURL();
   });
   $<HTMLButtonElement>(buttonSelector).addEventListener("click", () => settingsDialog.showModal());
   closeOnBackdrop(settingsDialog);
