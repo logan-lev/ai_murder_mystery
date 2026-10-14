@@ -80,8 +80,8 @@ export const TUTORIAL_CASE: Case = {
         howToSolve: [
             "The Hydroponics Bay held three traces. Dr. Okafor and SABLE visited at 21:00 and saw each other there, so theirs were harmless.",
             "The coolant-stained glove pointed to Tomas Reyes, who claimed the same 21:00 visit, but neither visitor saw him there.",
-            "Dr. Okafor saw Reyes in the Medbay at 21:30, carrying something wrapped in a cloth: the neurotoxin, before the murder.",
-            "SABLE saw Reyes in the Cargo Bay at 22:30, right after the murder, still holding it. That's where the weapon was hidden.",
+            "Dr. Okafor saw Reyes in the Medbay at 21:30, clutching something small: the neurotoxin, before the murder.",
+            "SABLE saw Reyes in the Cargo Bay at 22:30, right after the murder, still clutching it. That's where the weapon was hidden.",
             "Reyes's motive was in Nair's Cabin: the Inspection Audit.",
             "SABLE lied about 22:00 too: it was secretly recording Kharon's rings on the Observation Deck (proof: the Ring Recording in SABLE's Charging Alcove). A proven secret clears an innocent.",
         ],
@@ -144,7 +144,7 @@ export const QUESTIONS: Record<SuspectID, ScriptedQuestion[]> = {
         {
             id: "okafor-saw",
             text: "Did you see anyone else this evening?",
-            answer: "Tomas Reyes came into the Medbay at 21:30. He was carrying something wrapped in a cloth, and he left without saying a word."
+            answer: "Tomas Reyes came into the Medbay at 21:30. He was clutching something small in one closed hand, and he left without saying a word."
         },
     ],
     reyes: [
@@ -166,7 +166,7 @@ export const QUESTIONS: Record<SuspectID, ScriptedQuestion[]> = {
         },
         {
             id: "reyes-carrying",
-            text: "Okafor saw you in the Medbay at 21:30, carrying something wrapped in a cloth.",
+            text: "Okafor saw you in the Medbay at 21:30, clutching something in your hand.",
             answer: "A spare part. I borrow things. That's all.",
             afterAsked: ["okafor-saw"]
         },
@@ -197,7 +197,7 @@ export const QUESTIONS: Record<SuspectID, ScriptedQuestion[]> = {
         {
             id: "sable-saw",
             text: "Did you see anyone else this evening?",
-            answer: "At 22:30 I collected supplies from the Cargo Bay. Tomas Reyes was there, holding something wrapped in a cloth. He told me to mind my own business."
+            answer: "At 22:30 I collected supplies from the Cargo Bay. Tomas Reyes was there, clutching something small in one closed hand. He told me to mind my own business."
         },
     ],
 };

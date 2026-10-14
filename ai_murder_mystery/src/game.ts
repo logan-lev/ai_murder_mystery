@@ -65,7 +65,15 @@ const progressEl = $<HTMLProgressElement>("#progress");
 const roomListEl = $<HTMLElement>("#room-list");
 const roomDetailEl = $<HTMLElement>("#room-detail");
 const evidenceListEl = $<HTMLUListElement>("#evidence-list");
-const evidenceCountEl = $<HTMLElement>("#evidence-count");
+const searchLogEl = $<HTMLElement>("#search-log");
+const boardEl = $<HTMLElement>("#board");
+const trayEl = $<HTMLElement>("#evidence-tray");
+const viewEls = {
+  station: $<HTMLElement>("#view-station"),
+  evidence: $<HTMLElement>("#view-evidence"),
+  timeline: $<HTMLElement>("#view-timeline"),
+  suspect: $<HTMLElement>("#view-suspect"),
+};
 const accuseBtn = $<HTMLButtonElement>("#accuse-btn");
 const tabsEl = $<HTMLElement>("#suspect-tabs");
 const chatLog = $<HTMLDivElement>("#chat-log");
@@ -88,7 +96,9 @@ let engineStatus: "loading" | "ready" | "unsupported" | "failed" | "skipped" = "
 let isGenerating = false;
 let accuseForced = false;
 const newClueIDs = new Set<ClueID>(); // highlighted until the next search
-let boardOpen = false; // the Timeline tab is showing (activeSuspectID is null then)
+// Which folder tab is open. A crew member's tab is "suspect" with state.activeSuspectID set.
+type View = keyof typeof viewEls;
+let view: View = state.activeSuspectID ? "suspect" : "station";
 
 const coach = isTutorial
   ? new Coach(coachEl, {
@@ -97,7 +107,7 @@ const coach = isTutorial
     })
   : null;
 // persist() skips saving mid-reply, so coach progress is never saved ahead of the conversation
-const coachRender = () => coach?.render({ state, boardOpen, save: persist });
+const coachRender = () => coach?.render({ state, boardOpen: view === "timeline", save: persist });
 
 // ---------- Helpers ----------
 function setStatus(text: string): void {
@@ -133,8 +143,10 @@ const clueByID = (id: ClueID) => theCase.clues.find((cl) => cl.id === id);
 
 // Can the player still spend turns?
 const canAct = () => !isOver(state) && turnsLeft(state) > 0;
-// The tutorial's answers are scripted, so it never waits on the model
-const canTalk = () => (engine !== null || isTutorial) && !isGenerating && state.activeSuspectID !== null && canAct();
+// Can any crew member be questioned or shown evidence right now? (The tutorial's answers are scripted,
+// so it never waits on the model.) canTalk adds that a crew member's tab is open, for the text box.
+const canTalkNow = () => (engine !== null || isTutorial) && !isGenerating && canAct();
+const canTalk = () => view === "suspect" && state.activeSuspectID !== null && canTalkNow();
 
 // Narration costs tokens, so it's saved for moments that deserve a visible reaction:
 // meeting someone, or being confronted with evidence.
@@ -192,40 +204,46 @@ function addSuspectReply(name: string): (raw: string) => void {
   return update;
 }
 
-function renderChatLog(): void {
+// Shows the open folder tab and fills it. The conversation and board are only rebuilt here,
+// on a tab change, so a reply that's streaming in is never wiped by other re-renders.
+function renderView(): void {
+  for (const [name, node] of Object.entries(viewEls)) node.hidden = name !== view;
+  if (view === "suspect" && state.activeSuspectID) renderConversation(state.activeSuspectID);
+  if (view === "timeline") renderBoardView();
+  if (view === "station") scrollLogToBottom();
+  coachRender();
+}
+
+function renderConversation(id: SuspectID): void {
   chatLog.replaceChildren();
-  const id = state.activeSuspectID;
-
-  if (!id) {
-    if (boardOpen) renderBoardView();
-    else renderCaseFile();
-    coachRender();
-    return;
-  }
-
   const name = suspectName(id);
   const history = state.conversations[id];
-  if (history.length === 0) addLine("Briefing", `You begin questioning ${name}.`, "line-intro");
+  if (history.length === 0) chatLog.append(el("p", "line-intro", `You begin questioning ${name}.`));
   for (const msg of history) {
     const text = typeof msg.content === "string" ? msg.content : "";
     if (msg.role === "user") addPlayerLine(text, id);
     else if (msg.role === "assistant") addSuspectReply(name)(text);
   }
+  scrollToBottom();
 }
 
-// The Case File tab: the briefing, how to solve, and everything found, in the order it was found
-function renderCaseFile(): void {
-  addLine("Briefing", theCase.intro, "line-intro");
+function scrollLogToBottom(): void {
+  searchLogEl.scrollTop = searchLogEl.scrollHeight;
+}
+
+// The Station tab's log: the briefing, how to solve, and everything found, in the order it was found
+function renderSearchLog(): void {
+  const parts: Node[] = [el("p", "briefing", "", [el("strong", "", "Briefing. "), theCase.intro])];
   const guide = el("details", "guide", "", [
     el("summary", "", "How to crack the case"),
     el("ol", "", "", SOLVING_GUIDE.map((tip) => el("li", "", tip))),
   ]);
   guide.open = state.searchedRoomIDs.size === 0;
   // In training the coach teaches this step by step, and the full guide mentions secrets training doesn't have
-  if (!isTutorial) chatLog.append(guide);
+  if (!isTutorial) parts.push(guide);
 
   if (state.searchedRoomIDs.size === 0) {
-    chatLog.append(el("p", "line-hint", "Search a room on the station panel, or open a crew member's tab to question them."));
+    parts.push(el("p", "hint", "Pick a room and search it. What you find is logged here and filed in the Evidence tab."));
   }
   for (const roomID of state.searchedRoomIDs) {
     const found = theCase.clues.filter((cl) => cl.roomID === roomID);
@@ -234,15 +252,14 @@ function renderCaseFile(): void {
     for (const cl of found) {
       block.append(el("div", newClueIDs.has(cl.id) ? "clue-card new" : "clue-card", "", [el("strong", "", cl.name), el("p", "", cl.description)]));
     }
-    chatLog.append(block);
+    parts.push(block);
   }
-  scrollToBottom();
+  searchLogEl.replaceChildren(...parts);
+  scrollLogToBottom();
 }
 
 function renderBoardView(): void {
-  const container = el("div", "board-view");
-  chatLog.append(container);
-  renderBoard(container, theCase, state, {
+  renderBoard(boardEl, theCase, state, {
     // The body's description gives the time of death, so the column lights up once it's found
     deathSlot: state.foundClueIDs.has("body") ? SLOTS.indexOf(truth.murderTime) : null,
     onPin: (suspectID, slot, roomID) => {
@@ -251,6 +268,29 @@ function renderBoardView(): void {
       coachRender();
     },
   });
+}
+
+function showButton(clueID: ClueID, suspectID: SuspectID, label: string): HTMLButtonElement {
+  const btn = el("button", "show-btn", label);
+  btn.type = "button";
+  btn.dataset.clue = clueID;
+  btn.dataset.for = suspectID;
+  btn.disabled = !canTalkNow() || state.shownClues[suspectID].has(clueID);
+  btn.title = state.shownClues[suspectID].has(clueID) ? `Already shown to ${suspectName(suspectID)}` : `Show to ${suspectName(suspectID)} (1 turn)`;
+  btn.addEventListener("click", () => void showEvidence(clueID, suspectID));
+  return btn;
+}
+
+// In a crew member's tab: every found clue not yet shown to them, one click away
+function renderTray(): void {
+  const id = state.activeSuspectID;
+  trayEl.hidden = !id || isOver(state);
+  if (!id || isOver(state)) return;
+  const unshown = theCase.clues.filter((cl) => state.foundClueIDs.has(cl.id) && !state.shownClues[id].has(cl.id));
+  trayEl.replaceChildren(
+    el("span", "tray-label", unshown.length > 0 ? "Show evidence (1 turn):" : "No new evidence to show. Search rooms to find more."),
+    ...unshown.map((cl) => showButton(cl.id, id, cl.name)),
+  );
 }
 
 // ---------- Station rendering ----------
@@ -309,80 +349,52 @@ function renderRoomDetail(): void {
   roomDetailEl.replaceChildren(...parts);
 }
 
+// The Evidence tab: every clue found, as file cards with full descriptions and a Show button per crew member
 function renderEvidence(): void {
   const found = theCase.clues.filter((cl) => state.foundClueIDs.has(cl.id));
-  evidenceCountEl.textContent = found.length > 0 ? `(${found.length})` : "";
-
   if (found.length === 0) {
-    evidenceListEl.replaceChildren(el("li", "hint", "Nothing yet. Search rooms to find evidence."));
+    evidenceListEl.replaceChildren(el("li", "hint", "Nothing yet. Search rooms in the Station tab to find evidence."));
     return;
   }
-
-  const active = state.activeSuspectID;
   evidenceListEl.replaceChildren(
     ...found.map((cl) => {
-      const shownTo = theCase.suspects.filter((s) => state.shownClues[s.id].has(cl.id)).map((s) => s.name);
-      const details = el("details", "", "", [
-        el("summary", "", "", [el("span", "", cl.name), el("small", "", roomName(cl.roomID))]),
+      const card = el("li", newClueIDs.has(cl.id) ? "evidence-card new" : "evidence-card", "", [
+        el("div", "evidence-head", "", [el("strong", "", cl.name), el("small", "", roomName(cl.roomID))]),
         el("p", "", cl.description),
       ]);
-      if (shownTo.length > 0) details.append(el("p", "hint", `Shown to ${shownTo.join(", ")}.`));
-      const item = el("li", newClueIDs.has(cl.id) ? "new" : "", "", [details]);
-
-      // Outside the collapsible part so it's always visible, and lit up whenever it can be used
       if (!isOver(state)) {
-        const alreadyShown = active !== null && state.shownClues[active].has(cl.id);
-        const label = !active
-          ? "Open a crew tab to show this"
-          : alreadyShown
-            ? `Already shown to ${suspectName(active)}`
-            : `Show to ${suspectName(active)} (1 turn)`;
-        const btn = el("button", "show-btn", label);
-        btn.type = "button";
-        btn.dataset.clue = cl.id;
-        btn.dataset.for = active ?? "";
-        btn.disabled = !canTalk() || alreadyShown;
-        btn.addEventListener("click", () => showEvidence(cl.id));
-        item.append(btn);
+        card.append(
+          el("div", "show-row", "", [
+            el("span", "tray-label", "Show to:"),
+            ...theCase.suspects.map((s) => showButton(cl.id, s.id, s.shortName)),
+          ]),
+        );
       }
-      return item;
+      return card;
     }),
   );
 }
 
+function folderTab(id: string, title: string, sub: string, active: boolean, extraClass: string, onClick: () => void): HTMLButtonElement {
+  const btn = el("button", `tab ${extraClass}${active ? " active" : ""}`, "", [el("strong", "", title), el("small", "", sub)]);
+  btn.type = "button";
+  btn.dataset.tab = id;
+  btn.disabled = isGenerating;
+  btn.setAttribute("aria-pressed", String(active));
+  btn.title = `${title}: ${sub}`;
+  btn.addEventListener("click", onClick);
+  return btn;
+}
+
 function renderTabs(): void {
-  const caseTab = el("button", state.activeSuspectID === null && !boardOpen ? "tab case-tab active" : "tab case-tab", "", [
-    el("strong", "", "Case File"),
-    el("small", "", `${state.foundClueIDs.size} clue${state.foundClueIDs.size === 1 ? "" : "s"} found`),
-  ]);
-  caseTab.type = "button";
-  caseTab.dataset.tab = "case";
-  caseTab.disabled = isGenerating;
-  caseTab.addEventListener("click", () => selectSuspect(null));
-
-  const boardTab = el("button", boardOpen ? "tab case-tab active" : "tab case-tab", "", [
-    el("strong", "", "Timeline"),
-    el("small", "", "Pin where everyone was"),
-  ]);
-  boardTab.type = "button";
-  boardTab.dataset.tab = "board";
-  boardTab.disabled = isGenerating;
-  boardTab.addEventListener("click", () => selectSuspect(null, true));
-
+  const found = state.foundClueIDs.size;
   tabsEl.replaceChildren(
-    caseTab,
-    boardTab,
-    ...theCase.suspects.map((s) => {
-      const btn = el("button", s.id === state.activeSuspectID ? "tab active" : "tab", "", [
-        el("strong", "", s.name),
-        el("small", "", s.role),
-      ]);
-      btn.type = "button";
-      btn.dataset.tab = s.id;
-      btn.disabled = isGenerating;
-      btn.addEventListener("click", () => selectSuspect(s.id));
-      return btn;
-    }),
+    folderTab("station", "Station", `${state.searchedRoomIDs.size} of ${theCase.rooms.length} searched`, view === "station", "tab-file", () => selectView("station")),
+    folderTab("evidence", "Evidence", `${found} item${found === 1 ? "" : "s"}`, view === "evidence", "tab-file", () => selectView("evidence")),
+    folderTab("timeline", "Timeline", "Pin the crew", view === "timeline", "tab-file", () => selectView("timeline")),
+    ...theCase.suspects.map((s) =>
+      folderTab(s.id, s.shortName, s.role, view === "suspect" && s.id === state.activeSuspectID, "tab-crew", () => selectView("suspect", s.id)),
+    ),
   );
 }
 
@@ -392,7 +404,7 @@ function chatPlaceholder(): string {
   if (engineStatus === "unsupported") return "Questioning needs WebGPU. You can still search and accuse.";
   if (engineStatus === "failed") return "The AI failed to load. You can still search and accuse.";
   if (!engine) return "The crew AI is still loading...";
-  return state.activeSuspectID ? `Question ${suspectName(state.activeSuspectID)}...` : "Open a crew member's tab to question them...";
+  return state.activeSuspectID ? `Question ${suspectName(state.activeSuspectID)}...` : "Ask a question...";
 }
 
 function updateControls(): void {
@@ -401,7 +413,7 @@ function updateControls(): void {
   input.placeholder = chatPlaceholder();
   exportBtn.disabled = isGenerating;
   accuseBtn.disabled = isGenerating;
-  accuseBtn.textContent = isOver(state) ? "View result" : "Make an accusation";
+  accuseBtn.textContent = isOver(state) ? "View result" : "Accuse";
   renderTabs();
   renderChips();
   coachRender();
@@ -445,7 +457,9 @@ function renderStation(): void {
   renderStorm();
   renderRooms();
   renderRoomDetail();
+  renderSearchLog();
   renderEvidence();
+  renderTray();
   updateControls();
 }
 
@@ -469,23 +483,22 @@ function doSearch(id: RoomID): void {
   const found = searchRoom(state, theCase, id);
   newClueIDs.clear();
   found.forEach((cl) => newClueIDs.add(cl.id));
-  // Switch to the Case File so the new evidence and its description show up in the main log
-  state.activeSuspectID = null;
-  boardOpen = false;
-  renderChatLog();
+  // Searching happens in the Station tab, whose log shows the new evidence and its description
+  view = "station";
+  renderView();
   afterTurn();
 }
 
-function selectSuspect(id: SuspectID | null, board = false): void {
+function selectView(next: View, suspectID?: SuspectID): void {
   if (isGenerating) return;
-  state.activeSuspectID = id;
-  boardOpen = id === null && board;
+  view = next;
+  if (next === "suspect" && suspectID) state.activeSuspectID = suspectID;
   persist();
-  renderChatLog();
-  renderEvidence();
+  renderView();
+  renderTray();
   updateControls();
   // Skip on touch screens, where focusing pops up the keyboard over the conversation
-  if (id && matchMedia("(pointer: fine)").matches) input.focus();
+  if (next === "suspect" && matchMedia("(pointer: fine)").matches) input.focus();
 }
 
 // Sends one player message to a suspect and streams the reply. Returns false if it failed.
@@ -548,10 +561,11 @@ async function ask(suspectID: SuspectID, text: string, kind: ActionKind, scripte
   return ok;
 }
 
-async function showEvidence(clueID: ClueID): Promise<void> {
-  const suspectID = state.activeSuspectID;
+// Works from the Evidence tab or a crew member's tray; either way the conversation opens to show the reaction
+async function showEvidence(clueID: ClueID, suspectID: SuspectID): Promise<void> {
   const clue = clueByID(clueID);
-  if (!suspectID || !clue || !canTalk()) return;
+  if (!clue || !canTalkNow()) return;
+  if (view !== "suspect" || state.activeSuspectID !== suspectID) selectView("suspect", suspectID);
   if (!showClue(state, suspectID, clueID)) return;
 
   // The suspect learns about the clue through the system prompt (EVIDENCE SHOWN, plus any unlocks).
@@ -565,6 +579,7 @@ async function showEvidence(clueID: ClueID): Promise<void> {
   if (!ok) {
     state.shownClues[suspectID].delete(clueID);
     renderEvidence();
+    renderTray();
   }
 }
 
@@ -590,7 +605,7 @@ form.addEventListener("submit", (event) => {
       !state.shownClues[suspectID].has(cl.id) &&
       cl.name.toLowerCase().split(/[\s-]+/).some((word) => word.length >= 5 && lower.includes(word)),
   );
-  if (described) toast(`Tip: to confront ${suspectName(suspectID)} with the ${described.name}, press Show in the Evidence list.`);
+  if (described) toast(`Tip: to confront ${suspectName(suspectID)} with the ${described.name}, use the evidence tray under the conversation.`);
 
   input.value = "";
   void ask(suspectID, text, "question");
@@ -696,7 +711,7 @@ accuseForm.addEventListener("submit", (event) => {
   accuseDialog.close();
   persist();
   renderStation();
-  renderChatLog();
+  renderView();
   setStatus(verdict.correctCulprit ? "Case closed." : "The killer got away.");
   openEnd();
 });
@@ -722,9 +737,9 @@ function retryCase(): void {
     return;
   }
   newClueIDs.clear();
-  boardOpen = false;
+  view = "station";
   endDialog.close();
-  renderChatLog();
+  renderView();
   renderStation();
   setStatus(isTutorial ? "Training restarted." : "Case restarted. This try won't count toward your stats.");
 }
@@ -780,8 +795,8 @@ async function init(): Promise<void> {
   caseNumberEl.textContent = caseLabel(info);
   $<HTMLElement>("#app").hidden = false;
   document.title = `Dead Orbit: ${caseLabel(info)}`;
-  renderChatLog();
   renderStation();
+  renderView();
 
   // The coach replaces the help dialog in the tutorial
   if (!isTutorial && !readFlag("seen-help")) {

@@ -3,29 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="light" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
     <meta name="description" content="A daily murder mystery on a space station. The suspects are played by an AI running in your browser." />
     <link rel="stylesheet" href="/src/style.css" />
     <title>Dead Orbit</title>
   </head>
   <body>
     <main id="home" hidden>
+      <div class="home-corner">
+        <button id="home-help-btn" class="icon-btn" type="button" aria-label="How to play" title="How to play">?</button>
+        <button id="home-settings-btn" class="icon-btn" type="button" aria-label="Settings" title="Settings">&#9881;</button>
+      </div>
       <header id="home-header">
-        <div>
-          <h1>Dead Orbit</h1>
-          <p class="tagline">A daily murder mystery aboard a space station. The suspects are played by an AI that runs in your browser.</p>
-        </div>
-        <div class="header-buttons">
-          <button id="home-help-btn" class="icon-btn" type="button" aria-label="How to play" title="How to play">?</button>
-          <button id="home-settings-btn" class="icon-btn" type="button" aria-label="Settings" title="Settings">&#9881;</button>
-        </div>
+        <h1>Dead Orbit</h1>
+        <p class="tagline">A daily murder mystery aboard a space station. The suspects are played by an AI that runs in your browser.</p>
       </header>
       <section id="home-today" class="home-card"></section>
+      <section id="home-archive" class="home-card"></section>
       <div class="home-grid">
         <section id="home-training" class="home-card"></section>
         <section id="home-stats" class="home-card"></section>
       </div>
-      <section id="home-archive" class="home-card"></section>
     </main>
 
     <main id="app" hidden>
@@ -33,19 +34,22 @@
         <div id="brand">
           <a id="home-link" href="./"><h1>Dead Orbit</h1></a>
           <span id="case-number"></span>
-          <a id="daily-link" href="./">Home</a>
         </div>
         <div id="header-right">
+          <a id="daily-link" class="icon-btn" href="./" aria-label="Home" title="Home">&#8962;</a>
           <button id="help-btn" class="icon-btn" type="button" aria-label="How to play" title="How to play">?</button>
-          <button id="stats-btn" class="icon-btn" type="button" aria-label="Statistics" title="Statistics">&#9636;</button>
+          <button id="stats-btn" class="icon-btn" type="button" aria-label="Statistics" title="Statistics">&#9776;</button>
           <button id="settings-btn" class="icon-btn" type="button" aria-label="Settings" title="Settings">&#9881;</button>
-          <button id="export-btn" class="text-btn" type="button" hidden>Export Log</button>
+          <button id="export-btn" class="text-btn" type="button" hidden>Export</button>
         </div>
       </header>
 
-      <section id="storm" aria-live="polite">
-        <div id="storm-label"></div>
-        <div id="storm-bar"><div id="storm-fill"></div></div>
+      <section id="storm-row">
+        <div id="storm" aria-live="polite">
+          <div id="storm-label"></div>
+          <div id="storm-bar"><div id="storm-fill"></div></div>
+        </div>
+        <button id="accuse-btn" type="button">Accuse</button>
       </section>
 
       <section id="coach" aria-live="polite" hidden></section>
@@ -53,27 +57,43 @@
       <p id="status">Checking your GPU...</p>
       <progress id="progress" max="1" value="0"></progress>
 
-      <div id="layout">
-        <aside id="station">
-          <h2>Station</h2>
-          <div id="room-list"></div>
-          <div id="room-detail"></div>
+      <div id="folder">
+        <nav id="suspect-tabs" class="folder-tabs" aria-label="Case file sections"></nav>
+        <div id="folder-body">
+          <section id="view-station" class="view">
+            <div class="station-grid">
+              <div class="station-rooms">
+                <h2>Rooms</h2>
+                <div id="room-list"></div>
+                <div id="room-detail"></div>
+              </div>
+              <div class="station-log">
+                <h2>Search log</h2>
+                <div id="search-log"></div>
+              </div>
+            </div>
+          </section>
 
-          <h2>Evidence <span id="evidence-count"></span></h2>
-          <ul id="evidence-list"></ul>
+          <section id="view-evidence" class="view" hidden>
+            <h2>Evidence</h2>
+            <ul id="evidence-list"></ul>
+          </section>
 
-          <button id="accuse-btn" type="button">Make an accusation</button>
-        </aside>
+          <section id="view-timeline" class="view" hidden>
+            <h2>Timeline</h2>
+            <div id="board"></div>
+          </section>
 
-        <section id="interrogation">
-          <nav id="suspect-tabs"></nav>
-          <div id="chat-log" aria-live="polite"></div>
-          <div id="question-chips" hidden></div>
-          <form id="chat-form">
-            <input id="chat-input" type="text" placeholder="Choose a crew member to question..." autocomplete="off" maxlength="300" disabled />
-            <button id="send-btn" type="submit" disabled>Ask</button>
-          </form>
-        </section>
+          <section id="view-suspect" class="view" hidden>
+            <div id="chat-log" aria-live="polite"></div>
+            <div id="evidence-tray"></div>
+            <div id="question-chips" hidden></div>
+            <form id="chat-form">
+              <input id="chat-input" type="text" placeholder="Ask a question..." autocomplete="off" maxlength="300" disabled />
+              <button id="send-btn" type="submit" disabled>Ask</button>
+            </form>
+          </section>
+        </div>
       </div>
     </main>
 

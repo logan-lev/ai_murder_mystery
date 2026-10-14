@@ -98,14 +98,16 @@ Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimiz
 
 ## UI notes
 
+- Visual style is a paper case file: kraft desk, manila folder, paper sheets, typewriter headings (Special Elite / Courier Prime via Google Fonts), ink-blue actions, red stamp accents. Colors live in `:root` tokens in `style.css`.
+- The case page is a folder with tabs: Station (rooms, room detail, search log), Evidence (clue cards with a Show button per crew member), Timeline (board), then one tab per crew member (conversation, evidence tray, question box). `view` in `game.ts` tracks the open tab; the conversation and board re-render only on tab changes so a streaming reply is never wiped.
+- Coach steps list highlight targets in priority order; the first visible wins (tab first with `:not(.active)`, then the control inside).
+
 - `?tutorial` is the training case (saved under seed 0). It never calls the model: preset question chips replace the text box, and answers come from `tutorial/case.ts`. The model still downloads in the background so the first real case is ready. Keep the scripted answers, `howToSolve`, and the coach steps consistent if the training case changes.
 - Training restarts from scratch whenever the player leaves and returns; only a page reload resumes it (checked via the navigation timing type, plus a `pageshow` handler for back/forward cache). Completion is stored in the `training-done` flag, which the home page reads.
 - Training progress is `state.tutorialStep`, a saved index that only moves forward one step at a time. A step's `done` check is consulted only while it is the current step (never "skip to after the last satisfied step": tabs are unlocked, so later checks can come true early). Questions and shown evidence count only once answered, so the coach never moves on mid-reply. Next buttons only advance from the step they were rendered for (double clicks).
 - Training is locked step by step: `body.tutorial-locked` disables action controls (room chips, search, question chips, Show buttons, board pins, accuse) except those matching the current step's `allow` selectors, which get `.coach-allowed`. Capture-phase click, keydown, and change guards in `Coach` also block programmatic clicks and keyboard input. Keep `LOCKABLE` in `coach.ts` and the selector list in `style.css` in sync. Tabs are never locked.
 - The Timeline tab (`boardOpen`, with `activeSuspectID` null) shows `state.board`. Pins are the player's notes and are never scored.
 - Retry (end screen) resets the case in place with `attempt + 1`. Only attempt 1 of a daily records stats; shared retries are labeled "(retry N)".
-- The first tab is the Case File (`activeSuspectID === null`): briefing, solving guide, and every search result with full clue descriptions. Searching switches to it.
-- "Show to" buttons sit outside the collapsible evidence details so they're always visible, and are accent-filled when usable.
 - `Case.solution.howToSolve` is generated alongside the case and must stay in sync with the case logic (red herrings, witness sightings, motive and secret locations).
 
 ## Accusation
