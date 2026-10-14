@@ -580,6 +580,18 @@ form.addEventListener("submit", (event) => {
     toast("Just type what you'd say. Actions in ( ) or [ ] aren't supported.");
     return;
   }
+  // Describing evidence in a message doesn't count as showing it (only EVIDENCE SHOWN is real to a
+  // suspect), and new players miss that. Point them at the Show button, but still send the message.
+  const lower = text.toLowerCase();
+  const described = theCase.clues.find(
+    (cl) =>
+      cl.id !== "body" &&
+      state.foundClueIDs.has(cl.id) &&
+      !state.shownClues[suspectID].has(cl.id) &&
+      cl.name.toLowerCase().split(/[\s-]+/).some((word) => word.length >= 5 && lower.includes(word)),
+  );
+  if (described) toast(`Tip: to confront ${suspectName(suspectID)} with the ${described.name}, press Show in the Evidence list.`);
+
   input.value = "";
   void ask(suspectID, text, "question");
 });

@@ -136,6 +136,10 @@ Known model behaviors and their fixes:
 - Contradictory admissions confuse the 3B model. Unlocks use `storyChange` to rewrite the cover story, and `confession` drops all earlier denials and hiding rules. Avoid "last one wins" style rules.
 - The culprit denies their motive until confessing (by design, it was flaky otherwise). Innocents admit theirs.
 - First replies sometimes say "as I mentioned earlier": the prompt marks a first meeting, and `stripFalseCallbacks()` removes the phrase from a suspect's first reply.
+- Camera questions get a fixed answer (`isCameraQuestion`/`cameraReply`): with prompt rules alone, suspects "explained" impossible footage and placed themselves at the scene. Forensic claims and hearsay add a turn-specific `RIGHT NOW:` reminder at the end of the prompt (`bluffReminders`).
+- Sightings are two sentences with the name repeated ("You saw X in the airlock. X was lugging a tool bag."); as one clause, a witness read the carrying as about itself. Each weapon has its own `carried` wording.
+- Suspects are told whose trace is whose only when shown it, and red herrings' scene visit (and who they saw there) arrives with that unlock, not before.
+- Replies cut off by `max_tokens` are trimmed to the last full sentence (`trimIncomplete`).
 - Still open: occasional invented details (e.g. who someone was with), and suspects sometimes accept a true premise the player asserts.
 
 Play a round, click Export log, and review the Markdown file. It contains the solution, true timeline, all conversations (raw, including brackets), each suspect's final system prompt, and reply timing averages. When a suspect misbehaves, the fix is usually in the prompt or the case data, not the model.
