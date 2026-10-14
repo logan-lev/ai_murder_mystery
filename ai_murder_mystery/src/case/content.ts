@@ -493,7 +493,7 @@ export const METHODS: MethodDef[] = [
         hideRooms: ["comms", "cargo-bay", "rec-room"],
         body: "{victim} is slumped over with high-voltage burn marks on {his} neck.",
         hidden: "A stun baton from the security locker, its safety limiter pried off and its casing scorched.",
-        carried: "with something long tucked under one arm",
+        carried: "carrying something long tucked under one arm",
         confession: "You took a stun baton from security, removed its limiter, used it on {victim} in the {scene}, and hid it in the {hideRoom}."
     },
     {

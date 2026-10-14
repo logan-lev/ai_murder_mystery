@@ -101,10 +101,12 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
                 if (room === "exterior" || room !== timeline[b.id][s]) continue;
                 // The culprit only has the weapon on them right before (fetching it) and right after (hiding it)
                 const hasWeapon = b.id === culprit.id && Math.abs(s - murderIDx) === 1;
-                const carrying = hasWeapon ? `, ${method.carried}` : "";
+                // Two sentences with the name repeated: written as one clause, a witness once read
+                // "you saw X in the airlock, lugging a tool bag" as being about themselves
+                const carrying = hasWeapon ? ` ${b.name} was ${method.carried}.` : "";
                 sightings.get(a.id)!.push({
                     slot: s,
-                    text: `At ${SLOTS[s]} you saw ${b.name} in the ${roomName(room)}${carrying}.`
+                    text: `At ${SLOTS[s]} you saw ${b.name} in the ${roomName(room)}.${carrying}`
                 });
             }
         }
@@ -164,7 +166,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
     const aboard = cast.map((c) => `${c.name} (${c.pronouns.he}), ${c.role}`).join("; ");
     const sharedFacts = [
         ...SHARED_FACTS.map((f) => fill(f, vars)),
-        `Aboard the station tonight: ${aboard}. ${victim.shortName} is dead. No one else is aboard.`,
+        `Aboard the station tonight: ${aboard}. ${victim.shortName} (${victim.pronouns.he}) is dead. No one else is aboard.`,
     ];
     if (cast.some((c) => c.id === "sable")) sharedFacts.push("SABLE is an android and is referred to as 'it'.");
 

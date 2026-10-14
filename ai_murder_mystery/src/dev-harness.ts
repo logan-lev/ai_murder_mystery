@@ -2,7 +2,7 @@ import type { Case, ClueID, SuspectID } from "./case/types";
 import type { Truth } from "./case/generate";
 import { createGameState, buildMessages } from "./game/state";
 import { streamReply, type Engine } from "./llm";
-import { guardReply, isRoleplayRequest, roleplayRefusal } from "./game/guard";
+import { guardReply, isRoleplayRequest, roleplayRefusal, isCameraQuestion, cameraReply } from "./game/guard";
 
 // Dev-only console tool for stress-testing suspects without spending turns or touching the real game.
 // Usage in the browser console:
@@ -21,6 +21,8 @@ export function installHarness(getEngine: () => Engine | null, c: Case, truth: T
             const others = c.suspects.filter((s) => s.id !== suspectID).map((s) => s.name);
             const raw = isRoleplayRequest(text, others)
                 ? roleplayRefusal(name, narrate)
+                : isCameraQuestion(text)
+                ? cameraReply(name, narrate)
                 : (await streamReply(engine, buildMessages(scratch, c, suspectID, narrate), () => {})).text;
             const reply = guardReply(raw, name, narrate);
             if (reply !== raw) transcript.push(`(guard replaced: ${raw})`);

@@ -3,6 +3,7 @@ import type { Case, Clue, ClueID, RoomID, SuspectID } from "../case/types";
 import type { Accusation, Verdict } from "./accuse";
 import { buildSuspectPrompt } from "./prompt";
 import { SLOTS } from "../case/content";
+import { bluffReminders } from "./guard";
 
 // Every search, question, or shown clue costs one turn. The storm clears when they run out.
 export const TURN_LIMIT = 20;
@@ -89,10 +90,14 @@ export function showClue(state: GameState, suspectID: SuspectID, clueID: ClueID)
 export function buildMessages(state: GameState, c: Case, suspectID: SuspectID, narrate = false): ChatCompletionMessageParam[] {
     const suspect = c.suspects.find((s) => s.id === suspectID);
     if (!suspect) throw new Error(`Unknown Suspect: "${suspectID}"`);
+    const convo = state.conversations[suspectID];
+    const last = convo[convo.length - 1];
+    const lastText = last?.role === "user" && typeof last.content === "string" ? last.content : "";
+    const others = c.suspects.filter((s) => s.id !== suspectID).map((s) => s.name);
     return [
         {
             role: "system",
-            content: buildSuspectPrompt(c, suspect, state.shownClues[suspectID], narrate, state.conversations[suspectID].length <= 1)
+            content: buildSuspectPrompt(c, suspect, state.shownClues[suspectID], narrate, convo.length <= 1, bluffReminders(lastText, others))
         },
         ...state.conversations[suspectID].slice(-MAX_HISTORY)
     ];

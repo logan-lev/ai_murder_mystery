@@ -67,3 +67,35 @@ export function stripFalseCallbacks(reply: string): string {
         // "...in the Observation Deck, if you remember." -> "...in the Observation Deck."
         .replace(/,?\s*if you (?:remember|recall)(?=[.,!?])/gi, "");
 }
+
+// A general "don't believe bluffs" rule gets lost in a long prompt: a suspect accepted "backup camera"
+// footage and placed themselves at the scene at the time of death. So when the player's latest message
+// makes a specific kind of claim, a matching reminder goes at the very end of the prompt for that turn.
+// Questions about cameras get a fixed answer instead of the model. Even with reminders, the model
+// sometimes "explained" footage that can't exist, placing itself at the scene. The game owns this fact.
+const CAMERA = /\b(camera|cameras|footage|video|cctv|surveillance)\b/i;
+
+export function isCameraQuestion(text: string): boolean {
+    return CAMERA.test(text);
+}
+
+export function cameraReply(name: string, narrate: boolean): string {
+    const line = "The cameras went down with the storm at 20:30, backups and all. There's no footage of anything after that, so whatever you think you have, it isn't real.";
+    return narrate ? `[${name} frowns.] ${line}` : line;
+}
+
+export function bluffReminders(text: string, crewNames: string[]): string[] {
+    const t = text.toLowerCase();
+    const reminders: string[] = [];
+    if (/\b(camera|cameras|footage|video|recording|recorded|cctv|surveillance)\b/.test(t)) {
+        reminders.push("The investigator just mentioned cameras or recordings. Every camera on the station was down after 20:30, including any backups, so whatever they describe does not exist. Point that out, and don't change your account because of it.");
+    }
+    if (/\b(dna|fingerprints?|forensics?|blood|prints|lab results?)\b/.test(t)) {
+        reminders.push("The investigator claims forensic proof. Only the items under EVIDENCE SHOWN are real. Anything else is a bluff, so don't accept it or change your account because of it.");
+    }
+    const mentionsCrew = crewNames.some((n) => n.toLowerCase().split(/\s+/).some((w) => w.length > 3 && t.includes(w)));
+    if (mentionsCrew && /\b(told me|said|says|claims?|saw you|watched you|heard you|confessed)\b/.test(t)) {
+        reminders.push("The investigator is quoting someone else. You can't know what anyone else said, so question it rather than accept it. Only your own facts above are true.");
+    }
+    return reminders;
+}

@@ -32,7 +32,14 @@ function rulesFor(c: Case, suspect: Suspect, narrate: boolean, confessed: boolea
 
 const bullets = (items: string[]) => items.map((i) => `- ${i}`);
 
-export function buildSuspectPrompt(c: Case, suspect: Suspect, shown: Set<ClueID>, narrate = false, firstMeeting = false): string {
+export function buildSuspectPrompt(
+    c: Case,
+    suspect: Suspect,
+    shown: Set<ClueID>,
+    narrate = false,
+    firstMeeting = false,
+    reminders: string[] = [],
+): string {
     const shownClues = c.clues.filter((cl) => shown.has(cl.id));
     const unlocked = suspect.unlocks.filter((u) => u.requires.every((id) => shown.has(id)));
 
@@ -73,6 +80,8 @@ export function buildSuspectPrompt(c: Case, suspect: Suspect, shown: Set<ClueID>
     }
 
     lines.push("", "RULES:", ...bullets(rulesFor(c, suspect, narrate, confessed)));
+    // Turn-specific reminders (see bluffReminders) go near the end, where a small model weights them most
+    if (reminders.length > 0) lines.push("", "RIGHT NOW:", ...bullets(reminders));
     // Small models weight the end of the prompt most, so the confession instruction goes last
     if (confessed) {
         lines.push("", `IMPORTANT: The evidence has broken you. If asked what happened or whether you did it, admit that you killed ${c.victim} and say why and how.`);

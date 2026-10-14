@@ -22,7 +22,7 @@ import { scoreAccusation, PROOF_SLOTS, type Accusation } from "./game/accuse";
 import { loadGame, saveGame, pruneSaves, loadStats, recordDailyResult, recordHistory, readFlag, writeFlag } from "./game/save";
 import { buildShareText, shareText } from "./game/share";
 import { buildReport, downloadText, type ReplyStat } from "./game/export";
-import { guardReply, isRoleplayRequest, roleplayRefusal, polishNarration, stripFalseCallbacks } from "./game/guard";
+import { guardReply, isRoleplayRequest, roleplayRefusal, polishNarration, stripFalseCallbacks, isCameraQuestion, cameraReply } from "./game/guard";
 import { parseReply, renderWithActions } from "./ui/reply";
 import { el, $, formatCountdown } from "./ui/dom";
 import { renderEnd, renderStats, COUNTDOWN_CLASS } from "./ui/results";
@@ -518,6 +518,8 @@ async function ask(suspectID: SuspectID, text: string, kind: ActionKind, scripte
         ? { text: scripted, stats: noStats }
         : kind === "question" && isRoleplayRequest(text, others)
         ? { text: roleplayRefusal(name, narrate), stats: noStats }
+        : kind === "question" && isCameraQuestion(text)
+        ? { text: cameraReply(name, narrate), stats: noStats }
         : await streamReply(engine!, buildMessages(state, theCase, suspectID, narrate), (piece) => {
             shown += piece;
             update(shown);
