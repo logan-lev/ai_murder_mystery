@@ -50,6 +50,7 @@ interface SavedGame {
     // Added after version 2 shipped, so older saves may not have them
     board?: Record<string, string[]>;
     attempt?: number;
+    tutorialStep?: number;
 }
 
 export function saveGame(seed: number, state: GameState): void {
@@ -69,6 +70,7 @@ export function saveGame(seed: number, state: GameState): void {
         verdict: state.verdict,
         board: state.board,
         attempt: state.attempt,
+        tutorialStep: state.tutorialStep,
     };
     writeJSON(SAVE_PREFIX + seed, saved);
 }
@@ -90,6 +92,7 @@ export function loadGame(seed: number, c: Case): GameState | null {
     state.accusation = saved.accusation;
     state.verdict = saved.verdict;
     state.attempt = saved.attempt ?? 1;
+    state.tutorialStep = saved.tutorialStep ?? 0;
 
     for (const s of c.suspects) {
         const convo = saved.conversations[s.id] ?? [];

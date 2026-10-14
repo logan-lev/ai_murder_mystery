@@ -208,10 +208,14 @@ export const SHOWS: Record<SuspectID, ScriptedShow[]> = {
 
 export const SHOW_FALLBACK = "I don't know anything about that.";
 
+// A question counts once it has been answered, not when it's clicked, so the coach never moves on
+// while the reply is still arriving (and a reload mid-reply can't skip it)
 export function isAsked(state: { conversations: Record<string, { role: string; content?: unknown }[]> }, questionID: string): boolean {
     for (const [suspectID, list] of Object.entries(QUESTIONS)) {
         const q = list.find((x) => x.id === questionID);
-        if (q) return state.conversations[suspectID]?.some((m) => m.role === "user" && m.content === q.text) ?? false;
+        if (!q) continue;
+        const convo = state.conversations[suspectID] ?? [];
+        return convo.some((m, i) => m.role === "user" && m.content === q.text && convo[i + 1]?.role === "assistant");
     }
     return false;
 }

@@ -28,6 +28,8 @@ export interface GameState {
     board: Record<SuspectID, string[]>;
     // 1 for the first try. Retries don't count toward stats and are labeled when shared.
     attempt: number;
+    // Training only: index of the coach step the player is on. Saved so a reload resumes in place.
+    tutorialStep: number;
 }
 
 export function createGameState(c: Case): GameState {
@@ -51,7 +53,8 @@ export function createGameState(c: Case): GameState {
         accusation: null,
         verdict: null,
         board,
-        attempt: 1
+        attempt: 1,
+        tutorialStep: 0
     };
 }
 

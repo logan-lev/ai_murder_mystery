@@ -1,11 +1,13 @@
 import type { ClueID, SuspectID } from "../case/types";
 import type { GameState } from "../game/state";
 import { el } from "../ui/dom";
-import { isAsked } from "./case";
+import { isAsked, TUTORIAL_CASE } from "./case";
 
 export interface CoachContext {
     state: GameState;
-    boardVisited: boolean;
+    // Whether the Timeline tab is showing right now
+    boardOpen: boolean;
+    save: () => void;
 }
 
 interface Step {
@@ -27,7 +29,13 @@ const question = (id: string) => [`.chip[data-q="${id}"]`];
 const pin = (suspectID: string, slot: number) => [`.pin-select[data-pin="${suspectID}-${slot}"]`];
 
 const asked = (s: GameState, questionID: string) => isAsked(s, questionID);
-const shown = (s: GameState, suspectID: SuspectID, clueID: ClueID) => s.shownClues[suspectID]?.has(clueID) ?? false;
+// Like questions, shown evidence counts once the suspect has answered it
+const shown = (s: GameState, suspectID: SuspectID, clueID: ClueID) => {
+    if (!s.shownClues[suspectID]?.has(clueID)) return false;
+    const name = TUTORIAL_CASE.clues.find((cl) => cl.id === clueID)?.name ?? "";
+    const convo = s.conversations[suspectID] ?? [];
+    return convo.some((m, i) => m.role === "user" && typeof m.content === "string" && m.content.includes(`shows you the ${name}:`) && convo[i + 1]?.role === "assistant");
+};
 const searched = (s: GameState, roomID: string) => s.searchedRoomIDs.has(roomID);
 const pinned = (s: GameState, suspectID: SuspectID, slot: number, roomID: string) => s.board[suspectID]?.[slot] === roomID;
 
@@ -53,7 +61,7 @@ const STEPS: Step[] = [
     {
         text: "Open the Timeline tab. It's your board for pinning where everyone was.",
         target: '[data-tab="board"]',
-        done: ({ boardVisited }) => boardVisited,
+        done: ({ boardOpen }) => boardOpen,
     },
     {
         text: "Now question someone. Open Dr. Mara Okafor's tab and ask where she was tonight.",
@@ -140,65 +148,73 @@ const STEPS: Step[] = [
 
 // Steps without a check are acknowledged with Next. They also count as done once any later
 // step is done, so a reload (or a player who runs ahead) never lands on stale instructions.
+// Progress is a single index stored in the game state that only moves forward, one step at a time.
+// A step's check is only consulted while it's the current step, so doing something early (like
+// opening the Timeline tab) can never skip a step that comes before it.
 export class Coach {
-    private acked = new Set<number>();
     private highlighted: Element | null = null;
-
+    private shownIndex = -1;
+    private scrolledAllowedFor = -1;
     private panel: HTMLElement;
     private onFinish: { daily: () => void; replay: () => void };
 
     constructor(panel: HTMLElement, onFinish: { daily: () => void; replay: () => void }) {
         this.panel = panel;
         this.onFinish = onFinish;
-        // The CSS lock stops pointer clicks; this also catches keyboard activation (Enter/Space fire click)
-        document.addEventListener(
-            "click",
-            (event) => {
-                const control = (event.target as Element | null)?.closest(LOCKABLE);
-                if (control && document.body.classList.contains("tutorial-locked") && !control.classList.contains("coach-allowed")) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-            },
-            true,
-        );
-    }
 
-    private current(ctx: CoachContext): number {
-        let lastDone = -1;
-        STEPS.forEach((step, i) => {
-            if (step.done?.(ctx)) lastDone = i;
-        });
-        for (let i = lastDone + 1; i < STEPS.length; i++) {
-            const step = STEPS[i];
-            if (step.done ? !step.done(ctx) : !this.acked.has(i)) return i;
-        }
-        return STEPS.length - 1;
-    }
-
-    reset(): void {
-        this.acked.clear();
+        const isLocked = (target: EventTarget | null) => {
+            const control = (target as Element | null)?.closest?.(LOCKABLE);
+            return !!control && document.body.classList.contains("tutorial-locked") && !control.classList.contains("coach-allowed");
+        };
+        // The CSS lock stops pointer clicks. These also stop programmatic and keyboard clicks,
+        // and keyboard changes to a locked dropdown (arrow keys change a select without a click).
+        document.addEventListener("click", (event) => {
+            if (isLocked(event.target)) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        }, true);
+        document.addEventListener("keydown", (event) => {
+            if (event.key !== "Tab" && isLocked(event.target)) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        }, true);
+        document.addEventListener("change", (event) => {
+            if (isLocked(event.target)) event.stopPropagation();
+        }, true);
     }
 
     render(ctx: CoachContext): void {
-        const i = this.current(ctx);
+        const { state } = ctx;
+        // Finishing the case ends training wherever the player is
+        if (state.verdict) state.tutorialStep = STEPS.length - 1;
+        // Advance past every step whose check is met, one at a time, in order
+        while (state.tutorialStep < STEPS.length - 1 && STEPS[state.tutorialStep].done?.(ctx)) {
+            state.tutorialStep++;
+            ctx.save();
+        }
+        const i = Math.min(Math.max(state.tutorialStep, 0), STEPS.length - 1);
         const step = STEPS[i];
         const last = i === STEPS.length - 1;
 
         const actions: HTMLElement[] = [];
         if (last) {
+            const replay = el("button", state.verdict && !this.solved(state) ? "primary-btn" : "text-btn", "Replay training");
+            replay.type = "button";
+            replay.addEventListener("click", this.onFinish.replay);
             const daily = el("button", "primary-btn", "Play today's case");
             daily.type = "button";
             daily.addEventListener("click", this.onFinish.daily);
-            const replay = el("button", "text-btn", "Replay training");
-            replay.type = "button";
-            replay.addEventListener("click", this.onFinish.replay);
             actions.push(replay, daily);
         } else if (!step.done) {
             const next = el("button", "primary-btn", "Next");
             next.type = "button";
             next.addEventListener("click", () => {
-                this.acked.add(i);
+                // Only advance from the step this button was made for, so a double click moves one step
+                if (state.tutorialStep !== i) return;
+                state.tutorialStep = i + 1;
+                ctx.save();
                 this.render(ctx);
             });
             actions.push(next);
@@ -207,19 +223,44 @@ export class Coach {
         this.panel.hidden = false;
         this.panel.replaceChildren(
             el("p", "coach-step", `Training ${i + 1} of ${STEPS.length}`),
-            el("p", "coach-text", step.text),
+            el("p", "coach-text", last ? this.finalText(state) : step.text),
             el("div", "coach-actions", "", actions),
         );
 
         this.highlighted?.classList.remove("coach-target");
         this.highlighted = step.target ? document.querySelector(step.target) : null;
         this.highlighted?.classList.add("coach-target");
-
+        // On a new step, bring what it points at into view (it can be off-screen on a phone)
+        if (i !== this.shownIndex) {
+            this.shownIndex = i;
+            this.highlighted?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }
         // Lock every action control except this step's, until the final step frees everything
         document.body.classList.toggle("tutorial-locked", !last);
         document.querySelectorAll(".coach-allowed").forEach((node) => node.classList.remove("coach-allowed"));
         for (const selector of step.allow ?? []) {
             document.querySelectorAll(selector).forEach((node) => node.classList.add("coach-allowed"));
         }
+
+        // On a phone the allowed control may sit below the fold too (e.g. the question chips)
+        if (i !== this.scrolledAllowedFor) {
+            const allowed = document.querySelector(".coach-allowed");
+            if (allowed) {
+                this.scrolledAllowedFor = i;
+                const box = allowed.getBoundingClientRect();
+                if (box.bottom > window.innerHeight || box.top < 0) allowed.scrollIntoView({ block: "center", behavior: "smooth" });
+            }
+        }
+    }
+
+    private solved(state: GameState): boolean {
+        return state.verdict?.rank === "Master Investigator";
+    }
+
+    private finalText(state: GameState): string {
+        const wrap = "Real cases have five suspects, you type your own questions to an AI, and innocent crew also hide secrets about where they were at the time of death. Evidence of a secret clears them.";
+        if (!state.verdict || this.solved(state)) return `That's the whole loop. ${wrap}`;
+        if (!state.verdict.correctCulprit) return "Not quite: Tomas Reyes was the killer. His glove put him at the scene, Okafor and SABLE never saw him there at 21:00, and both saw him carrying the vial. Replay training to try it again.";
+        return "You got the killer, but not all of the proof. Opportunity was the Coolant-Stained Glove, motive the Inspection Audit, and means the Neurotoxin Vial. Replay training to try it again, or move on to a real case.";
     }
 }

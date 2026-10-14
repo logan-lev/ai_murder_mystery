@@ -1218,3 +1218,27 @@ body.tutorial-locked :is(.room-chip, #room-detail button, .chip, .show-btn, .pin
 #accuse-dialog {
   width: min(640px, calc(100vw - 2rem));
 }
+
+/* The coach stays visible while the player scrolls to what it points at */
+#coach {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  box-shadow: 0 6px 16px rgba(5, 8, 13, 0.6);
+}
+
+/* Leave room for the sticky coach when a target is scrolled into view */
+.coach-target {
+  scroll-margin-top: 11rem;
+}
+
+@media (max-width: 760px) {
+  #coach {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.92rem;
+  }
+
+  .coach-target {
+    scroll-margin-top: 13rem;
+  }
+}

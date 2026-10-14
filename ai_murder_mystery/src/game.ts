@@ -78,7 +78,6 @@ let isGenerating = false;
 let accuseForced = false;
 const newClueIDs = new Set<ClueID>(); // highlighted until the next search
 let boardOpen = false; // the Timeline tab is showing (activeSuspectID is null then)
-let boardVisited = false;
 
 const coach = isTutorial
   ? new Coach(coachEl, {
@@ -86,7 +85,8 @@ const coach = isTutorial
       replay: () => retryCase(),
     })
   : null;
-const coachRender = () => coach?.render({ state, boardVisited });
+// persist() skips saving mid-reply, so coach progress is never saved ahead of the conversation
+const coachRender = () => coach?.render({ state, boardOpen, save: persist });
 
 // ---------- Helpers ----------
 function setStatus(text: string): void {
@@ -467,7 +467,6 @@ function selectSuspect(id: SuspectID | null, board = false): void {
   if (isGenerating) return;
   state.activeSuspectID = id;
   boardOpen = id === null && board;
-  if (boardOpen) boardVisited = true;
   persist();
   renderChatLog();
   renderEvidence();
@@ -694,8 +693,6 @@ function retryCase(): void {
   }
   newClueIDs.clear();
   boardOpen = false;
-  boardVisited = false;
-  coach?.reset();
   endDialog.close();
   renderChatLog();
   renderStation();
