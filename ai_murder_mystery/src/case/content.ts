@@ -133,6 +133,9 @@ export interface MethodDef {
     hideRooms: RoomID[];
     body: string;
     hidden: string;
+    // How a witness describes the killer with the weapon, after "you saw X in the Y, ". Lowercase, no period.
+    // Different per weapon, so "carrying a weapon" isn't one fixed phrase players learn to scan for.
+    carried: string;
     confession: string;
 }
 
@@ -470,6 +473,7 @@ export const METHODS: MethodDef[] = [
         hideRooms: ["hydroponics", "cargo-bay", "observation"],
         body: "{victim} is slumped beside a cup of synthetic coffee, {his} lips tinged blue.",
         hidden: "An empty neurotoxin vial from the medbay's locked cabinet, tucked out of sight.",
+        carried: "clutching something small in one closed hand",
         confession: "You took a neurotoxin vial from the medbay, put it in {victim}'s coffee, and hid the empty vial in the {hideRoom}."
     },
     {
@@ -479,6 +483,7 @@ export const METHODS: MethodDef[] = [
         hideRooms: ["cargo-bay", "airlock", "hydroponics"],
         body: "{victim} lies on the floor with a narrow scorch wound in {his} chest.",
         hidden: "A plasma cutter from engineering, its tip still blackened, stuffed out of sight.",
+        carried: "lugging a heavy tool bag",
         confession: "You took a plasma cutter from engineering, used it on {victim} in the {scene}, and hid it in the {hideRoom}."
     },
     {
@@ -488,6 +493,7 @@ export const METHODS: MethodDef[] = [
         hideRooms: ["comms", "cargo-bay", "rec-room"],
         body: "{victim} is slumped over with high-voltage burn marks on {his} neck.",
         hidden: "A stun baton from the security locker, its safety limiter pried off and its casing scorched.",
+        carried: "with something long tucked under one arm",
         confession: "You took a stun baton from security, removed its limiter, used it on {victim} in the {scene}, and hid it in the {hideRoom}."
     },
     {
@@ -497,6 +503,7 @@ export const METHODS: MethodDef[] = [
         hideRooms: ["galley", "airlock", "observation"],
         body: "{victim} is curled on the floor, {his} skin mottled grey, a half-eaten meal tray beside {him}.",
         hidden: "A cracked culture dish from the research lab, labeled with a biohazard warning, wrapped in a cloth.",
+        carried: "holding a sealed specimen case close",
         confession: "You took a pathogen culture from the research lab, mixed it into {victim}'s meal, and hid the dish in the {hideRoom}."
     }
 ];

@@ -101,7 +101,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
                 if (room === "exterior" || room !== timeline[b.id][s]) continue;
                 // The culprit only has the weapon on them right before (fetching it) and right after (hiding it)
                 const hasWeapon = b.id === culprit.id && Math.abs(s - murderIDx) === 1;
-                const carrying = hasWeapon ? ", carrying something wrapped in a cloth" : "";
+                const carrying = hasWeapon ? `, ${method.carried}` : "";
                 sightings.get(a.id)!.push({
                     slot: s,
                     text: `At ${SLOTS[s]} you saw ${b.name} in the ${roomName(room)}${carrying}.`
@@ -175,12 +175,13 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
         const reason = fill(motive.reason, vars);
 
         const facts = [...c.facts];
-        if (isRedHerring(c.id)) {
-            facts.push(`At ${SLOTS[0]} you briefly visited the ${sceneName} to speak with ${victim.shortName}. ${vars.He} was alive and in a foul mood. You will admit this if asked.`);
-        }
 
-        // Sightings outside the murder slot are told freely
-        facts.push(...seen.filter((s) => s.slot !== murderIDx).map((s) => s.text));
+        // A red herring's visit to the scene stays out of the prompt until they're shown their trace.
+        // Told freely, the model mentioned who it saw at the scene while claiming it never left its post.
+        const atScene = (s: { slot: number }) => isRedHerring(c.id) && s.slot === 0;
+
+        // Other sightings outside the murder slot are told freely
+        facts.push(...seen.filter((s) => s.slot !== murderIDx && !atScene(s)).map((s) => s.text));
 
         // Innocents admit their motive; the culprit denies it until the confession.
         // The model tended to deny it anyway once cornered, so code makes that consistent,
@@ -210,7 +211,11 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
         if (isRedHerring(c.id)) {
             unlocks.push({
                 requires: [`trace-${c.id}`],
-                reveals: `You readily explain that you visited the ${sceneName} at ${SLOTS[0]}, and ${victim.shortName} was alive when you left.`,
+                // Suspects aren't told which trace is theirs until shown it, or they guess (often wrongly)
+                reveals: [
+                    `The ${c.traceName.toLowerCase()} is yours: you left it when you briefly visited the ${sceneName} at ${SLOTS[0]} to speak with ${victim.shortName}. ${victim.shortName} was alive and in a foul mood when you left. You readily admit this now.`,
+                    ...seen.filter(atScene).map((s) => s.text),
+                ].join(" "),
                 storyChange: `At ${SLOTS[0]} you briefly visited the ${sceneName}. ${victim.shortName} was alive when you left.`
             });
         }
@@ -221,7 +226,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
                     requires: [`trace-${c.id}`],
                     // A lie: the culprit claims the same harmless early visit as the red herrings.
                     // The herrings saw each other at that time and can't place the culprit there.
-                    reveals: `You admit you went to the ${sceneName}, but claim it was a short visit at ${SLOTS[0]} and ${victim.shortName} was alive when you left. Stick to that time.`,
+                    reveals: `The ${c.traceName.toLowerCase()} is yours. You admit you went to the ${sceneName}, but claim it was a short visit at ${SLOTS[0]} and ${victim.shortName} was alive when you left. Stick to that time.`,
                     storyChange: `At ${SLOTS[0]} you briefly visited the ${sceneName}. ${victim.shortName} was alive when you left. (Insist on this time.)`
                 },
                 {
@@ -276,8 +281,8 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             const where = roomName(timeline[a.id][s]);
             howToSolve.push(
                 s === afterIDx
-                    ? `${a.name} saw ${culprit.name} in the ${where} at ${SLOTS[s]}, right after the murder, carrying something wrapped in a cloth. That's where the weapon was hidden.`
-                    : `${a.name} saw ${culprit.name} in the ${where} at ${SLOTS[s]}, carrying something wrapped in a cloth: the weapon, before the murder.`,
+                    ? `${a.name} saw ${culprit.name} in the ${where} at ${SLOTS[s]}, right after the murder, ${method.carried}. That's where the weapon was hidden.`
+                    : `${a.name} saw ${culprit.name} in the ${where} at ${SLOTS[s]}, ${method.carried}: the weapon, before the murder.`,
             );
         }
     }
