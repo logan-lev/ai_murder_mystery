@@ -265,10 +265,10 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
     const culpritMotive = motives.get(culprit.id)!;
 
     // 10. The reasoning path, built from the same data the suspects were given
-    // "the Galley" but "Park's Cabin", never "the Park's Cabin"
+    // Station rooms take "the" ("the Galley", "the Commander's Office"); cabins don't ("Park's Cabin")
     const clueRoom = (id: string) => {
-        const name = roomName(clues.find((cl) => cl.id === id)!.roomID);
-        return name.includes("'s ") ? name : `the ${name}`;
+        const roomID = clues.find((cl) => cl.id === id)!.roomID;
+        return STATION_ROOMS.some((r) => r.id === roomID) ? `the ${roomName(roomID)}` : roomName(roomID);
     };
     const [h1, h2] = redHerrings;
     const howToSolve = [

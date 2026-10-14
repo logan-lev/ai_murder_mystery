@@ -5,7 +5,7 @@ import { getCaseInfo, caseLabel, dayNumber, dailySeed, msUntilNextDay, dailyURL 
 import { TUTORIAL_CASE, TUTORIAL_TRUTH, QUESTIONS, SHOWS, SHOW_FALLBACK, isAsked } from "./tutorial/case";
 import { Coach } from "./tutorial/coach";
 import { renderBoard } from "./ui/board";
-import { SLOTS } from "./case/content";
+import { SLOTS, STATION_ROOMS } from "./case/content";
 import { generateCase } from "./case/generate";
 import type { ClueID, RoomID, SuspectID } from "./case/types";
 import {
@@ -127,8 +127,8 @@ function errorMessage(err: unknown): string {
 
 const suspectName = (id: SuspectID) => theCase.suspects.find((s) => s.id === id)?.name ?? id;
 const roomName = (id: RoomID) => theCase.rooms.find((r) => r.id === id)?.name ?? id;
-// "the Galley" but "Park's Cabin", never "the Park's Cabin"
-const theRoom = (id: RoomID) => (roomName(id).includes("'s ") ? roomName(id) : `the ${roomName(id)}`);
+// Station rooms take "the" ("the Galley", "the Commander's Office"); cabins don't ("Park's Cabin")
+const theRoom = (id: RoomID) => (STATION_ROOMS.some((r) => r.id === id) ? `the ${roomName(id)}` : roomName(id));
 const clueByID = (id: ClueID) => theCase.clues.find((cl) => cl.id === id);
 
 // Can the player still spend turns?

@@ -84,7 +84,7 @@ export const STATION_ROOMS: Room[] = [
     },
     {
         id: "airlock",
-        name: "Airlock B",
+        name: "EVA Airlock",
         description: "The station's EVA airlock, with spacesuits racked along the wall."
     }
 ];
@@ -523,7 +523,7 @@ export const SECRETS: SecretDef[] = [
         activity: "taking an unauthorized spacewalk to see Kharon's rings up close",
         clueName: "Airlock Log",
         clueRoom: "airlock",
-        clueDescription: "The Airlock B log shows an unscheduled cycle at {time} using {name}'s access code."
+        clueDescription: "The EVA Airlock log shows an unscheduled cycle at {time} using {name}'s access code."
     },
     {
         id: "romance",
