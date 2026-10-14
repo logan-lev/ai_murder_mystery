@@ -37,3 +37,31 @@ export function roleplayRefusal(name: string, narrate: boolean): string {
     const line = "Ask them yourself. I can only speak for myself.";
     return narrate ? `[${name} looks unimpressed.] ${line}` : line;
 }
+
+// The model writes clipped narration like "[Vale rubs temples, eyes narrowing.]".
+// This adds the missing possessive before common body parts, in the bracketed narration only.
+const BODY = "temples|eyes|hands|head|arms|shoulders|brow|jaw|fingers|lips|hair|neck|chin|gaze|fists|nose|forehead|teeth|face|voice|expression|posture|hand|arm|shoulder";
+const DETERMINER = "his|her|its|their|the|a|an|one|both|my|your";
+
+export function polishNarration(reply: string, his: string): string {
+    const match = reply.match(/^(\s*\[)([^\]]*)(\][\s\S]*)$/);
+    if (!match) return reply;
+    let narration = match[2];
+    // "rubs temples" -> "rubs his temples"
+    narration = narration.replace(new RegExp(`\\b(?!(?:${DETERMINER})\\b)(\\w+s) (?!(?:${DETERMINER})\\b)(${BODY})\\b`, "gi"), `$1 ${his} $2`);
+    // ", eyes narrowing" -> ", his eyes narrowing"
+    narration = narration.replace(new RegExp(`(,\\s*)(?!(?:${DETERMINER})\\b)(${BODY}) (\\w+ing)\\b`, "gi"), `$1${his} $2 $3`);
+    return match[1] + narration + match[3];
+}
+
+// A verbal habit of the model: "as I mentioned earlier" on the very first answer, even when told
+// it's a first meeting. Used only when the suspect has no earlier replies, so real callbacks survive.
+const CALLBACK = "(?:as|like) I (?:mentioned|said|told you|explained|already said)(?: (?:earlier|before|already|previously))?";
+
+export function stripFalseCallbacks(reply: string): string {
+    return reply
+        // "As I mentioned earlier, I was..." -> "I was..."
+        .replace(new RegExp(`(^|[.!?]\\s+|\\]\\s*)${CALLBACK},\\s*(\\w)`, "gi"), (_, before: string, first: string) => before + first.toUpperCase())
+        // "...at 21:00, as I mentioned earlier." -> "...at 21:00."
+        .replace(new RegExp(`,?\\s*${CALLBACK}(?=[.,!?])`, "gi"), "");
+}

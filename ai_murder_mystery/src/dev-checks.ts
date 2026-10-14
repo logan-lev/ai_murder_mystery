@@ -19,6 +19,11 @@ export function runDevChecks(): void {
         const { case: fc, truth: ft } = generateCase(seed);
         const errors = validateCase(fc);
 
+        for (const line of [fc.intro, fc.solution.explanation, ...fc.solution.howToSolve]) {
+            for (const bad of ["..", ".,", " ,", "{", "}"]) {
+                if (line.includes(bad)) uniqueErrors.add(`Player-facing text contains "${bad}": ${line}`);
+            }
+        }
         for (const s of fc.suspects) {
             const allClues = new Set(fc.clues.map((cl) =>  cl.id));
             const prompt = buildSuspectPrompt(fc, s, allClues);

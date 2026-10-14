@@ -229,6 +229,8 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
         return {
             id: c.id,
             name: c.name,
+            shortName: c.shortName,
+            pronouns: { he: c.pronouns.he, his: c.pronouns.his },
             role: c.role,
             personality: c.personality,
             facts,
@@ -247,6 +249,29 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
     const motiveOptions: Motive[] = cast.flatMap((c) => c.motives.map((m) => ({ id: m.id, label: m.label })));
     const culpritMotive = motives.get(culprit.id)!;
 
+    // 10. The reasoning path, built from the same data the suspects were given
+    // "the Galley" but "Park's Cabin", never "the Park's Cabin"
+    const clueRoom = (id: string) => {
+        const name = roomName(clues.find((cl) => cl.id === id)!.roomID);
+        return name.includes("'s ") ? name : `the ${name}`;
+    };
+    const [h1, h2] = redHerrings;
+    const howToSolve = [
+        `The ${sceneName} held three traces. ${h1.name} and ${h2.name} visited at ${SLOTS[0]} and saw each other there, so theirs were harmless.`,
+        `The ${culprit.traceName.toLowerCase()} pointed to ${culprit.name}, who claimed the same ${SLOTS[0]} visit, but neither visitor saw ${culprit.pronouns.him} there.`,
+    ];
+    for (const a of innocents) {
+        for (const s of [murderIDx - 1, murderIDx + 1]) {
+            if (timeline[a.id][s] === timeline[culprit.id][s]) {
+                howToSolve.push(`${a.name} saw ${culprit.name} in the ${roomName(timeline[a.id][s])} at ${SLOTS[s]}, carrying something wrapped in a cloth.`);
+            }
+        }
+    }
+    howToSolve.push(
+        `${culprit.name}'s motive was in ${clueRoom(`motive-${culprit.id}`)}: the ${motives.get(culprit.id)!.clueName}.`,
+        ...innocents.map((c) => `${c.name} was really ${secrets.get(c.id)!.activity} at ${murderTime} (proof: the ${secrets.get(c.id)!.clueName} in ${clueRoom(`secret-${c.id}`)}).`),
+    );
+
     const theCase: Case = {
         id: `case-${seed}`,
         title: `${TITLE}: Case #${seed}`,
@@ -264,6 +289,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             culpritID: culprit.id,
             motiveID: culpritMotive.id,
             requiredClueIDs: [`trace-${culprit.id}`, `motive-${culprit.id}`],
+            howToSolve,
             explanation: `${culprit.name} killed ${victim.name} in the ${sceneName} at ${murderTime}. Motive: ${culpritMotive.label.toLowerCase()}. The weapon, ${withArticle(method.weaponName.toLowerCase())}, was hidden in the ${roomName(hideRoom)}. ${redHerrings.map((c) => c.name).join(" and ")} left traces too, but only from a harmless visit at ${SLOTS[0]}.`
         }
     };

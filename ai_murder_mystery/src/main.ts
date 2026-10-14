@@ -17,10 +17,11 @@ import { scoreAccusation, MAX_ACCUSE_EVIDENCE, type Accusation } from "./game/ac
 import { loadGame, saveGame, pruneSaves, loadStats, recordDailyResult, readFlag, writeFlag } from "./game/save";
 import { buildShareText, shareText } from "./game/share";
 import { buildReport, downloadText, type ReplyStat } from "./game/export";
-import { guardReply, isRoleplayRequest, roleplayRefusal } from "./game/guard";
+import { guardReply, isRoleplayRequest, roleplayRefusal, polishNarration, stripFalseCallbacks } from "./game/guard";
 import { parseReply, renderWithActions } from "./ui/reply";
 import { el, $, formatCountdown } from "./ui/dom";
 import { renderEnd, renderStats, COUNTDOWN_CLASS } from "./ui/results";
+import { SOLVING_GUIDE } from "./ui/guide";
 import { runDevChecks } from "./dev-checks";
 
 // ---------- Case setup ----------
@@ -106,17 +107,18 @@ const canAct = () => !isOver(state) && turnsLeft(state) > 0;
 const canTalk = () => engine !== null && !isGenerating && state.activeSuspectID !== null && canAct();
 
 // Narration costs tokens, so it's saved for moments that deserve a visible reaction:
-// meeting someone, the player acting (in parentheses), or being confronted with evidence.
-function shouldNarrate(suspectID: SuspectID, text: string, kind: ActionKind): boolean {
-  return kind === "show" || state.conversations[suspectID].length === 0 || /\(.+\)/.test(text);
+// meeting someone, or being confronted with evidence.
+function shouldNarrate(suspectID: SuspectID, kind: ActionKind): boolean {
+  return kind === "show" || state.conversations[suspectID].length === 0;
 }
 
 // ---------- Chat rendering ----------
-// A single "Speaker: text" line. (Parenthesized actions) get styled.
-function addLine(speaker: string, text: string, className: string): void {
+// A single "Speaker: text" line. The player's own words are plain text: actions are only for the crew.
+function addLine(speaker: string, text: string, className: string, styleActions = false): void {
   const line = el("p", className, "", [el("strong", "", `${speaker}: `)]);
   const body = el("span");
-  renderWithActions(body, text);
+  if (styleActions) renderWithActions(body, text);
+  else body.textContent = text;
   line.append(body);
   chatLog.append(line);
   scrollToBottom();
@@ -165,8 +167,7 @@ function renderChatLog(): void {
   const id = state.activeSuspectID;
 
   if (!id) {
-    addLine("Briefing", theCase.intro, "line-intro");
-    chatLog.append(el("p", "line-hint", "Search the station's rooms for evidence, or pick a crew member above to question them."));
+    renderCaseFile();
     return;
   }
 
@@ -178,6 +179,31 @@ function renderChatLog(): void {
     if (msg.role === "user") addPlayerLine(text, id);
     else if (msg.role === "assistant") addSuspectReply(name)(text);
   }
+}
+
+// The Case File tab: the briefing, how to solve, and everything found, in the order it was found
+function renderCaseFile(): void {
+  addLine("Briefing", theCase.intro, "line-intro");
+  const guide = el("details", "guide", "", [
+    el("summary", "", "How to crack the case"),
+    el("ol", "", "", SOLVING_GUIDE.map((tip) => el("li", "", tip))),
+  ]);
+  guide.open = state.searchedRoomIDs.size === 0;
+  chatLog.append(guide);
+
+  if (state.searchedRoomIDs.size === 0) {
+    chatLog.append(el("p", "line-hint", "Search a room on the station panel, or open a crew member's tab to question them."));
+  }
+  for (const roomID of state.searchedRoomIDs) {
+    const found = theCase.clues.filter((cl) => cl.roomID === roomID);
+    const block = el("div", "discovery", "", [el("p", "discovery-title", `You search the ${roomName(roomID)}.`)]);
+    if (found.length === 0) block.append(el("p", "hint", "Nothing of interest here."));
+    for (const cl of found) {
+      block.append(el("div", newClueIDs.has(cl.id) ? "clue-card new" : "clue-card", "", [el("strong", "", cl.name), el("p", "", cl.description)]));
+    }
+    chatLog.append(block);
+  }
+  scrollToBottom();
 }
 
 // ---------- Station rendering ----------
@@ -252,23 +278,37 @@ function renderEvidence(): void {
         el("p", "", cl.description),
       ]);
       if (shownTo.length > 0) details.append(el("p", "hint", `Shown to ${shownTo.join(", ")}.`));
+      const item = el("li", newClueIDs.has(cl.id) ? "new" : "", "", [details]);
 
+      // Outside the collapsible part so it's always visible, and lit up whenever it can be used
       if (!isOver(state)) {
         const alreadyShown = active !== null && state.shownClues[active].has(cl.id);
-        const label = !active ? "Pick a crew member to show this" : alreadyShown ? `Already shown to ${suspectName(active)}` : `Show to ${suspectName(active)} (1 turn)`;
-        const btn = el("button", "text-btn", label);
+        const label = !active
+          ? "Open a crew tab to show this"
+          : alreadyShown
+            ? `Already shown to ${suspectName(active)}`
+            : `Show to ${suspectName(active)} (1 turn)`;
+        const btn = el("button", "show-btn", label);
         btn.type = "button";
         btn.disabled = !canTalk() || alreadyShown;
         btn.addEventListener("click", () => showEvidence(cl.id));
-        details.append(btn);
+        item.append(btn);
       }
-      return el("li", newClueIDs.has(cl.id) ? "new" : "", "", [details]);
+      return item;
     }),
   );
 }
 
 function renderTabs(): void {
+  const caseTab = el("button", state.activeSuspectID === null ? "tab case-tab active" : "tab case-tab", "", [
+    el("strong", "", "Case File"),
+    el("small", "", `${state.foundClueIDs.size} clue${state.foundClueIDs.size === 1 ? "" : "s"} found`),
+  ]);
+  caseTab.type = "button";
+  caseTab.disabled = isGenerating;
+  caseTab.addEventListener("click", () => selectSuspect(null));
   tabsEl.replaceChildren(
+    caseTab,
     ...theCase.suspects.map((s) => {
       const btn = el("button", s.id === state.activeSuspectID ? "tab active" : "tab", "", [
         el("strong", "", s.name),
@@ -288,7 +328,7 @@ function chatPlaceholder(): string {
   if (engineStatus === "unsupported") return "Questioning needs WebGPU. You can still search and accuse.";
   if (engineStatus === "failed") return "The AI failed to load. You can still search and accuse.";
   if (!engine) return "The crew AI is still loading...";
-  return state.activeSuspectID ? `Question ${suspectName(state.activeSuspectID)}...` : "Choose a crew member to question...";
+  return state.activeSuspectID ? `Question ${suspectName(state.activeSuspectID)}...` : "Open a crew member's tab to question them...";
 }
 
 function updateControls(): void {
@@ -328,11 +368,13 @@ function doSearch(id: RoomID): void {
   const found = searchRoom(state, theCase, id);
   newClueIDs.clear();
   found.forEach((cl) => newClueIDs.add(cl.id));
-  toast(found.length > 0 ? `Found: ${found.map((cl) => cl.name).join(", ")}` : `Nothing of interest in the ${roomName(id)}.`);
+  // Switch to the Case File so the new evidence and its description show up in the main log
+  state.activeSuspectID = null;
+  renderChatLog();
   afterTurn();
 }
 
-function selectSuspect(id: SuspectID): void {
+function selectSuspect(id: SuspectID | null): void {
   if (isGenerating) return;
   state.activeSuspectID = id;
   persist();
@@ -340,7 +382,7 @@ function selectSuspect(id: SuspectID): void {
   renderEvidence();
   updateControls();
   // Skip on touch screens, where focusing pops up the keyboard over the conversation
-  if (matchMedia("(pointer: fine)").matches) input.focus();
+  if (id && matchMedia("(pointer: fine)").matches) input.focus();
 }
 
 // Sends one player message to a suspect and streams the reply. Returns false if it failed.
@@ -349,7 +391,7 @@ async function ask(suspectID: SuspectID, text: string, kind: ActionKind): Promis
 
   const name = suspectName(suspectID);
   const conversation = state.conversations[suspectID];
-  const narrate = shouldNarrate(suspectID, text, kind);
+  const narrate = shouldNarrate(suspectID, kind);
 
   addPlayerLine(text, suspectID);
   conversation.push({ role: "user", content: text });
@@ -373,7 +415,10 @@ async function ask(suspectID: SuspectID, text: string, kind: ActionKind): Promis
             update(shown);
           });
     // Saving the guarded text keeps a broken reply out of the history the model sees next turn
-    const reply = guardReply(result.text, name, narrate);
+    const suspect = theCase.suspects.find((s) => s.id === suspectID)!;
+    const firstReply = !conversation.some((m) => m.role === "assistant");
+    const guarded = guardReply(result.text, name, narrate);
+    const reply = polishNarration(firstReply ? stripFalseCallbacks(guarded) : guarded, suspect.pronouns.his);
     update(reply);
     conversation.push({ role: "assistant", content: reply });
     replyStats.push({ suspectID, ...result.stats });
@@ -414,6 +459,11 @@ form.addEventListener("submit", (event) => {
   const suspectID = state.activeSuspectID;
   const text = input.value.trim();
   if (!text || !suspectID || !canTalk()) return;
+  // Free-form actions let the player narrate things the case never contained, so speech only
+  if (/[()[\]]/.test(text)) {
+    toast("Just type what you'd say. Actions in ( ) or [ ] aren't supported.");
+    return;
+  }
   input.value = "";
   void ask(suspectID, text, "question");
 });
@@ -554,6 +604,7 @@ $<HTMLButtonElement>("#stats-btn").addEventListener("click", () => {
   statsDialog.showModal();
 });
 
+$<HTMLElement>("#help-guide").replaceChildren(...SOLVING_GUIDE.map((tip) => el("li", "", tip)));
 $<HTMLButtonElement>("#help-btn").addEventListener("click", () => helpDialog.showModal());
 
 const fastMode = $<HTMLInputElement>("#fast-mode");

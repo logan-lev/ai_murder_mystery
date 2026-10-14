@@ -80,7 +80,7 @@ export function buildMessages(state: GameState, c: Case, suspectID: SuspectID, n
     return [
         {
             role: "system",
-            content: buildSuspectPrompt(c, suspect, state.shownClues[suspectID], narrate)
+            content: buildSuspectPrompt(c, suspect, state.shownClues[suspectID], narrate, state.conversations[suspectID].length <= 1)
         },
         ...state.conversations[suspectID].slice(-MAX_HISTORY)
     ];

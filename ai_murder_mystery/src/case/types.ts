@@ -28,6 +28,8 @@ export interface Unlock {
 export interface Suspect {
     id: SuspectID;
     name: string;
+    shortName: string;
+    pronouns: { he: string; his: string };
     role: string;
     personality: string;
     facts: string[];
@@ -60,5 +62,7 @@ export interface Case {
         motiveID: string;
         requiredClueIDs: ClueID[];
         explanation: string;
+        // The chain of reasoning that cracks this case, shown on the ending screen
+        howToSolve: string[];
     };
 }

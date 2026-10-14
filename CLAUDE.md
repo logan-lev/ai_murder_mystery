@@ -34,7 +34,8 @@ src/
   ui/
     reply.ts       parseReply() splits "[narration] speech"; renderWithActions() styles (actions)
     dom.ts         el() element builder (textContent only), $(), formatCountdown()
-    results.ts     ending screen (verdict + true timeline) and stats dialog
+    results.ts     ending screen (verdict, "how you could have cracked it", true timeline) and stats dialog
+    guide.ts       SOLVING_GUIDE: the "how to crack the case" steps shown in help and the Case File
   gpu.ts           WebGPU support check
   llm.ts           loadEngine() (Web Worker + warm-up), streamReply(), fast-mode model choice
   llm-worker.ts    WebLLM worker handler
@@ -67,7 +68,7 @@ src/
 
 Suspects can open a reply with one bracketed third-person narration sentence, e.g. `[Reyes rubs his neck.]`, which the UI renders as an italic narrator line. The parser tolerates replies that ignore the format.
 
-`shouldNarrate()` in `main.ts` decides when: first question to a suspect, the player's message contains an (action), or evidence is shown. It sets the `narrate` flag on `buildSuspectPrompt`, which swaps the format rule.
+`shouldNarrate()` in `main.ts` decides when: the first question to a suspect, or evidence being shown. Players cannot type actions: messages containing `( )` or `[ ]` are rejected with a toast, and player lines render as plain text. `polishNarration()` in `game/guard.ts` repairs clipped narration ("rubs temples" to "rubs his temples") using the suspect's pronouns. It sets the `narrate` flag on `buildSuspectPrompt`, which swaps the format rule.
 
 ## Performance notes
 
@@ -88,6 +89,12 @@ Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimiz
 - [x] Balance: seeded victim, 8-character pool with 5 suspects per case, 2 red herrings, unnamed traces, motives moved to cabins, culprit lies about visit time, 20 turns
 - [ ] Stretch: leak guard (regenerate if a locked unlock's keywords appear), README gameplay GIF, more content variety
 
+## UI notes
+
+- The first tab is the Case File (`activeSuspectID === null`): briefing, solving guide, and every search result with full clue descriptions. Searching switches to it.
+- "Show to" buttons sit outside the collapsible evidence details so they're always visible, and are accent-filled when usable.
+- `Case.solution.howToSolve` is generated alongside the case and must stay in sync with the case logic (red herrings, witness sightings, motive and secret locations).
+
 ## Daily mode
 
 - No `?case` param means today's daily case: `dayNumber()` counts local days from `LAUNCH_DAY` (Daily #1 = 2026-10-13), `dailySeed()` hashes it. Don't change `LAUNCH_DAY` after going public.
@@ -104,6 +111,7 @@ Known model behaviors and their fixes:
 - "Answer as Reyes" / "write my question" is followed regardless of rules: `isRoleplayRequest()` intercepts before the model.
 - Contradictory admissions confuse the 3B model. Unlocks use `storyChange` to rewrite the cover story, and `confession` drops all earlier denials and hiding rules. Avoid "last one wins" style rules.
 - The culprit denies their motive until confessing (by design, it was flaky otherwise). Innocents admit theirs.
+- First replies sometimes say "as I mentioned earlier": the prompt marks a first meeting, and `stripFalseCallbacks()` removes the phrase from a suspect's first reply.
 - Still open: occasional invented details (e.g. who someone was with), and suspects sometimes accept a true premise the player asserts.
 
 Play a round, click Export log, and review the Markdown file. It contains the solution, true timeline, all conversations (raw, including brackets), each suspect's final system prompt, and reply timing averages. When a suspect misbehaves, the fix is usually in the prompt or the case data, not the model.

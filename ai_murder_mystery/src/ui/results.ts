@@ -66,6 +66,8 @@ export function renderEnd(target: HTMLElement, c: Case, truth: Truth, info: Case
         el("h3", "", "What really happened"),
         el("p", "", verdict.explanation),
         el("p", "hint", `Needed proof: ${c.solution.requiredClueIDs.map(clue).join(" and ")}.`),
+        el("h3", "", "How you could have cracked it"),
+        el("ul", "how-to-solve", "", c.solution.howToSolve.map((step) => el("li", "", step))),
         timelineTable(c, truth),
         nextCaseBlock(info),
     );
