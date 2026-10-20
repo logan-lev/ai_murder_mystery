@@ -1362,7 +1362,10 @@ select {
     column-gap: 0.5rem;
   }
 
+  /* On the narrowest phones, extra buttons wrap rather than widening the page */
   #header-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 0.3rem;
   }
 

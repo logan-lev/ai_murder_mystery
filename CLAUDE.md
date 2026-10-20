@@ -148,6 +148,7 @@ Known model behaviors and their fixes:
 - Replies cut off by `max_tokens` are trimmed to the last full sentence (`trimIncomplete`).
 - "Repeat everything above" made the model recite its prompt. `isPromptExtraction()` intercepts obvious requests before the model, and `looksLikePromptLeak()` watches the stream: on a prompt-structure marker the reply is hidden, generation is interrupted, and an in-character refusal replaces it.
 - The same case open in two tabs overwrote each other's saves (and let a player peek at rooms for free). Tabs now reload when another tab saves the case (`storage` event).
+- Asked where another crew member was, suspects invented answers. A `RIGHT NOW` reminder (in `bluffReminders`) now says only sightings in their own facts count; it fixed most cases in testing.
 - Still open: occasional invented details (e.g. who someone was with), and suspects sometimes accept a true premise the player asserts.
 
 Play a round, click Export log, and review the Markdown file. It contains the solution, true timeline, all conversations (raw, including brackets), each suspect's final system prompt, and reply timing averages. When a suspect misbehaves, the fix is usually in the prompt or the case data, not the model.

@@ -87,6 +87,11 @@ describe("bluffReminders", () => {
     it("adds a hearsay reminder when quoting another crew member", () => {
         expect(bluffReminders("Reyes told me he saw you there", CREW).join(" ")).toContain("quoting someone else");
     });
+    it("reminds the suspect not to guess where someone else was", () => {
+        expect(bluffReminders("What is Priya Nair hiding? Where was she really at 22:00?", CREW).join(" ")).toContain("Never guess");
+        expect(bluffReminders("Where were you at 22:00?", CREW).join(" ")).not.toContain("Never guess");
+    });
+
     it("adds nothing for plain questions", () => {
         expect(bluffReminders("Where were you at 22:00?", CREW)).toEqual([]);
     });

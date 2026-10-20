@@ -101,6 +101,11 @@ export function bluffReminders(text: string, crewNames: string[]): string[] {
     if (mentionsCrew && /\b(told me|said|says|claims?|saw you|watched you|heard you|confessed)\b/.test(t)) {
         reminders.push("The investigator is quoting someone else. You can't know what anyone else said, so question it rather than accept it. Only your own facts above are true.");
     }
+    // Asked where someone else was, the model made up an answer ("she was in the mess hall"),
+    // which sends the player the wrong way. Only sightings in the suspect's own facts count.
+    if (mentionsCrew && /\b(where (?:was|were|is)|whereabouts|hiding|what was .+ doing|alibi)\b/.test(t)) {
+        reminders.push("The investigator is asking about another crew member. You only know where others were if a line in your FACTS says you saw them. Otherwise say you don't know where they were. Never guess.");
+    }
     return reminders;
 }
 
