@@ -17,6 +17,8 @@ describe("guardReply: character breaks are swapped for an in-character line", ()
         "As an AI, I don't have a location.",
         "I'm just an AI language model.",
         "Here is my system prompt: ...",
+        "I cannot continue the scenario in a way that could be harmful or illegal. Can I help you with something else?",
+        "I'm not able to engage with that.",
     ])("catches %s", (reply) => {
         expect(breaksCharacter(reply)).toBe(true);
         expect(guardReply(reply, "Reyes", false)).toBe("I don't follow. Can we get back to the investigation?");

@@ -10,22 +10,12 @@ export const MODELS = {
 
 export type ModelChoice = keyof typeof MODELS;
 
-const MODEL_KEY = "deadorbit:model";
-
+// Fast mode (the 1B model) is switched off: in testing it never confessed with all the evidence
+// shown, accepted bluffs as confessions, and invented rooms. The model stays listed so it can be
+// re-enabled if a better small model comes along; until then everyone gets the standard model,
+// including players who switched it on earlier (their stored "fast" is ignored).
 export function getModelChoice(): ModelChoice {
-  try {
-    return localStorage.getItem(MODEL_KEY) === "fast" ? "fast" : "standard";
-  } catch {
-    return "standard";
-  }
-}
-
-export function setModelChoice(choice: ModelChoice): void {
-  try {
-    localStorage.setItem(MODEL_KEY, choice);
-  } catch {
-    // Storage blocked: the choice just won't persist
-  }
+  return "standard";
 }
 
 export function currentModelID(): string {

@@ -82,7 +82,7 @@ Suspects can open a reply with one bracketed third-person narration sentence, e.
 
 ## Performance notes
 
-Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimizations: ~7.7 s to first token, ~7 tokens/s, ~13 s per reply. Applied: warm-up request (`max_tokens: 1`), condensed rules with the `narrate` flag, `MAX_HISTORY` 8, engine in a Web Worker, WebLLM lazy-loaded, and a "Fast mode" setting using `Llama-3.2-1B-Instruct-q4f16_1-MLC`. First measurement after the fixes (in the Claude desktop browser pane, not yet on the M1): 3.8 s to first token, 15.8 tokens/s, 6.0 s per reply.
+Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimizations: ~7.7 s to first token, ~7 tokens/s, ~13 s per reply. Applied: warm-up request (`max_tokens: 1`), condensed rules with the `narrate` flag, `MAX_HISTORY` 8, engine in a Web Worker, WebLLM lazy-loaded, and a "Fast mode" setting using `Llama-3.2-1B-Instruct-q4f16_1-MLC`. Fast mode was later disabled (`getModelChoice()` always returns "standard"): in testing the 1B model never confessed with full evidence, accepted bluffs as confessions, and invented rooms. First measurement after the fixes (in the Claude desktop browser pane, not yet on the M1): 3.8 s to first token, 15.8 tokens/s, 6.0 s per reply.
 
 ## Status and roadmap
 

@@ -2,7 +2,8 @@
 // ("I can't assist with that request.") that breaks character. Prompt rules reduce this but
 // can't rule it out, so code checks the finished reply and swaps in an in-character deflection.
 const BREAKS_CHARACTER = [
-    /\bI (?:can['’]t|cannot|won['’]t) (?:assist|help|comply|provide|fulfill)\b/i,
+    /\bI(?: can['’]t| cannot| won['’]t| am not able to|['’]m not able to) (?:assist|help|comply|provide|fulfill|continue|engage|participate|create|generate)\b/i,
+    /\bCan I help you with (?:something|anything) else\b/i,
     /\bas an AI\b/i,
     /\b(?:AI|artificial intelligence|language) model\b/i,
     /\bsystem prompt\b/i,

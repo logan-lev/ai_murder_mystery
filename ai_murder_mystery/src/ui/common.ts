@@ -1,4 +1,3 @@
-import { getModelChoice, setModelChoice } from "../llm";
 import { deleteAllProgress } from "../game/save";
 import { SOLVING_GUIDE } from "./guide";
 import { el, $ } from "./dom";
@@ -16,12 +15,6 @@ export function wireHelp(buttonSelector = "#help-btn"): HTMLDialogElement {
 
 export function wireSettings(buttonSelector = "#settings-btn"): void {
   const settingsDialog = $<HTMLDialogElement>("#settings-dialog");
-  const fastMode = $<HTMLInputElement>("#fast-mode");
-  fastMode.checked = getModelChoice() === "fast";
-  fastMode.addEventListener("change", () => {
-    setModelChoice(fastMode.checked ? "fast" : "standard");
-    $<HTMLElement>("#settings-reload").hidden = false;
-  });
   $<HTMLButtonElement>(buttonSelector).addEventListener("click", () => settingsDialog.showModal());
   closeOnBackdrop(settingsDialog);
 

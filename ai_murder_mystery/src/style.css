@@ -1139,6 +1139,13 @@ select {
   border-top: 1px dashed var(--line-strong);
 }
 
+/* With nothing above it in the dialog, the danger zone needs no divider */
+.danger-zone.first {
+  margin-top: 0.5rem;
+  padding-top: 0;
+  border-top: none;
+}
+
 .danger-zone small {
   color: var(--muted);
 }

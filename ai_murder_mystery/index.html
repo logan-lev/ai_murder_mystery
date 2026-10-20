@@ -148,18 +148,10 @@
 
     <dialog id="settings-dialog">
       <h2>Settings</h2>
-      <label class="toggle">
-        <input id="fast-mode" type="checkbox" />
-        <span>
-          <strong>Fast mode</strong>
-          <small>Uses a smaller AI model. Quicker replies, but the crew act less convincingly.</small>
-        </span>
-      </label>
-      <p id="settings-reload" class="hint" hidden>Reload the page to switch models. Your progress is saved.</p>
 
-      <div class="danger-zone">
+      <div class="danger-zone first">
         <strong>Delete all progress</strong>
-        <small>Erases every saved case, your stats and streaks, archive results, and training completion. Settings are kept.</small>
+        <small>Erases every saved case, your stats and streaks, archive results, and training completion.</small>
         <button id="reset-btn" class="text-btn danger-btn" type="button">Delete all progress</button>
         <div id="reset-confirm" class="reset-confirm" hidden>
           <p>Are you sure? This can't be undone.</p>
