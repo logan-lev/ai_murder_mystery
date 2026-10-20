@@ -34,7 +34,11 @@ describe("secrets stay out of prompts until unlocked", () => {
             // Shown their trace, they claim the same harmless 21:00 visit as the herrings
             expect(partial).toContain("claim it was a short visit at 21:00");
 
-            const full = buildSuspectPrompt(c, culprit, new Set([`trace-${culprit.id}`, `motive-${culprit.id}`, "weapon"]));
+            const full = buildSuspectPrompt(
+                c,
+                culprit,
+                new Set([`trace-${culprit.id}`, `motive-${culprit.id}`, "weapon"]),
+            );
             expect(full).toMatch(/You confess to killing/);
             // Denials and hiding rules are dropped so they can't fight the confession
             expect(full).not.toContain("insist you did not kill");
@@ -46,7 +50,9 @@ describe("secrets stay out of prompts until unlocked", () => {
             for (const id of truth.redHerringIDs) {
                 const s = c.suspects.find((x) => x.id === id)!;
                 const locked = buildSuspectPrompt(c, s, new Set());
-                expect(locked).not.toMatch(new RegExp(`At 21:00 you saw .+ in the ${c.rooms.find((r) => r.id === c.sceneRoomID)!.name}`));
+                expect(locked).not.toMatch(
+                    new RegExp(`At 21:00 you saw .+ in the ${c.rooms.find((r) => r.id === c.sceneRoomID)!.name}`),
+                );
                 expect(locked).not.toContain("is yours");
                 const opened = buildSuspectPrompt(c, s, new Set([`trace-${id}`]));
                 expect(opened).toContain("is yours");
@@ -78,7 +84,9 @@ describe("prompt format flags", () => {
     });
 
     it("marks a first meeting so the model doesn't say 'as I mentioned'", () => {
-        expect(buildSuspectPrompt(c, s, new Set(), false, true)).toContain("first time the investigator has spoken to you");
+        expect(buildSuspectPrompt(c, s, new Set(), false, true)).toContain(
+            "first time the investigator has spoken to you",
+        );
         expect(buildSuspectPrompt(c, s, new Set(), false, false)).not.toContain("first time the investigator");
     });
 

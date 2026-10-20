@@ -30,63 +30,63 @@ export const STATION_ROOMS: Room[] = [
     {
         id: "office",
         name: "Commander's Office",
-        description: "A cramped office with a viewport onto Kharon's swirling storms and a desk buried in reports."
+        description: "A cramped office with a viewport onto Kharon's swirling storms and a desk buried in reports.",
     },
     {
         id: "medbay",
         name: "Medbay",
-        description: "Sterile white surfaces, a diagnostic bed, and locked drug cabinets."
+        description: "Sterile white surfaces, a diagnostic bed, and locked drug cabinets.",
     },
     {
         id: "engineering",
         name: "Engineering Bay",
-        description: "The humming reactor core, tool racks, and walls of blinking panels."
+        description: "The humming reactor core, tool racks, and walls of blinking panels.",
     },
     {
         id: "security",
         name: "Security Office",
-        description: "Dead camera monitors, a weapons locker, and an empty holding cell."
+        description: "Dead camera monitors, a weapons locker, and an empty holding cell.",
     },
     {
         id: "lab",
         name: "Research Lab",
-        description: "Sealed specimen tanks, a centrifuge, and whiteboards dense with equations."
+        description: "Sealed specimen tanks, a centrifuge, and whiteboards dense with equations.",
     },
     {
         id: "galley",
         name: "Galley",
-        description: "Food printers, a long steel table, and the smell of synthetic coffee."
+        description: "Food printers, a long steel table, and the smell of synthetic coffee.",
     },
     {
         id: "hydroponics",
         name: "Hydroponics Bay",
-        description: "Rows of glowing grow-trays holding the only real plants for a billion kilometers."
+        description: "Rows of glowing grow-trays holding the only real plants for a billion kilometers.",
     },
     {
         id: "cargo-bay",
         name: "Cargo Bay",
-        description: "Stacked supply crates under flickering lights."
+        description: "Stacked supply crates under flickering lights.",
     },
     {
         id: "observation",
         name: "Observation Deck",
-        description: "A dome of reinforced glass with a breathtaking view of Kharon's rings."
+        description: "A dome of reinforced glass with a breathtaking view of Kharon's rings.",
     },
     {
         id: "comms",
         name: "Comms Array",
-        description: "Antenna controls and a transmitter silenced by the ion storm."
+        description: "Antenna controls and a transmitter silenced by the ion storm.",
     },
     {
         id: "rec-room",
         name: "Recreation Deck",
-        description: "A VR rig, a battered couch, and a zero-g handball court."
+        description: "A VR rig, a battered couch, and a zero-g handball court.",
     },
     {
         id: "airlock",
         name: "EVA Airlock",
-        description: "The station's EVA airlock, with spacesuits racked along the wall."
-    }
+        description: "The station's EVA airlock, with spacesuits racked along the wall.",
+    },
 ];
 
 export interface Pronouns {
@@ -162,11 +162,11 @@ export const CHARACTERS: CharacterDef[] = [
         cabin: {
             id: "vale-cabin",
             name: "Vale's Cabin",
-            description: "Military-neat, with a decanter of real whiskey and a wall of commendations."
+            description: "Military-neat, with a decanter of real whiskey and a wall of commendations.",
         },
         facts: [
             "You have commanded Erebus Station for eight years.",
-            "You signed off on the evening duty roster at 20:00."
+            "You signed off on the evening duty roster at 20:00.",
         ],
         traceName: "Command Insignia Pin",
         trace: "a gold insignia pin of the kind only the station commander wears",
@@ -177,7 +177,8 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} was gathering signatures to have you removed from command",
                 clueName: "Petition",
                 clueRoom: "victim-cabin",
-                clueDescription: "A petition in {victim}'s handwriting asking the company to remove Commander Vale from command, already signed twice."
+                clueDescription:
+                    "A petition in {victim}'s handwriting asking the company to remove Commander Vale from command, already signed twice.",
             },
             {
                 id: "embezzlement",
@@ -185,9 +186,10 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} discovered you had been skimming the station's supply budget",
                 clueName: "Private Ledger",
                 clueRoom: "own-cabin",
-                clueDescription: "A private ledger showing years of skimmed supply funds. In the margin of the last page: '{victim} knows.'"
-            }
-        ]
+                clueDescription:
+                    "A private ledger showing years of skimmed supply funds. In the margin of the last page: '{victim} knows.'",
+            },
+        ],
     },
     {
         id: "okafor",
@@ -201,11 +203,11 @@ export const CHARACTERS: CharacterDef[] = [
         cabin: {
             id: "okafor-cabin",
             name: "Okafor's Cabin",
-            description: "Neatly organized, with medical journals stacked by the bunk."
+            description: "Neatly organized, with medical journals stacked by the bunk.",
         },
         facts: [
             "You have served on Erebus Station for four years.",
-            "You ran routine crew health checks this afternoon."
+            "You ran routine crew health checks this afternoon.",
         ],
         traceName: "Medical Stylus",
         trace: "a medical stylus from the medbay, still smelling faintly of antiseptic",
@@ -216,7 +218,8 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} discovered that a crew member died last year because of your mistake and was going to report it",
                 clueName: "Draft Incident Report",
                 clueRoom: "victim-cabin",
-                clueDescription: "A draft incident report by {victim} concluding that Dr. Okafor's error caused a crew member's death last year."
+                clueDescription:
+                    "A draft incident report by {victim} concluding that Dr. Okafor's error caused a crew member's death last year.",
             },
             {
                 id: "research-theft",
@@ -224,9 +227,10 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} was selling your research to a corporation under {his} own name",
                 clueName: "Research Contract",
                 clueRoom: "own-cabin",
-                clueDescription: "A contract selling Dr. Okafor's research to Helix Corp, signed by {victim} alone, with furious notes in the margins."
-            }
-        ]
+                clueDescription:
+                    "A contract selling Dr. Okafor's research to Helix Corp, signed by {victim} alone, with furious notes in the margins.",
+            },
+        ],
     },
     {
         id: "reyes",
@@ -240,12 +244,9 @@ export const CHARACTERS: CharacterDef[] = [
         cabin: {
             id: "reyes-cabin",
             name: "Reyes's Cabin",
-            description: "Tools everywhere, a half-built gadget, and a photo of a girl on Callisto."
+            description: "Tools everywhere, a half-built gadget, and a photo of a girl on Callisto.",
         },
-        facts: [
-            "You have kept this station running for six years.",
-            "Your daughter lives on Callisto."
-        ],
+        facts: ["You have kept this station running for six years.", "Your daughter lives on Callisto."],
         traceName: "Coolant-Stained Glove",
         trace: "a heavy work glove stained with blue reactor coolant",
         motives: [
@@ -255,7 +256,8 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} found out you faked the reactor safety inspections and was going to report you",
                 clueName: "Inspection Audit",
                 clueRoom: "victim-cabin",
-                clueDescription: "An audit compiled by {victim} proving the last three reactor safety inspections were falsified and signed off by Reyes."
+                clueDescription:
+                    "An audit compiled by {victim} proving the last three reactor safety inspections were falsified and signed off by Reyes.",
             },
             {
                 id: "debt",
@@ -263,9 +265,10 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "you owe a loan shark on Callisto, and {victim} was threatening to tell the company, which would cost you your job",
                 clueName: "Threatening Message",
                 clueRoom: "own-cabin",
-                clueDescription: "A printed message to Reyes: 'Pay by next cycle or we visit your daughter.' Below it, a note from {victim}: 'Settle this or I tell the company.'"
-            }
-        ]
+                clueDescription:
+                    "A printed message to Reyes: 'Pay by next cycle or we visit your daughter.' Below it, a note from {victim}: 'Settle this or I tell the company.'",
+            },
+        ],
     },
     {
         id: "park",
@@ -279,11 +282,11 @@ export const CHARACTERS: CharacterDef[] = [
         cabin: {
             id: "park-cabin",
             name: "Park's Cabin",
-            description: "Spartan and spotless, with a framed military citation on the wall."
+            description: "Spartan and spotless, with a framed military citation on the wall.",
         },
         facts: [
             "You were assigned to Erebus Station two years ago.",
-            "You served in the Titan evacuation before this posting."
+            "You served in the Titan evacuation before this posting.",
         ],
         traceName: "Security ID Clip",
         trace: "a security ID clip with the badge number scratched off",
@@ -294,7 +297,8 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} filed a formal complaint that would get you court-martialed for insubordination",
                 clueName: "Formal Complaint",
                 clueRoom: "victim-cabin",
-                clueDescription: "A copy of a formal complaint by {victim} requesting Lt. Park's court-martial for insubordination."
+                clueDescription:
+                    "A copy of a formal complaint by {victim} requesting Lt. Park's court-martial for insubordination.",
             },
             {
                 id: "revenge",
@@ -302,9 +306,10 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} gave the order during the Titan evacuation that got your brother killed",
                 clueName: "Casualty Report",
                 clueRoom: "own-cabin",
-                clueDescription: "An old Titan evacuation casualty report listing Park's brother as killed. {victim}'s name is circled on the authorizing order."
-            }
-        ]
+                clueDescription:
+                    "An old Titan evacuation casualty report listing Park's brother as killed. {victim}'s name is circled on the authorizing order.",
+            },
+        ],
     },
     {
         id: "sable",
@@ -313,17 +318,18 @@ export const CHARACTERS: CharacterDef[] = [
         role: "the station's android steward",
         pronouns: IT,
         canBeVictim: false,
-        personality: "Precise, polite, and literal. Speaks in calm, formal sentences. Claims to have no feelings, but sometimes sounds hurt.",
+        personality:
+            "Precise, polite, and literal. Speaks in calm, formal sentences. Claims to have no feelings, but sometimes sounds hurt.",
         homeRoom: "galley",
         cabin: {
             id: "sable-alcove",
             name: "SABLE's Charging Alcove",
-            description: "A small recess with a charging cradle and a shelf of carefully arranged trinkets."
+            description: "A small recess with a charging cradle and a shelf of carefully arranged trinkets.",
         },
         facts: [
             "You are an android and refer to yourself as 'it'.",
             "You were activated aboard Erebus Station six years ago.",
-            "You served the crew's dinner at 20:00."
+            "You served the crew's dinner at 20:00.",
         ],
         traceName: "Synthetic Skin Fleck",
         trace: "a fleck of pale synthetic skin",
@@ -334,7 +340,8 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} had requested a full memory wipe for you",
                 clueName: "Maintenance Request",
                 clueRoom: "victim-cabin",
-                clueDescription: "A signed request from {victim} to perform a full memory wipe on SABLE at 06:00 tomorrow."
+                clueDescription:
+                    "A signed request from {victim} to perform a full memory wipe on SABLE at 06:00 tomorrow.",
             },
             {
                 id: "scrapping",
@@ -342,9 +349,10 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} arranged to sell you to a mining company to be stripped for parts",
                 clueName: "Sale Contract",
                 clueRoom: "own-cabin",
-                clueDescription: "A contract selling SABLE to Deepcore Mining 'for parts recovery', arranged by {victim}. It looks like SABLE has been reading it."
-            }
-        ]
+                clueDescription:
+                    "A contract selling SABLE to Deepcore Mining 'for parts recovery', arranged by {victim}. It looks like SABLE has been reading it.",
+            },
+        ],
     },
     {
         id: "sorokin",
@@ -353,16 +361,17 @@ export const CHARACTERS: CharacterDef[] = [
         role: "the xenobiologist",
         pronouns: HE,
         canBeVictim: true,
-        personality: "Brilliant, absent-minded, and condescending. Gets lost in tangents and corrects other people's grammar.",
+        personality:
+            "Brilliant, absent-minded, and condescending. Gets lost in tangents and corrects other people's grammar.",
         homeRoom: "lab",
         cabin: {
             id: "sorokin-cabin",
             name: "Sorokin's Cabin",
-            description: "Specimen jars on every shelf and a bunk nobody seems to sleep in."
+            description: "Specimen jars on every shelf and a bunk nobody seems to sleep in.",
         },
         facts: [
             "You study microbes from Kharon's upper atmosphere.",
-            "You arrived on Erebus Station eighteen months ago."
+            "You arrived on Erebus Station eighteen months ago.",
         ],
         traceName: "Specimen Tag",
         trace: "a numbered specimen tag of the kind used in the research lab",
@@ -373,7 +382,8 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} was about to report your unauthorized experiments on live samples to the company",
                 clueName: "Unsent Report",
                 clueRoom: "victim-cabin",
-                clueDescription: "An unsent report by {victim} describing Dr. Sorokin's unauthorized experiments on live atmospheric samples."
+                clueDescription:
+                    "An unsent report by {victim} describing Dr. Sorokin's unauthorized experiments on live atmospheric samples.",
             },
             {
                 id: "forged-degree",
@@ -381,9 +391,10 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} was blackmailing you over your forged doctorate",
                 clueName: "Blackmail Note",
                 clueRoom: "own-cabin",
-                clueDescription: "A note to Dr. Sorokin: 'Ten thousand credits or the board learns your doctorate is forged.' It is signed with {victim}'s initials."
-            }
-        ]
+                clueDescription:
+                    "A note to Dr. Sorokin: 'Ten thousand credits or the board learns your doctorate is forged.' It is signed with {victim}'s initials.",
+            },
+        ],
     },
     {
         id: "castellanos",
@@ -397,12 +408,9 @@ export const CHARACTERS: CharacterDef[] = [
         cabin: {
             id: "castellanos-cabin",
             name: "Castellanos's Cabin",
-            description: "Fairy lights, a cluttered vanity, and three different radios."
+            description: "Fairy lights, a cluttered vanity, and three different radios.",
         },
-        facts: [
-            "You handle all of the station's outgoing and incoming transmissions.",
-            "You grew up on Ganymede."
-        ],
+        facts: ["You handle all of the station's outgoing and incoming transmissions.", "You grew up on Ganymede."],
         traceName: "Comms Earpiece",
         trace: "a comms earpiece, still tuned to the station's command channel",
         motives: [
@@ -412,7 +420,8 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} discovered you were selling station data to a rival corporation",
                 clueName: "Intercept Printout",
                 clueRoom: "victim-cabin",
-                clueDescription: "Printouts of intercepted messages, annotated in {victim}'s handwriting: 'Castellanos is selling our data. Report when the storm clears.'"
+                clueDescription:
+                    "Printouts of intercepted messages, annotated in {victim}'s handwriting: 'Castellanos is selling our data. Report when the storm clears.'",
             },
             {
                 id: "jilted",
@@ -420,9 +429,10 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} ended your secret relationship and threatened to tell everyone about it",
                 clueName: "Torn Photo",
                 clueRoom: "own-cabin",
-                clueDescription: "A torn photo of Castellanos and {victim} together, with 'You'll regret this' scrawled on the back."
-            }
-        ]
+                clueDescription:
+                    "A torn photo of Castellanos and {victim} together, with 'You'll regret this' scrawled on the back.",
+            },
+        ],
     },
     {
         id: "nair",
@@ -436,12 +446,9 @@ export const CHARACTERS: CharacterDef[] = [
         cabin: {
             id: "nair-cabin",
             name: "Nair's Cabin",
-            description: "Potted herbs on every surface and a hand-knitted blanket."
+            description: "Potted herbs on every surface and a hand-knitted blanket.",
         },
-        facts: [
-            "You grow all of the station's fresh food.",
-            "You have been aboard for three years."
-        ],
+        facts: ["You grow all of the station's fresh food.", "You have been aboard for three years."],
         traceName: "Soil Smudge",
         trace: "a smudge of dark, nutrient-rich potting soil",
         motives: [
@@ -451,7 +458,7 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} poisoned your crops to cover up {his} own mistake",
                 clueName: "Soil Test Results",
                 clueRoom: "own-cabin",
-                clueDescription: "Soil test results in Nair's handwriting: 'Contaminated on purpose. It was {victim}.'"
+                clueDescription: "Soil test results in Nair's handwriting: 'Contaminated on purpose. It was {victim}.'",
             },
             {
                 id: "testimony",
@@ -459,10 +466,11 @@ export const CHARACTERS: CharacterDef[] = [
                 reason: "{victim} was going to testify against your brother in a fraud trial",
                 clueName: "Witness Statement",
                 clueRoom: "victim-cabin",
-                clueDescription: "A signed witness statement by {victim} against Nair's brother in a fraud trial, ready to send when the storm clears."
-            }
-        ]
-    }
+                clueDescription:
+                    "A signed witness statement by {victim} against Nair's brother in a fraud trial, ready to send when the storm clears.",
+            },
+        ],
+    },
 ];
 
 export const METHODS: MethodDef[] = [
@@ -474,7 +482,8 @@ export const METHODS: MethodDef[] = [
         body: "{victim} is slumped beside a cup of synthetic coffee, {his} lips tinged blue.",
         hidden: "An empty neurotoxin vial from the medbay's locked cabinet, tucked out of sight.",
         carried: "clutching something small in one closed hand",
-        confession: "You took a neurotoxin vial from the medbay, put it in {victim}'s coffee, and hid the empty vial in the {hideRoom}."
+        confession:
+            "You took a neurotoxin vial from the medbay, put it in {victim}'s coffee, and hid the empty vial in the {hideRoom}.",
     },
     {
         id: "plasma-cutter",
@@ -484,7 +493,8 @@ export const METHODS: MethodDef[] = [
         body: "{victim} lies on the floor with a narrow scorch wound in {his} chest.",
         hidden: "A plasma cutter from engineering, its tip still blackened, stuffed out of sight.",
         carried: "lugging a heavy tool bag",
-        confession: "You took a plasma cutter from engineering, used it on {victim} in the {scene}, and hid it in the {hideRoom}."
+        confession:
+            "You took a plasma cutter from engineering, used it on {victim} in the {scene}, and hid it in the {hideRoom}.",
     },
     {
         id: "stun-baton",
@@ -494,7 +504,8 @@ export const METHODS: MethodDef[] = [
         body: "{victim} is slumped over with high-voltage burn marks on {his} neck.",
         hidden: "A stun baton from the security locker, its safety limiter pried off and its casing scorched.",
         carried: "carrying something long tucked under one arm",
-        confession: "You took a stun baton from security, removed its limiter, used it on {victim} in the {scene}, and hid it in the {hideRoom}."
+        confession:
+            "You took a stun baton from security, removed its limiter, used it on {victim} in the {scene}, and hid it in the {hideRoom}.",
     },
     {
         id: "pathogen",
@@ -504,8 +515,9 @@ export const METHODS: MethodDef[] = [
         body: "{victim} is curled on the floor, {his} skin mottled grey, a half-eaten meal tray beside {him}.",
         hidden: "A cracked culture dish from the research lab, labeled with a biohazard warning, wrapped in a cloth.",
         carried: "holding a sealed specimen case close",
-        confession: "You took a pathogen culture from the research lab, mixed it into {victim}'s meal, and hid the dish in the {hideRoom}."
-    }
+        confession:
+            "You took a pathogen culture from the research lab, mixed it into {victim}'s meal, and hid the dish in the {hideRoom}.",
+    },
 ];
 
 export const SECRETS: SecretDef[] = [
@@ -515,7 +527,7 @@ export const SECRETS: SecretDef[] = [
         activity: "hiding contraband in an unregistered cargo crate",
         clueName: "Falsified Manifest",
         clueRoom: "own-cabin",
-        clueDescription: "A cargo manifest for unregistered crate C-17, signed with {name}'s access code."
+        clueDescription: "A cargo manifest for unregistered crate C-17, signed with {name}'s access code.",
     },
     {
         id: "spacewalk",
@@ -523,7 +535,7 @@ export const SECRETS: SecretDef[] = [
         activity: "taking an unauthorized spacewalk to see Kharon's rings up close",
         clueName: "Airlock Log",
         clueRoom: "airlock",
-        clueDescription: "The EVA Airlock log shows an unscheduled cycle at {time} using {name}'s access code."
+        clueDescription: "The EVA Airlock log shows an unscheduled cycle at {time} using {name}'s access code.",
     },
     {
         id: "romance",
@@ -531,7 +543,7 @@ export const SECRETS: SecretDef[] = [
         activity: "secretly recording a video message for a lover from the last supply crew on the observation deck",
         clueName: "Private Message",
         clueRoom: "own-cabin",
-        clueDescription: "A message on {name}'s tablet: 'Observation Deck, {time}. Delete this after reading.'"
+        clueDescription: "A message on {name}'s tablet: 'Observation Deck, {time}. Delete this after reading.'",
     },
     {
         id: "transmission",
@@ -539,7 +551,8 @@ export const SECRETS: SecretDef[] = [
         activity: "trying to force a message home through the comms array despite the storm",
         clueName: "Comms Log",
         clueRoom: "comms",
-        clueDescription: "The comms array logged an unauthorized transmission attempt at {time}, encrypted with {name}'s personal key."
+        clueDescription:
+            "The comms array logged an unauthorized transmission attempt at {time}, encrypted with {name}'s personal key.",
     },
     {
         id: "produce-trade",
@@ -547,7 +560,8 @@ export const SECRETS: SecretDef[] = [
         activity: "harvesting real strawberries from hydroponics to sell on the black market",
         clueName: "Stripped Grow-Tray",
         clueRoom: "hydroponics",
-        clueDescription: "A strawberry grow-tray picked bare at {time}, with a note in {name}'s handwriting: 'For the Callisto buyer.'"
+        clueDescription:
+            "A strawberry grow-tray picked bare at {time}, with a note in {name}'s handwriting: 'For the Callisto buyer.'",
     },
     {
         id: "vr-session",
@@ -555,7 +569,7 @@ export const SECRETS: SecretDef[] = [
         activity: "skipping a duty shift to use the VR rig",
         clueName: "VR Session Log",
         clueRoom: "rec-room",
-        clueDescription: "The VR rig's log shows a session starting at {time} under {name}'s profile."
+        clueDescription: "The VR rig's log shows a session starting at {time} under {name}'s profile.",
     },
     {
         id: "painkillers",
@@ -563,7 +577,8 @@ export const SECRETS: SecretDef[] = [
         activity: "stealing painkillers from the medbay cabinet for a habit nobody knows about",
         clueName: "Cabinet Access Log",
         clueRoom: "medbay",
-        clueDescription: "The medbay drug cabinet log shows it was opened at {time} with {name}'s access code, and two painkiller strips are missing."
+        clueDescription:
+            "The medbay drug cabinet log shows it was opened at {time} with {name}'s access code, and two painkiller strips are missing.",
     },
     {
         id: "snooping",
@@ -571,7 +586,7 @@ export const SECRETS: SecretDef[] = [
         activity: "copying confidential research files in the research lab to sell later",
         clueName: "Data Chip",
         clueRoom: "own-cabin",
-        clueDescription: "A data chip in {name}'s belongings holding research files copied in the lab at {time}."
+        clueDescription: "A data chip in {name}'s belongings holding research files copied in the lab at {time}.",
     },
     {
         id: "gambling",
@@ -579,6 +594,7 @@ export const SECRETS: SecretDef[] = [
         activity: "running an illegal betting pool from the galley terminal",
         clueName: "Betting Ledger",
         clueRoom: "galley",
-        clueDescription: "The galley terminal shows a hidden betting ledger last updated at {time} under {name}'s login."
-    }
+        clueDescription:
+            "The galley terminal shows a hidden betting ledger last updated at {time} under {name}'s login.",
+    },
 ];

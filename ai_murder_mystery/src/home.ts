@@ -46,7 +46,11 @@ function renderTraining(): void {
     const done = readFlag("training-done");
     $<HTMLElement>("#home-training").replaceChildren(
         el("h2", "", "Training"),
-        el("p", "", "New here? A guided case that walks through every tool: searching, questioning, catching lies, uncovering secrets, the timeline board, and making an accusation. It takes about five minutes."),
+        el(
+            "p",
+            "",
+            "New here? A guided case that walks through every tool: searching, questioning, catching lies, uncovering secrets, the timeline board, and making an accusation. It takes about five minutes.",
+        ),
         done ? el("p", "home-status ok", "Completed") : el("p", "home-status", "Recommended before your first case"),
         link(done ? "text-btn" : "primary-btn", done ? "Replay training" : "Start training", tutorialURL()),
     );
@@ -60,7 +64,11 @@ function renderArchive(): void {
         const result = history[day];
         const mark = result ? (result.solved ? "✓" : "✗") : "";
         const status = result ? result.rank : "Not played";
-        const row = link(result?.solved ? "archive-row solved" : result ? "archive-row unsolved" : "archive-row", "", dailyURL(day));
+        const row = link(
+            result?.solved ? "archive-row solved" : result ? "archive-row unsolved" : "archive-row",
+            "",
+            dailyURL(day),
+        );
         row.append(
             el("span", "archive-day", `#${day}`),
             el("span", "archive-date", dayDate(day)),
@@ -72,7 +80,9 @@ function renderArchive(): void {
     target.replaceChildren(
         el("h2", "", "Archive"),
         el("p", "hint", "Play any past daily case. Archive results are saved here but don't affect your streak."),
-        ...(rows.length > 0 ? [el("div", "archive-list", "", rows)] : [el("p", "hint", "Past cases appear here. Yesterday's case will show up tomorrow.")]),
+        ...(rows.length > 0
+            ? [el("div", "archive-list", "", rows)]
+            : [el("p", "hint", "Past cases appear here. Yesterday's case will show up tomorrow.")]),
         el("p", "home-more", "", [link("text-btn", "Play a random practice case", practiceURL())]),
     );
 }

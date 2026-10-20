@@ -1,7 +1,18 @@
 import type { Case, Clue, Suspect, Unlock, Room, RoomID } from "./types";
 import {
-    TITLE, SETTING, INTRO, SLOTS, SHARED_FACTS, STATION_ROOMS, CHARACTERS, METHODS, SECRETS,
-    SUSPECT_COUNT, RED_HERRING_COUNT, type CharacterDef, type SecretDef
+    TITLE,
+    SETTING,
+    INTRO,
+    SLOTS,
+    SHARED_FACTS,
+    STATION_ROOMS,
+    CHARACTERS,
+    METHODS,
+    SECRETS,
+    SUSPECT_COUNT,
+    RED_HERRING_COUNT,
+    type CharacterDef,
+    type SecretDef,
 } from "./content";
 import { mulberry32, pick, shuffle } from "./random";
 
@@ -16,7 +27,8 @@ export interface Truth {
     timeline: Record<string, string[]>;
 }
 
-const fill = (text: string, vars: Record<string, string>) => text.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? `{${key}}`);
+const fill = (text: string, vars: Record<string, string>) =>
+    text.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? `{${key}}`);
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const withArticle = (noun: string) => `${/^[aeiou]/i.test(noun) ? "an" : "a"} ${noun}`;
 
@@ -24,26 +36,45 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
     const rng = mulberry32(seed);
 
     // 1. Pick the victim and the suspects. The crime scene is wherever the victim works.
-    const victim = pick(rng, CHARACTERS.filter((c) => c.canBeVictim));
+    const victim = pick(
+        rng,
+        CHARACTERS.filter((c) => c.canBeVictim),
+    );
     const scene = victim.homeRoom;
     // Shuffled to choose who's aboard, then put back in a fixed order so tabs look the same every case
-    const chosen = new Set(shuffle(rng, CHARACTERS.filter((c) => c.id !== victim.id)).slice(0, SUSPECT_COUNT).map((c) => c.id));
+    const chosen = new Set(
+        shuffle(
+            rng,
+            CHARACTERS.filter((c) => c.id !== victim.id),
+        )
+            .slice(0, SUSPECT_COUNT)
+            .map((c) => c.id),
+    );
     const cast = CHARACTERS.filter((c) => chosen.has(c.id));
 
     // 2. Pick the crime. The weapon can't come from the scene, and it can't be hidden there.
     const culprit = pick(rng, cast);
     const innocents = cast.filter((c) => c.id !== culprit.id);
-    const method = pick(rng, METHODS.filter((m) => m.weaponRoom !== scene));
-    const hideRoom = pick(rng, method.hideRooms.filter((r) => r !== scene));
+    const method = pick(
+        rng,
+        METHODS.filter((m) => m.weaponRoom !== scene),
+    );
+    const hideRoom = pick(
+        rng,
+        method.hideRooms.filter((r) => r !== scene),
+    );
     const murderIDx = pick(rng, [1, 2]);
     const murderTime = SLOTS[murderIDx];
 
     // 3. Rooms: the fixed station plus a cabin for everyone in this case (the victim included)
     const rooms: Room[] = [
-        ...STATION_ROOMS.map((r) => (r.id === scene ? { ...r, description: `${r.description} ${victim.name}'s body lies here.` } : r)),
+        ...STATION_ROOMS.map((r) =>
+            r.id === scene ? { ...r, description: `${r.description} ${victim.name}'s body lies here.` } : r,
+        ),
         ...[victim, ...cast].map((c) => c.cabin),
     ];
-    const roomName = (id: string) => (id === "exterior" ? "outside the station" : rooms.find((r) => r.id === id)?.name ?? id);
+    const roomName = (id: string) =>
+        id === "exterior" ? "outside the station" : (rooms.find((r) => r.id === id)?.name ?? id);
     const sceneName = roomName(scene);
 
     const p = victim.pronouns;
@@ -54,8 +85,11 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
         scene: sceneName,
         time: murderTime,
         hideRoom: roomName(hideRoom),
-        he: p.he, him: p.him, his: p.his,
-        He: capitalize(p.he), His: capitalize(p.his),
+        he: p.he,
+        him: p.him,
+        his: p.his,
+        He: capitalize(p.he),
+        His: capitalize(p.his),
     };
 
     // 4. Motives for everyone, secrets for innocents, red herrings
@@ -63,7 +97,10 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
 
     // An innocent's secret must take them away from their own post (or they wouldn't need to lie)
     // and away from the scene (or they'd have been with the victim at the time of death).
-    const secretPool = shuffle(rng, SECRETS.filter((s) => s.room !== scene));
+    const secretPool = shuffle(
+        rng,
+        SECRETS.filter((s) => s.room !== scene),
+    );
     const secrets = new Map<string, SecretDef>();
     for (const c of innocents) {
         const i = secretPool.findIndex((s) => s.room !== c.homeRoom);
@@ -106,7 +143,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
                 const carrying = hasWeapon ? ` ${b.name} was ${method.carried}.` : "";
                 sightings.get(a.id)!.push({
                     slot: s,
-                    text: `At ${SLOTS[s]} you saw ${b.name} in the ${roomName(room)}.${carrying}`
+                    text: `At ${SLOTS[s]} you saw ${b.name} in the ${roomName(room)}.${carrying}`,
                 });
             }
         }
@@ -121,14 +158,14 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             id: "body",
             name: "The Body",
             roomID: scene,
-            description: `${fill(method.body, vars)} ${vars.His} wrist monitor recorded ${p.his} heart stopping at ${murderTime}.`
+            description: `${fill(method.body, vars)} ${vars.His} wrist monitor recorded ${p.his} heart stopping at ${murderTime}.`,
         },
         {
             id: "weapon",
             name: method.weaponName,
             roomID: hideRoom,
-            description: method.hidden
-        }
+            description: method.hidden,
+        },
     ];
 
     // Shuffled so the culprit's trace isn't always listed first
@@ -137,7 +174,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             id: `trace-${c.id}`,
             name: c.traceName,
             roomID: scene,
-            description: `Found in the ${sceneName}: ${c.trace}.`
+            description: `Found in the ${sceneName}: ${c.trace}.`,
         });
     }
 
@@ -147,7 +184,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             id: `motive-${c.id}`,
             name: m.clueName,
             roomID: motiveRoom(m.clueRoom, c),
-            description: fill(m.clueDescription, vars)
+            description: fill(m.clueDescription, vars),
         });
     }
 
@@ -157,7 +194,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             id: `secret-${c.id}`,
             name: s.clueName,
             roomID: secretRoom(s.clueRoom, c),
-            description: fill(s.clueDescription, { ...vars, name: c.name })
+            description: fill(s.clueDescription, { ...vars, name: c.name }),
         });
     }
 
@@ -194,8 +231,8 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
                 requires: [`motive-${c.id}`],
                 reveals: isCulprit
                     ? `You claim the ${motive.clueName.toLowerCase()} is exaggerated or a misunderstanding. You insist you did not kill ${victim.shortName}.`
-                    : `You admit that ${reason}. You insist you did not kill ${victim.shortName}.`
-            }
+                    : `You admit that ${reason}. You insist you did not kill ${victim.shortName}.`,
+            },
         ];
 
         if (secret) {
@@ -207,7 +244,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
                     `You confess that at ${murderTime} you were actually ${secret.activity}. You lied because you would be in serious trouble.`,
                     ...atMurder,
                 ].join(" "),
-                storyChange: `At ${murderTime} you were ${secret.activity}.`
+                storyChange: `At ${murderTime} you were ${secret.activity}.`,
             });
         }
 
@@ -219,7 +256,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
                     `The ${c.traceName.toLowerCase()} is yours: you left it when you briefly visited the ${sceneName} at ${SLOTS[0]} to speak with ${victim.shortName}. ${victim.shortName} was alive and in a foul mood when you left. You readily admit this now.`,
                     ...seen.filter(atScene).map((s) => s.text),
                 ].join(" "),
-                storyChange: `At ${SLOTS[0]} you briefly visited the ${sceneName}. ${victim.shortName} was alive when you left.`
+                storyChange: `At ${SLOTS[0]} you briefly visited the ${sceneName}. ${victim.shortName} was alive when you left.`,
             });
         }
 
@@ -230,17 +267,17 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
                     // A lie: the culprit claims the same harmless early visit as the red herrings.
                     // The herrings saw each other at that time and can't place the culprit there.
                     reveals: `The ${c.traceName.toLowerCase()} is yours. You admit you went to the ${sceneName}, but claim it was a short visit at ${SLOTS[0]} and ${victim.shortName} was alive when you left. Stick to that time.`,
-                    storyChange: `At ${SLOTS[0]} you briefly visited the ${sceneName}. ${victim.shortName} was alive when you left. (Insist on this time.)`
+                    storyChange: `At ${SLOTS[0]} you briefly visited the ${sceneName}. ${victim.shortName} was alive when you left. (Insist on this time.)`,
                 },
                 {
                     requires: ["weapon"],
-                    reveals: `You deny ever seeing the ${method.weaponName.toLowerCase()} before.`
+                    reveals: `You deny ever seeing the ${method.weaponName.toLowerCase()} before.`,
                 },
                 {
                     requires: [`trace-${c.id}`, "weapon", `motive-${c.id}`],
                     reveals: `Your composure breaks. You confess to killing ${victim.shortName}: ${reason}. ${fill(method.confession, vars)}`,
-                    confession: true
-                }
+                    confession: true,
+                },
             );
         }
 
@@ -254,13 +291,14 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             facts,
             post: roomName(c.homeRoom),
             // "Alone" stops the model from inventing alibi witnesses
-            story: errandRunner?.id === c.id
-                ? `You were working alone in the ${roomName(c.homeRoom)} from 21:00 until the body was found at 23:00, apart from a quick trip to the ${roomName(hideRoom)} at ${SLOTS[afterIDx]}.`
-                : `You were working alone in the ${roomName(c.homeRoom)} from 21:00 until the body was found at 23:00.`,
+            story:
+                errandRunner?.id === c.id
+                    ? `You were working alone in the ${roomName(c.homeRoom)} from 21:00 until the body was found at 23:00, apart from a quick trip to the ${roomName(hideRoom)} at ${SLOTS[afterIDx]}.`
+                    : `You were working alone in the ${roomName(c.homeRoom)} from 21:00 until the body was found at 23:00.`,
             reactions: isCulprit
                 ? [`If asked about the ${sceneName}, say you did not go there tonight.`]
                 : ["If the investigator suggests you were somewhere else, insist on your story."],
-            unlocks
+            unlocks,
         };
     });
 
@@ -291,7 +329,10 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
     }
     howToSolve.push(
         `${culprit.name}'s motive was in ${clueRoom(`motive-${culprit.id}`)}: the ${motives.get(culprit.id)!.clueName}.`,
-        ...innocents.map((c) => `${c.name} was really ${secrets.get(c.id)!.activity} at ${murderTime} (proof: the ${secrets.get(c.id)!.clueName} in ${clueRoom(`secret-${c.id}`)}).`),
+        ...innocents.map(
+            (c) =>
+                `${c.name} was really ${secrets.get(c.id)!.activity} at ${murderTime} (proof: the ${secrets.get(c.id)!.clueName} in ${clueRoom(`secret-${c.id}`)}).`,
+        ),
     );
 
     const theCase: Case = {
@@ -310,8 +351,8 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             culpritID: culprit.id,
             proof: { opportunity: `trace-${culprit.id}`, motive: `motive-${culprit.id}`, means: "weapon" },
             howToSolve,
-            explanation: `${culprit.name} killed ${victim.name} in the ${sceneName} at ${murderTime}. Motive: ${culpritMotive.label.toLowerCase()}. The weapon, ${withArticle(method.weaponName.toLowerCase())}, was hidden in the ${roomName(hideRoom)}. ${redHerrings.map((c) => c.name).join(" and ")} left traces too, but only from a harmless visit at ${SLOTS[0]}.`
-        }
+            explanation: `${culprit.name} killed ${victim.name} in the ${sceneName} at ${murderTime}. Motive: ${culpritMotive.label.toLowerCase()}. The weapon, ${withArticle(method.weaponName.toLowerCase())}, was hidden in the ${roomName(hideRoom)}. ${redHerrings.map((c) => c.name).join(" and ")} left traces too, but only from a harmless visit at ${SLOTS[0]}.`,
+        },
     };
 
     return {
@@ -324,7 +365,7 @@ export function generateCase(seed: number): { case: Case; truth: Truth } {
             hideRoom,
             murderTime,
             redHerringIDs: redHerrings.map((c) => c.id),
-            timeline
-        }
+            timeline,
+        },
     };
 }

@@ -15,7 +15,7 @@ export function validateCase(c: Case): string[] {
     for (const s of c.suspects) {
         for (const u of s.unlocks) {
             for (const id of u.requires) {
-                if (!clueIDs.has(id)) errors.push(`Suspect, "${s.id}", has an unlock needing unknown clue: "${id}".`)
+                if (!clueIDs.has(id)) errors.push(`Suspect, "${s.id}", has an unlock needing unknown clue: "${id}".`);
             }
         }
     }

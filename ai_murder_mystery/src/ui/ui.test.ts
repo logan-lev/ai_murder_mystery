@@ -57,7 +57,10 @@ describe("renderEnd", () => {
 
     it("shows each proof slot, the right answer when wrong, and the true timeline", () => {
         const s = createGameState(c);
-        s.accusation = { suspectID: truth.culpritID, proof: { opportunity: `trace-${truth.culpritID}`, motive: "", means: "body" } };
+        s.accusation = {
+            suspectID: truth.culpritID,
+            proof: { opportunity: `trace-${truth.culpritID}`, motive: "", means: "body" },
+        };
         s.verdict = scoreAccusation(c, s.accusation);
         const div = document.createElement("div");
         renderEnd(div, c, truth, { mode: "practice", seed: 2718 }, s, s.verdict);
@@ -66,14 +69,21 @@ describe("renderEnd", () => {
         expect(text).toContain("Nothing chosen (it was the");
         expect(text).toContain("How you could have cracked it");
         expect(div.querySelectorAll(".timeline tbody tr")).toHaveLength(c.suspects.length);
-        expect(div.querySelector(".culprit-row th")?.textContent).toBe(c.suspects.find((x) => x.id === truth.culpritID)!.name);
+        expect(div.querySelector(".culprit-row th")?.textContent).toBe(
+            c.suspects.find((x) => x.id === truth.culpritID)!.name,
+        );
     });
 });
 
 describe("renderStats", () => {
     it("handles a player with no games", () => {
         const div = document.createElement("div");
-        renderStats(div, { played: 0, solved: 0, streak: 0, maxStreak: 0, lastPlayedDay: 0, lastSolvedDay: 0, ranks: {} }, 5, false);
+        renderStats(
+            div,
+            { played: 0, solved: 0, streak: 0, maxStreak: 0, lastPlayedDay: 0, lastSolvedDay: 0, ranks: {} },
+            5,
+            false,
+        );
         expect(div.textContent).toContain("Played");
         expect(div.textContent).not.toContain("NaN");
         expect(div.querySelector(".countdown")).toBeNull();

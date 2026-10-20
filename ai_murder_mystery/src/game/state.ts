@@ -55,7 +55,7 @@ export function createGameState(c: Case): GameState {
         verdict: null,
         board,
         attempt: 1,
-        tutorialStep: 0
+        tutorialStep: 0,
     };
 }
 
@@ -87,7 +87,12 @@ export function showClue(state: GameState, suspectID: SuspectID, clueID: ClueID)
 }
 
 // The full message list to send for a suspect's next reply
-export function buildMessages(state: GameState, c: Case, suspectID: SuspectID, narrate = false): ChatCompletionMessageParam[] {
+export function buildMessages(
+    state: GameState,
+    c: Case,
+    suspectID: SuspectID,
+    narrate = false,
+): ChatCompletionMessageParam[] {
     const suspect = c.suspects.find((s) => s.id === suspectID);
     if (!suspect) throw new Error(`Unknown Suspect: "${suspectID}"`);
     const convo = state.conversations[suspectID];
@@ -97,8 +102,15 @@ export function buildMessages(state: GameState, c: Case, suspectID: SuspectID, n
     return [
         {
             role: "system",
-            content: buildSuspectPrompt(c, suspect, state.shownClues[suspectID], narrate, convo.length <= 1, bluffReminders(lastText, others))
+            content: buildSuspectPrompt(
+                c,
+                suspect,
+                state.shownClues[suspectID],
+                narrate,
+                convo.length <= 1,
+                bluffReminders(lastText, others),
+            ),
         },
-        ...state.conversations[suspectID].slice(-MAX_HISTORY)
+        ...state.conversations[suspectID].slice(-MAX_HISTORY),
     ];
 }

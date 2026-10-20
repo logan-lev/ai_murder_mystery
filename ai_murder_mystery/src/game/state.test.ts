@@ -21,7 +21,12 @@ describe("turns and searching", () => {
     it("searching finds the room's clues and uses one turn", () => {
         const s = createGameState(c);
         const found = searchRoom(s, c, c.sceneRoomID);
-        expect(found.map((cl) => cl.id).sort()).toEqual(c.clues.filter((cl) => cl.roomID === c.sceneRoomID).map((cl) => cl.id).sort());
+        expect(found.map((cl) => cl.id).sort()).toEqual(
+            c.clues
+                .filter((cl) => cl.roomID === c.sceneRoomID)
+                .map((cl) => cl.id)
+                .sort(),
+        );
         expect(found.map((cl) => cl.id)).toContain("body");
         expect(s.actions).toEqual(["search-hit"]);
         expect(turnsLeft(s)).toBe(TURN_LIMIT - 1);
@@ -76,7 +81,8 @@ describe("buildMessages", () => {
 
     it("keeps the system prompt and only the most recent messages", () => {
         const s = createGameState(c);
-        for (let i = 0; i < 20; i++) s.conversations[innocent].push({ role: i % 2 ? "assistant" : "user", content: `m${i}` });
+        for (let i = 0; i < 20; i++)
+            s.conversations[innocent].push({ role: i % 2 ? "assistant" : "user", content: `m${i}` });
         const msgs = buildMessages(s, c, innocent);
         expect(msgs[0].role).toBe("system");
         expect(msgs).toHaveLength(9);

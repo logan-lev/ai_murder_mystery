@@ -11,7 +11,11 @@ const c = TUTORIAL_CASE;
 const clueIDs = new Set(c.clues.map((cl) => cl.id));
 const roomIDs = new Set(c.rooms.map((r) => r.id));
 const suspectIDs = new Set(c.suspects.map((s) => s.id));
-const questionIDs = new Set(Object.values(QUESTIONS).flat().map((q) => q.id));
+const questionIDs = new Set(
+    Object.values(QUESTIONS)
+        .flat()
+        .map((q) => q.id),
+);
 
 describe("training case data", () => {
     it("is a valid case", () => {
@@ -23,7 +27,9 @@ describe("training case data", () => {
             expect(TUTORIAL_TRUTH.timeline[id]).toHaveLength(SLOTS.length);
             for (const r of TUTORIAL_TRUTH.timeline[id]) expect(roomIDs.has(r)).toBe(true);
         }
-        expect(TUTORIAL_TRUTH.timeline[TUTORIAL_TRUTH.culpritID][SLOTS.indexOf(TUTORIAL_TRUTH.murderTime)]).toBe(c.sceneRoomID);
+        expect(TUTORIAL_TRUTH.timeline[TUTORIAL_TRUTH.culpritID][SLOTS.indexOf(TUTORIAL_TRUTH.murderTime)]).toBe(
+            c.sceneRoomID,
+        );
     });
 
     it("only scripts questions and shows for real suspects, clues, and questions", () => {
@@ -51,7 +57,8 @@ describe("training case data", () => {
     });
 
     it("never refers to the victim as just 'her' in a scripted answer", () => {
-        for (const q of Object.values(QUESTIONS).flat()) expect(q.answer).not.toMatch(/found her\b|kill her\b|left her\b/);
+        for (const q of Object.values(QUESTIONS).flat())
+            expect(q.answer).not.toMatch(/found her\b|kill her\b|left her\b/);
     });
 
     it("puts the proof clues where the coach sends the player", () => {
@@ -81,10 +88,12 @@ describe("coach steps", () => {
                 for (const [, cl] of sel.matchAll(/data-clue="([^"]+)"/g)) expect(clueIDs.has(cl), sel).toBe(true);
                 for (const [, r] of sel.matchAll(/data-room="([^"]+)"/g)) expect(roomIDs.has(r), sel).toBe(true);
                 for (const [, s] of sel.matchAll(/data-for="([^"]+)"/g)) expect(suspectIDs.has(s), sel).toBe(true);
-                for (const [, p] of sel.matchAll(/data-pin="([a-z]+)-(\d)"/g)) expect(suspectIDs.has(p), sel).toBe(true);
+                for (const [, p] of sel.matchAll(/data-pin="([a-z]+)-(\d)"/g))
+                    expect(suspectIDs.has(p), sel).toBe(true);
             }
             for (const sel of step.target ?? []) {
-                for (const [, t] of sel.matchAll(/data-tab="([^"]+)"/g)) expect(["station", "evidence", "timeline", ...suspectIDs].includes(t), sel).toBe(true);
+                for (const [, t] of sel.matchAll(/data-tab="([^"]+)"/g))
+                    expect(["station", "evidence", "timeline", ...suspectIDs].includes(t), sel).toBe(true);
             }
         }
     });
@@ -100,13 +109,19 @@ describe("coach steps", () => {
                 if (q) {
                     const [sid, list] = Object.entries(QUESTIONS).find(([, l]) => l.some((x) => x.id === q))!;
                     const question = list.find((x) => x.id === q)!;
-                    state.conversations[sid].push({ role: "user", content: question.text }, { role: "assistant", content: question.answer });
+                    state.conversations[sid].push(
+                        { role: "user", content: question.text },
+                        { role: "assistant", content: question.answer },
+                    );
                 }
                 const show = sel.match(/data-for="([^"]+)"\]\[data-clue="([^"]+)"/);
                 if (show) {
                     const name = c.clues.find((cl) => cl.id === show[2])!.name;
                     state.shownClues[show[1]].add(show[2]);
-                    state.conversations[show[1]].push({ role: "user", content: `(The investigator shows you the ${name}: ...)` }, { role: "assistant", content: "..." });
+                    state.conversations[show[1]].push(
+                        { role: "user", content: `(The investigator shows you the ${name}: ...)` },
+                        { role: "assistant", content: "..." },
+                    );
                 }
                 const room = sel.match(/^\.room-chip\[data-room="([^"]+)"\]/)?.[1];
                 if (room) state.searchedRoomIDs.add(room);
@@ -120,7 +135,13 @@ describe("coach steps", () => {
                 }
             }
             if (step.target?.some((t) => t.includes("timeline"))) ctx.boardOpen = true;
-            if (step.allow?.includes("#accuse-btn")) state.verdict = { correctCulprit: true, correctProof: { opportunity: true, motive: true, means: true }, rank: "Master Investigator", explanation: "" };
+            if (step.allow?.includes("#accuse-btn"))
+                state.verdict = {
+                    correctCulprit: true,
+                    correctProof: { opportunity: true, motive: true, means: true },
+                    rank: "Master Investigator",
+                    explanation: "",
+                };
             expect(step.done(ctx), step.text.slice(0, 60)).toBe(true);
             ctx.boardOpen = false;
         }

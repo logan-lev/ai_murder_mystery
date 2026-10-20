@@ -1026,7 +1026,8 @@ button:disabled {
 
 /* Tutorial: action controls are locked except the ones the current coach step allows.
    Tabs stay usable, since looking around can't put the steps out of order. */
-body.tutorial-locked :is(.room-chip, #room-detail button, .chip, .show-btn, .pin-select, #accuse-btn):not(.coach-allowed) {
+body.tutorial-locked
+  :is(.room-chip, #room-detail button, .chip, .show-btn, .pin-select, #accuse-btn):not(.coach-allowed) {
   pointer-events: none;
   opacity: 0.35;
 }

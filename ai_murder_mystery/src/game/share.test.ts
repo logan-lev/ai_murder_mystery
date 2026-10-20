@@ -5,7 +5,12 @@ import { buildShareText } from "./share";
 import type { Verdict } from "./accuse";
 
 const { case: c } = generateCase(2718);
-const verdict: Verdict = { correctCulprit: true, correctProof: { opportunity: true, motive: false, means: true }, rank: "Sharp Inspector", explanation: "" };
+const verdict: Verdict = {
+    correctCulprit: true,
+    correctProof: { opportunity: true, motive: false, means: true },
+    rank: "Sharp Inspector",
+    explanation: "",
+};
 
 describe("buildShareText", () => {
     it("is spoiler-free: no names, rooms, or clues", () => {
@@ -25,13 +30,17 @@ describe("buildShareText", () => {
     it("wraps the action grid every 8 turns", () => {
         const s = createGameState(c);
         s.actions = Array(19).fill("question");
-        const rows = buildShareText({ mode: "practice", seed: 5 }, s, verdict).split("\n").filter((l) => l.startsWith("💬"));
+        const rows = buildShareText({ mode: "practice", seed: 5 }, s, verdict)
+            .split("\n")
+            .filter((l) => l.startsWith("💬"));
         expect(rows.map((r) => [...r].length)).toEqual([8, 8, 3]);
     });
 
     it("labels retries", () => {
         const s = createGameState(c);
         s.attempt = 3;
-        expect(buildShareText({ mode: "daily", day: 7, seed: 1, isToday: true }, s, verdict)).toContain("Daily #7 (retry 2)");
+        expect(buildShareText({ mode: "daily", day: 7, seed: 1, isToday: true }, s, verdict)).toContain(
+            "Daily #7 (retry 2)",
+        );
     });
 });

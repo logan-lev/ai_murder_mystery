@@ -3,7 +3,10 @@ import { parseReply, renderWithActions, trimIncomplete } from "./reply";
 
 describe("parseReply", () => {
     it("splits narration from speech", () => {
-        expect(parseReply("[Reyes rubs his neck.] I was in Engineering.")).toEqual({ narration: "Reyes rubs his neck.", speech: "I was in Engineering." });
+        expect(parseReply("[Reyes rubs his neck.] I was in Engineering.")).toEqual({
+            narration: "Reyes rubs his neck.",
+            speech: "I was in Engineering.",
+        });
     });
     it("treats a reply without brackets as all speech", () => {
         expect(parseReply("I was in Engineering.")).toEqual({ narration: "", speech: "I was in Engineering." });
@@ -50,8 +53,14 @@ describe("renderWithActions", () => {
 
 describe("trimIncomplete", () => {
     it.each([
-        ["[Nair looks down.] I remember seeing SABLE in the lab. It was... pa", "[Nair looks down.] I remember seeing SABLE in the lab. It was..."],
-        ["[Castellanos steps back.] That's just a device. I had nothing to do with... [pauses, her", "[Castellanos steps back.] That's just a device. I had nothing to do with..."],
+        [
+            "[Nair looks down.] I remember seeing SABLE in the lab. It was... pa",
+            "[Nair looks down.] I remember seeing SABLE in the lab. It was...",
+        ],
+        [
+            "[Castellanos steps back.] That's just a device. I had nothing to do with... [pauses, her",
+            "[Castellanos steps back.] That's just a device. I had nothing to do with...",
+        ],
         ["I was there at 21:00. He was alive (mostly", "I was there at 21:00."],
         ["Short. Then 'quoted.' and more wor", "Short. Then 'quoted.'"],
         ["Done? Yes! Finished.", "Done? Yes! Finished."],

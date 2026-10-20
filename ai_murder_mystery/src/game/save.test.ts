@@ -2,14 +2,34 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { generateCase } from "../case/generate";
 import { createGameState, searchRoom, showClue } from "./state";
 import {
-    saveGame, loadGame, pruneSaves, peekSave, loadStats, recordDailyResult, currentStreak,
-    loadHistory, recordHistory, deleteAllProgress, readFlag, writeFlag,
+    saveGame,
+    loadGame,
+    pruneSaves,
+    peekSave,
+    loadStats,
+    recordDailyResult,
+    currentStreak,
+    loadHistory,
+    recordHistory,
+    deleteAllProgress,
+    readFlag,
+    writeFlag,
 } from "./save";
 import type { Verdict } from "./accuse";
 
 const { case: c, truth } = generateCase(31337);
-const solved: Verdict = { correctCulprit: true, correctProof: { opportunity: true, motive: true, means: true }, rank: "Master Investigator", explanation: "" };
-const missed: Verdict = { correctCulprit: false, correctProof: { opportunity: false, motive: false, means: false }, rank: "Case Unsolved", explanation: "" };
+const solved: Verdict = {
+    correctCulprit: true,
+    correctProof: { opportunity: true, motive: true, means: true },
+    rank: "Master Investigator",
+    explanation: "",
+};
+const missed: Verdict = {
+    correctCulprit: false,
+    correctProof: { opportunity: false, motive: false, means: false },
+    rank: "Case Unsolved",
+    explanation: "",
+};
 
 beforeEach(() => localStorage.clear());
 
@@ -18,7 +38,10 @@ describe("saving and loading a case", () => {
         const s = createGameState(c);
         searchRoom(s, c, c.sceneRoomID);
         showClue(s, truth.culpritID, "body");
-        s.conversations[truth.culpritID].push({ role: "user", content: "Hi" }, { role: "assistant", content: "Hello." });
+        s.conversations[truth.culpritID].push(
+            { role: "user", content: "Hi" },
+            { role: "assistant", content: "Hello." },
+        );
         s.board[truth.culpritID][0] = c.sceneRoomID;
         s.activeSuspectID = truth.culpritID;
         s.attempt = 2;
@@ -38,7 +61,11 @@ describe("saving and loading a case", () => {
 
     it("drops a question whose reply never arrived", () => {
         const s = createGameState(c);
-        s.conversations[truth.culpritID].push({ role: "user", content: "Hi" }, { role: "assistant", content: "Hello." }, { role: "user", content: "Unanswered" });
+        s.conversations[truth.culpritID].push(
+            { role: "user", content: "Hi" },
+            { role: "assistant", content: "Hello." },
+            { role: "user", content: "Unanswered" },
+        );
         saveGame(31337, s);
         expect(loadGame(31337, c)!.conversations[truth.culpritID].map((m) => m.content)).toEqual(["Hi", "Hello."]);
     });
@@ -154,7 +181,16 @@ describe("when storage is blocked (private browsing, disabled cookies)", () => {
         const boom = () => {
             throw new DOMException("blocked", "SecurityError");
         };
-        vi.stubGlobal("localStorage", { getItem: boom, setItem: boom, removeItem: boom, key: boom, clear: boom, get length(): number { return boom(); } });
+        vi.stubGlobal("localStorage", {
+            getItem: boom,
+            setItem: boom,
+            removeItem: boom,
+            key: boom,
+            clear: boom,
+            get length(): number {
+                return boom();
+            },
+        });
         try {
             expect(() => saveGame(1, createGameState(c))).not.toThrow();
             expect(loadGame(1, c)).toBeNull();

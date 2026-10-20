@@ -38,10 +38,17 @@ const shown = (s: GameState, suspectID: SuspectID, clueID: ClueID) => {
     if (!s.shownClues[suspectID]?.has(clueID)) return false;
     const name = TUTORIAL_CASE.clues.find((cl) => cl.id === clueID)?.name ?? "";
     const convo = s.conversations[suspectID] ?? [];
-    return convo.some((m, i) => m.role === "user" && typeof m.content === "string" && m.content.includes(`shows you the ${name}:`) && convo[i + 1]?.role === "assistant");
+    return convo.some(
+        (m, i) =>
+            m.role === "user" &&
+            typeof m.content === "string" &&
+            m.content.includes(`shows you the ${name}:`) &&
+            convo[i + 1]?.role === "assistant",
+    );
 };
 const searched = (s: GameState, roomID: string) => s.searchedRoomIDs.has(roomID);
-const pinned = (s: GameState, suspectID: SuspectID, slot: number, roomID: string) => s.board[suspectID]?.[slot] === roomID;
+const pinned = (s: GameState, suspectID: SuspectID, slot: number, roomID: string) =>
+    s.board[suspectID]?.[slot] === roomID;
 
 export const STEPS: Step[] = [
     {
@@ -79,7 +86,7 @@ export const STEPS: Step[] = [
     },
     {
         text: "Now talk to a suspect. Each crew member has their own tab. In training you pick questions from buttons; in real cases you type them.",
-        todo: "Click Dr. Okafor's tab, then click \"Where were you tonight?\"",
+        todo: 'Click Dr. Okafor\'s tab, then click "Where were you tonight?"',
         target: ['[data-tab="okafor"]:not(.active)', "#question-chips"],
         allow: question("okafor-where"),
         done: ({ state }) => asked(state, "okafor-where"),
@@ -93,14 +100,14 @@ export const STEPS: Step[] = [
     },
     {
         text: "Now she admits she was there at 21:00. So her first answer was a lie.",
-        todo: "Click \"Why did you lie?\"",
+        todo: 'Click "Why did you lie?"',
         target: ['[data-tab="okafor"]:not(.active)', "#question-chips"],
         allow: question("okafor-why-lie"),
         done: ({ state }) => asked(state, "okafor-why-lie"),
     },
     {
         text: "Innocent people lie too, usually to avoid looking guilty. A lie doesn't prove someone is the killer. It tells you to dig deeper.",
-        todo: "Click \"Who else was in the Hydroponics Bay at 21:00?\"",
+        todo: 'Click "Who else was in the Hydroponics Bay at 21:00?"',
         target: ['[data-tab="okafor"]:not(.active)', "#question-chips"],
         allow: question("okafor-who-else"),
         done: ({ state }) => asked(state, "okafor-who-else"),
@@ -121,7 +128,7 @@ export const STEPS: Step[] = [
     },
     {
         text: "Reyes says he was there at 21:00 too. But Okafor said only SABLE was there with her. Someone is lying.",
-        todo: "Go back to Dr. Okafor's tab and click \"Did you see anyone else this evening?\"",
+        todo: 'Go back to Dr. Okafor\'s tab and click "Did you see anyone else this evening?"',
         target: ['[data-tab="okafor"]:not(.active)', "#question-chips"],
         allow: question("okafor-saw"),
         done: ({ state }) => asked(state, "okafor-saw"),
@@ -135,7 +142,7 @@ export const STEPS: Step[] = [
     },
     {
         text: "Real cases have one more layer. At the time of death (22:00), innocent people are often hiding something unrelated, so they lie about where they were. Uncovering their secret proves they didn't do it.",
-        todo: "Click SABLE's tab, then click \"Where exactly were you at 22:00?\"",
+        todo: 'Click SABLE\'s tab, then click "Where exactly were you at 22:00?"',
         target: ['[data-tab="sable"]:not(.active)', "#question-chips"],
         allow: question("sable-2200"),
         done: ({ state }) => asked(state, "sable-2200"),
@@ -177,7 +184,7 @@ export const STEPS: Step[] = [
     },
     {
         text: "Last, the weapon. The killer hid it right after the murder, around 22:30, and someone may have seen where.",
-        todo: "Click SABLE's tab, then click \"Did you see anyone else this evening?\"",
+        todo: 'Click SABLE\'s tab, then click "Did you see anyone else this evening?"',
         target: ['[data-tab="sable"]:not(.active)', "#question-chips"],
         allow: question("sable-saw"),
         done: ({ state }) => asked(state, "sable-saw"),
@@ -226,25 +233,41 @@ export class Coach {
 
         const isLocked = (target: EventTarget | null) => {
             const control = (target as Element | null)?.closest?.(LOCKABLE);
-            return !!control && document.body.classList.contains("tutorial-locked") && !control.classList.contains("coach-allowed");
+            return (
+                !!control &&
+                document.body.classList.contains("tutorial-locked") &&
+                !control.classList.contains("coach-allowed")
+            );
         };
         // The CSS lock stops pointer clicks. These also stop programmatic and keyboard clicks,
         // and keyboard changes to a locked dropdown (arrow keys change a select without a click).
-        document.addEventListener("click", (event) => {
-            if (isLocked(event.target)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        }, true);
-        document.addEventListener("keydown", (event) => {
-            if (event.key !== "Tab" && isLocked(event.target)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        }, true);
-        document.addEventListener("change", (event) => {
-            if (isLocked(event.target)) event.stopPropagation();
-        }, true);
+        document.addEventListener(
+            "click",
+            (event) => {
+                if (isLocked(event.target)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            },
+            true,
+        );
+        document.addEventListener(
+            "keydown",
+            (event) => {
+                if (event.key !== "Tab" && isLocked(event.target)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            },
+            true,
+        );
+        document.addEventListener(
+            "change",
+            (event) => {
+                if (isLocked(event.target)) event.stopPropagation();
+            },
+            true,
+        );
     }
 
     render(ctx: CoachContext): void {
@@ -262,7 +285,11 @@ export class Coach {
 
         const actions: HTMLElement[] = [];
         if (last) {
-            const replay = el("button", state.verdict && !this.solved(state) ? "primary-btn" : "text-btn", "Replay training");
+            const replay = el(
+                "button",
+                state.verdict && !this.solved(state) ? "primary-btn" : "text-btn",
+                "Replay training",
+            );
             replay.type = "button";
             replay.addEventListener("click", this.onFinish.replay);
             const daily = el("button", "primary-btn", "Play today's case");
@@ -312,7 +339,8 @@ export class Coach {
             if (allowed) {
                 this.scrolledAllowedFor = i;
                 const box = allowed.getBoundingClientRect();
-                if (box.bottom > window.innerHeight || box.top < 0) allowed.scrollIntoView({ block: "center", behavior: "smooth" });
+                if (box.bottom > window.innerHeight || box.top < 0)
+                    allowed.scrollIntoView({ block: "center", behavior: "smooth" });
             }
         }
     }
@@ -330,9 +358,11 @@ export class Coach {
     }
 
     private finalText(state: GameState): string {
-        const wrap = "Real cases have five suspects and you type your own questions to an AI. Every innocent hides a secret like SABLE's about the time of death, and proving it clears them.";
+        const wrap =
+            "Real cases have five suspects and you type your own questions to an AI. Every innocent hides a secret like SABLE's about the time of death, and proving it clears them.";
         if (!state.verdict || this.solved(state)) return `That's the whole loop. ${wrap}`;
-        if (!state.verdict.correctCulprit) return "Not quite: Tomas Reyes was the killer. His glove put him at the scene, Okafor and SABLE never saw him there at 21:00, and both saw him carrying the vial. Replay training to try it again.";
+        if (!state.verdict.correctCulprit)
+            return "Not quite: Tomas Reyes was the killer. His glove put him at the scene, Okafor and SABLE never saw him there at 21:00, and both saw him carrying the vial. Replay training to try it again.";
         return "You got the killer, but not all of the proof. Opportunity was the Coolant-Stained Glove, motive the Inspection Audit, and means the Neurotoxin Vial. Replay training to try it again, or move on to a real case.";
     }
 }

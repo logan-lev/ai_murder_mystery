@@ -54,10 +54,13 @@ export function dailyURL(day: number): string {
     return `${window.location.pathname}?day=${day}`;
 }
 
-
 // The calendar date a daily case belongs to, e.g. "Oct 13"
 export function dayDate(day: number): string {
-    return new Date(LAUNCH_DAY + (day - 1) * DAY_MS).toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+    return new Date(LAUNCH_DAY + (day - 1) * DAY_MS).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+    });
 }
 
 export function caseLabel(info: CaseInfo): string {

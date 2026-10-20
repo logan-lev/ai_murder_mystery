@@ -61,7 +61,8 @@ describe("generateCase invariants", () => {
             }
 
             // Motives are never at the scene
-            for (const cl of c.clues.filter((x) => x.id.startsWith("motive-"))) expect(cl.roomID).not.toBe(c.sceneRoomID);
+            for (const cl of c.clues.filter((x) => x.id.startsWith("motive-")))
+                expect(cl.roomID).not.toBe(c.sceneRoomID);
 
             // The weapon is never at the scene, and someone sees the culprit at its hiding place right after
             expect(clue("weapon")?.roomID).toBe(truth.hideRoom);
@@ -70,14 +71,28 @@ describe("generateCase invariants", () => {
 
             // The proof points at real clues that belong to the culprit
             expect(c.solution.culpritID).toBe(truth.culpritID);
-            expect(c.solution.proof).toEqual({ opportunity: `trace-${truth.culpritID}`, motive: `motive-${truth.culpritID}`, means: "weapon" });
+            expect(c.solution.proof).toEqual({
+                opportunity: `trace-${truth.culpritID}`,
+                motive: `motive-${truth.culpritID}`,
+                means: "weapon",
+            });
             expect(c.solution.howToSolve.length).toBeGreaterThanOrEqual(4);
 
             // Player-facing text and prompts have no template leftovers or punctuation glitches
-            const texts = [c.intro, c.solution.explanation, ...c.solution.howToSolve, ...c.clues.map((cl) => cl.description)];
-            for (const s of c.suspects) texts.push(buildSuspectPrompt(c, s, new Set()), buildSuspectPrompt(c, s, new Set(c.clues.map((cl) => cl.id))));
+            const texts = [
+                c.intro,
+                c.solution.explanation,
+                ...c.solution.howToSolve,
+                ...c.clues.map((cl) => cl.description),
+            ];
+            for (const s of c.suspects)
+                texts.push(
+                    buildSuspectPrompt(c, s, new Set()),
+                    buildSuspectPrompt(c, s, new Set(c.clues.map((cl) => cl.id))),
+                );
             for (const t of texts) {
-                for (const bad of ["{", "}", "..", ".,", " ,", "undefined", "the the "]) expect(t, `"${bad}" in: ${t.slice(0, 120)}`).not.toContain(bad);
+                for (const bad of ["{", "}", "..", ".,", " ,", "undefined", "the the "])
+                    expect(t, `"${bad}" in: ${t.slice(0, 120)}`).not.toContain(bad);
             }
             // Cabins never get a stray "the" in front of them ("the Park's Cabin")
             for (const t of texts) expect(t).not.toMatch(/\bthe \w+'s (Cabin|Charging Alcove)/);
@@ -91,10 +106,12 @@ describe("generateCase determinism and variety", () => {
     });
 
     it("produces mostly different cases across seeds", () => {
-        const keys = new Set(SEEDS.map((s) => {
-            const { truth } = generateCase(s);
-            return `${truth.victimID}|${truth.culpritID}|${truth.methodID}|${truth.hideRoom}|${JSON.stringify(truth.timeline)}`;
-        }));
+        const keys = new Set(
+            SEEDS.map((s) => {
+                const { truth } = generateCase(s);
+                return `${truth.victimID}|${truth.culpritID}|${truth.methodID}|${truth.hideRoom}|${JSON.stringify(truth.timeline)}`;
+            }),
+        );
         expect(keys.size).toBeGreaterThan(SEEDS.length * 0.95);
     });
 

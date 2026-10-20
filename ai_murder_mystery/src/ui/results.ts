@@ -13,7 +13,8 @@ export const COUNTDOWN_CLASS = "countdown";
 function nextCaseBlock(info: CaseInfo): HTMLElement {
     if (info.mode === "tutorial") return el("p", "hint", "Training doesn't count toward your stats.");
     if (info.mode !== "daily") return el("p", "hint", "Practice cases don't count toward your stats.");
-    if (!info.isToday) return el("p", "hint", "Archive cases show up in your archive, but don't count toward your streak.");
+    if (!info.isToday)
+        return el("p", "hint", "Archive cases show up in your archive, but don't count toward your streak.");
     return el("p", "next-case", "Next case in ", [el("strong", COUNTDOWN_CLASS)]);
 }
 
@@ -27,7 +28,8 @@ function resultRow(label: string, ok: boolean, detail: string): HTMLElement {
 
 // The reveal: where everyone really was. Innocents' secret rooms finally make sense here.
 function timelineTable(c: Case, truth: Truth): HTMLElement {
-    const roomName = (id: string) => (id === "exterior" ? "Outside (EVA)" : c.rooms.find((r) => r.id === id)?.name ?? id);
+    const roomName = (id: string) =>
+        id === "exterior" ? "Outside (EVA)" : (c.rooms.find((r) => r.id === id)?.name ?? id);
     const murderSlot = SLOTS.indexOf(truth.murderTime);
     const head = el("tr", "", "", [
         el("th", "", "Crew"),
@@ -39,10 +41,19 @@ function timelineTable(c: Case, truth: Truth): HTMLElement {
             ...truth.timeline[s.id].map((room, i) => el("td", i === murderSlot ? "murder-slot" : "", roomName(room))),
         ]),
     );
-    return el("div", "table-wrap", "", [el("table", "timeline", "", [el("thead", "", "", [head]), el("tbody", "", "", rows)])]);
+    return el("div", "table-wrap", "", [
+        el("table", "timeline", "", [el("thead", "", "", [head]), el("tbody", "", "", rows)]),
+    ]);
 }
 
-export function renderEnd(target: HTMLElement, c: Case, truth: Truth, info: CaseInfo, state: GameState, verdict: Verdict): void {
+export function renderEnd(
+    target: HTMLElement,
+    c: Case,
+    truth: Truth,
+    info: CaseInfo,
+    state: GameState,
+    verdict: Verdict,
+): void {
     const accusation = state.accusation;
     const name = (id: string) => c.suspects.find((s) => s.id === id)?.name ?? id;
     const clue = (id: string) => c.clues.find((cl) => cl.id === id)?.name ?? id;
@@ -69,7 +80,12 @@ export function renderEnd(target: HTMLElement, c: Case, truth: Truth, info: Case
         el("h3", "", "What really happened"),
         el("p", "", verdict.explanation),
         el("h3", "", "How you could have cracked it"),
-        el("ul", "how-to-solve", "", c.solution.howToSolve.map((step) => el("li", "", step))),
+        el(
+            "ul",
+            "how-to-solve",
+            "",
+            c.solution.howToSolve.map((step) => el("li", "", step)),
+        ),
         timelineTable(c, truth),
         nextCaseBlock(info),
     );
@@ -77,7 +93,8 @@ export function renderEnd(target: HTMLElement, c: Case, truth: Truth, info: Case
 
 export function renderStats(target: HTMLElement, stats: Stats, today: number, showCountdown = true): void {
     const winPct = stats.played > 0 ? Math.round((stats.solved / stats.played) * 100) : 0;
-    const tile = (value: number, label: string) => el("div", "stat", "", [el("strong", "", String(value)), el("small", "", label)]);
+    const tile = (value: number, label: string) =>
+        el("div", "stat", "", [el("strong", "", String(value)), el("small", "", label)]);
     const most = Math.max(1, ...RANKS.map((r) => stats.ranks[r] ?? 0));
 
     target.replaceChildren(

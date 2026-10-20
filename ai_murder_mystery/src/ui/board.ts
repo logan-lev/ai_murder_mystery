@@ -14,7 +14,10 @@ export interface BoardOptions {
 // patterns visible (two people vouching for each other, someone nobody can place).
 export function renderBoard(target: HTMLElement, c: Case, state: GameState, opts: BoardOptions): void {
     const scene = c.rooms.find((r) => r.id === c.sceneRoomID)!;
-    const places = [...c.rooms.map((r) => ({ id: r.id, name: r.name })), { id: "exterior", name: "Outside the station" }];
+    const places = [
+        ...c.rooms.map((r) => ({ id: r.id, name: r.name })),
+        { id: "exterior", name: "Outside the station" },
+    ];
 
     const slotClass = (i: number) => (i === opts.deathSlot ? "death-slot" : "");
     const head = el("tr", "", "", [
@@ -37,11 +40,14 @@ export function renderBoard(target: HTMLElement, c: Case, state: GameState, opts
                 select.dataset.pin = `${s.id}-${i}`;
                 const unknown = el("option", "", "?");
                 unknown.value = "";
-                select.append(unknown, ...places.map((p) => {
-                    const opt = el("option", "", p.name);
-                    opt.value = p.id;
-                    return opt;
-                }));
+                select.append(
+                    unknown,
+                    ...places.map((p) => {
+                        const opt = el("option", "", p.name);
+                        opt.value = p.id;
+                        return opt;
+                    }),
+                );
                 select.value = state.board[s.id]?.[i] ?? "";
                 const paint = () => {
                     select.classList.toggle("pinned", select.value !== "");
@@ -58,7 +64,13 @@ export function renderBoard(target: HTMLElement, c: Case, state: GameState, opts
     );
 
     target.replaceChildren(
-        el("p", "board-intro", "Pin where you think each crew member was. Use their answers, what others saw, and the evidence. Anyone pinned to the crime scene shows up in red."),
-        el("div", "table-wrap", "", [el("table", "board", "", [el("thead", "", "", [head]), el("tbody", "", "", [victimRow, ...rows])])]),
+        el(
+            "p",
+            "board-intro",
+            "Pin where you think each crew member was. Use their answers, what others saw, and the evidence. Anyone pinned to the crime scene shows up in red.",
+        ),
+        el("div", "table-wrap", "", [
+            el("table", "board", "", [el("thead", "", "", [head]), el("tbody", "", "", [victimRow, ...rows])]),
+        ]),
     );
 }

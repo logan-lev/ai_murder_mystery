@@ -1,5 +1,15 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { dayNumber, dailySeed, getCaseInfo, isHomeRoute, caseLabel, caseURL, dayDate, msUntilNextDay, randomSeed } from "./seed";
+import {
+    dayNumber,
+    dailySeed,
+    getCaseInfo,
+    isHomeRoute,
+    caseLabel,
+    caseURL,
+    dayDate,
+    msUntilNextDay,
+    randomSeed,
+} from "./seed";
 
 const visit = (search: string) => history.replaceState(null, "", `/${search}`);
 afterEach(() => {
