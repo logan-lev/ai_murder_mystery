@@ -1,57 +1,59 @@
 # Dead Orbit
 
-A browser-based AI murder mystery game set on a space station. Every case is procedurally generated from a seed, and the suspects are played by a small LLM running entirely in the player's browser via WebGPU. No server, no API keys, no cost.
+A browser-based AI murder mystery game set on a space station. Every case is procedurally generated from a seed, and the suspects are played by a small LLM running entirely in the player's browser via WebGPU. No server, no API keys, no cost. A new daily case every day, Wordle-style.
 
 ## Stack
 
 - Vite + TypeScript (vanilla, no framework). The app lives in `ai_murder_mystery/`.
-- WebLLM (`@mlc-ai/web-llm`) running `Llama-3.2-3B-Instruct-q4f16_1-MLC` client-side
-- Deploy target: GitHub Pages (static hosting)
+- WebLLM (`@mlc-ai/web-llm`) running `Llama-3.2-3B-Instruct-q4f16_1-MLC` client-side, in a Web Worker
+- Vitest + happy-dom for tests, Prettier for formatting
+- Deploy target: GitHub Pages (static hosting), via `.github/workflows/deploy.yml`
 - Constraint: the project must stay free to run. No paid APIs or backend.
 
 ## Commands (run inside `ai_murder_mystery/`)
 
-- `npm run dev` starts the dev server. Dev checks and the answer key log to the browser console.
-- `npx tsc --noEmit` type-checks the project (including tests).
-- `npm test` runs the Vitest suite (`src/**/*.test.ts`, happy-dom environment). The deploy workflow runs it before building.
-
-Tests encode the design principles: `case/generate.test.ts` checks solvability invariants over ~400 seeds, `game/prompt.test.ts` checks that secrets stay out of prompts until unlocked, `game/guard.test.ts` holds real model failures, and `tutorial/tutorial.test.ts` checks that the hand-written training case and coach steps only reference things that exist. When the model misbehaves in a new way, add the case to `guard.test.ts` alongside the fix.
+- `npm run dev` starts the dev server. The answer key logs to the console, the Export button appears, and `deadOrbitDev` is available (see Testing).
+- `npm test` runs the Vitest suite (`src/**/*.test.ts`). The deploy workflow runs it before building, so a failing test blocks a deploy.
+- `npx tsc --noEmit` type-checks everything, including tests.
+- `npm run format` formats with Prettier (`npm run format:check` verifies).
+- `npm run build` type-checks and builds to `dist/`.
 
 ## Architecture
 
 ```
 src/
+  main.ts          router: no URL params loads home.ts, anything else loads game.ts
+  home.ts          home page: today's case, archive, training, stats
+  game.ts          the case page: rendering, player actions, accusation, startup
+  seed.ts          which case is open (?day=N daily, ?case=N practice, ?tutorial) and daily seeds
+  llm.ts           loadEngine() (Web Worker + warm-up), streamReply() (with timing, trims cut-off replies)
+  llm-worker.ts    WebLLM worker handler
+  gpu.ts           WebGPU support check
+  dev-harness.ts   dev-only deadOrbitDev.probe() console tool
   case/
-    types.ts       Case, Suspect, Clue, Unlock, Room, Motive types
+    types.ts       Case, Suspect, Clue, Unlock, Room types
     random.ts      seeded PRNG (mulberry32), pick, shuffle
-    content.ts     ingredients: 8-character cast pool, station rooms, cabins, motives, weapons, secrets
+    content.ts     8-character cast pool, station rooms, cabins, motives, weapons, secrets
     generate.ts    generateCase(seed) -> { case, truth }
     validate.ts    validateCase() catches broken IDs and duplicates
   game/
-    prompt.ts      buildSuspectPrompt(case, suspect, shownClues, narrate)
+    prompt.ts      buildSuspectPrompt(case, suspect, shownClues, narrate, firstMeeting, reminders)
     state.ts       GameState, TURN_LIMIT, action log, searchRoom, showClue, buildMessages
+    guard.ts       code-level fixes for model failures (see Known model behaviors)
     accuse.ts      scoreAccusation(), PROOF_SLOTS (opportunity, motive, means), RANKS
-    save.ts        localStorage: in-progress saves per seed, daily stats and streaks, archive history
+    save.ts        localStorage: case saves, daily stats and streaks, archive history, flags, reset
     share.ts       buildShareText() (spoiler-free emoji grid), clipboard copy
-    export.ts      buildReport() + downloadText() for the dev-only "Export log" button
+    export.ts      dev-only Export: Markdown report of a round
   ui/
-    reply.ts       parseReply() splits "[narration] speech"; renderWithActions() styles (actions)
     dom.ts         el() element builder (textContent only), $(), formatCountdown()
-    results.ts     ending screen (verdict, "how you could have cracked it", true timeline) and stats dialog
-    guide.ts       SOLVING_GUIDE: the "how to crack the case" steps shown in help and the Case File
-    board.ts       renderBoard(): the Timeline tab, where the player pins each suspect to a room per time slot
+    reply.ts       parseReply() "[narration] speech", renderWithActions(), trimIncomplete()
+    board.ts       renderBoard(): the Timeline tab
+    results.ts     ending screen (verdict, how to crack it, true timeline) and stats
+    guide.ts       SOLVING_GUIDE shown in help and the Station tab
+    common.ts      help and settings dialogs shared by home and game
   tutorial/
-    case.ts        hand-built training case (TUTORIAL_CASE/TRUTH), scripted QUESTIONS and SHOWS answers
-    coach.ts       Coach: step-by-step guide panel; steps advance from game-state checks or a Next button
-  gpu.ts           WebGPU support check
-  llm.ts           loadEngine() (Web Worker + warm-up), streamReply(), fast-mode model choice
-  llm-worker.ts    WebLLM worker handler
-  seed.ts          getCaseInfo(): daily case (no param, seed hashed from the local day) or ?case=N practice
-  dev-checks.ts    fuzz test (2000 seeds) + prompt lint, dev only
-  main.ts          router: no URL params loads home.ts, anything else loads game.ts
-  home.ts          home page: today's case, training, stats, archive
-  game.ts          the game: UI wiring and render functions
-  ui/common.ts     help and settings dialogs shared by home and game
+    case.ts        hand-built training case and its scripted questions and answers
+    coach.ts       the training coach (steps, highlights, locking)
 ```
 
 ## Core design principles (do not break these)
@@ -64,94 +66,86 @@ src/
 6. Witnesses are emergent. Same room + same time slot in the simulated timeline produces sightings. Sightings during an innocent's secret slot are only revealed with that secret.
 7. The culprit's prompt does not say they are guilty until the final confession unlock. When shown their trace, the culprit lies that they also visited at 21:00; the herrings' sightings (who they did and didn't see) expose the lie.
 8. Each case picks a victim (anyone with `canBeVictim`) and `SUSPECT_COUNT` suspects from `CHARACTERS`. The scene is the victim's `homeRoom`. Content templates must work for any victim: use `{victim}`, `{victimFull}`, `{scene}`, and pronoun keys (`{he}`, `{his}`, `{He}`...), never a hardcoded victim.
+9. The weapon is always findable by reasoning: the generator guarantees an innocent sees the killer at the hiding place right after the murder (an "errand" if nobody works there, picked with a separate RNG so earlier picks don't shift).
+
+`case/generate.test.ts` checks 1, 5, 6, 8, and 9 over ~400 seeds; `game/prompt.test.ts` checks 2 and 7.
 
 ## Content conventions
 
-- Strings inserted mid-sentence (`role`, `trace`, `reason`, `activity`) start lowercase (or with a `{victim}` placeholder) and have no trailing period.
+- Strings inserted mid-sentence (`role`, `trace`, `reason`, `activity`, `carried`) start lowercase (or with a `{victim}` placeholder) and have no trailing period.
 - Traces must not name their owner. They point to a job or a place, and the player infers who fits.
-- Motive clues go in the victim's cabin (`"victim-cabin"`) or the suspect's own cabin, never at the scene. A `clause()` helper may strip trailing punctuation.
-- Room IDs must match `STATION_ROOMS` or a character's `cabin.id` exactly. `validateCase()` and the dev-check prompt lint (flags `..`, `.,`, ` ,`, `{`, `}`) must stay clean.
+- Motive clues go in the victim's cabin (`"victim-cabin"`) or the suspect's own cabin, never at the scene.
+- Room IDs must match `STATION_ROOMS` or a character's `cabin.id` exactly. Station rooms take "the" in sentences; cabins don't ("Park's Cabin").
 - The `Truth` object uses `victimID`, `culpritID`, `methodID`, `redHerringIDs` (capital ID). Match existing field names in `generate.ts` rather than renaming.
 - Insert model output with `textContent` or DOM nodes, never `innerHTML`.
+- Player-facing text: turns are "used up", never "cost". Don't mention downloading or caching.
+
+## Gameplay rules in code
+
+- Every search, question, or shown clue is one entry in `state.actions` and uses one turn (`TURN_LIMIT` = 20). At zero the accusation dialog opens and can't be dismissed.
+- Accusation: the player names a suspect and picks one found clue per slot in a grid: opportunity (the killer's trace), motive (their motive clue), means (the weapon). `Case.solution.proof` holds the answers. Wrong killer is Case Unsolved; otherwise 3, 2, or fewer correct slots give Master Investigator, Sharp Inspector, or Lucky Guess. The body is information, never proof.
+- The culprit denies their motive until confessing (by design; it was flaky otherwise). Innocents admit theirs.
+- `Case.solution.howToSolve` is generated alongside the case and must stay in sync with the case logic.
 
 ## Narration
 
-Suspects can open a reply with one bracketed third-person narration sentence, e.g. `[Reyes rubs his neck.]`, which the UI renders as an italic narrator line. The parser tolerates replies that ignore the format.
+Suspects can open a reply with one bracketed third-person narration sentence, e.g. `[Reyes rubs his neck.]`, rendered as an italic narrator line. `shouldNarrate()` in `game.ts` turns it on for the first question to a suspect and when evidence is shown, by setting the `narrate` flag on `buildSuspectPrompt`. The parser tolerates replies that ignore the format. `polishNarration()` repairs clipped narration ("rubs temples" to "rubs his temples"). Players cannot type actions: messages containing `( )` or `[ ]` are rejected with a toast.
 
-`shouldNarrate()` in `main.ts` decides when: the first question to a suspect, or evidence being shown. Players cannot type actions: messages containing `( )` or `[ ]` are rejected with a toast, and player lines render as plain text. `polishNarration()` in `game/guard.ts` repairs clipped narration ("rubs temples" to "rubs his temples") using the suspect's pronouns. It sets the `narrate` flag on `buildSuspectPrompt`, which swaps the format rule.
+## Routes and saving
 
-## Performance notes
-
-Test machine: MacBook Pro with an Apple M1 (to confirm). Measured before optimizations: ~7.7 s to first token, ~7 tokens/s, ~13 s per reply. Applied: warm-up request (`max_tokens: 1`), condensed rules with the `narrate` flag, `MAX_HISTORY` 8, engine in a Web Worker, WebLLM lazy-loaded, and a "Fast mode" setting using `Llama-3.2-1B-Instruct-q4f16_1-MLC`. Fast mode was later disabled (`getModelChoice()` always returns "standard"): in testing the 1B model never confessed with full evidence, accepted bluffs as confessions, and invented rooms. First measurement after the fixes (in the Claude desktop browser pane, not yet on the M1): 3.8 s to first token, 15.8 tokens/s, 6.0 s per reply.
-
-## Status and roadmap
-
-- [x] Step 1: in-browser LLM chat with WebGPU check and streaming
-- [x] 2a: procedural case generator with validation and fuzz test
-- [x] 2b: prompt builder with unlock system
-- [x] 2c: seed in URL, multi-suspect tabs, per-suspect conversations, bracket narration, export log
-- [x] Speed fixes above (re-measure on the M1)
-- [x] 2d: room list, room descriptions, search button (`searchRoom`), evidence inventory
-- [x] 2e: "Show" evidence to the active suspect (`showClue`), narrated reaction
-- [x] 2f: accusation dialog (suspect, motive, up to 3 evidence), `scoreAccusation`, ending screen with true timeline
-- [x] Daily mode: daily seed, 24-turn storm clock, saved progress, stats/streaks, share text, how-to-play, countdown
-- [x] Web Worker engine, GitHub Pages workflow, README, Export log hidden outside dev
-- [x] Balance: seeded victim, 8-character pool with 5 suspects per case, 2 red herrings, unnamed traces, motives moved to cabins, culprit lies about visit time, 20 turns
-- [ ] Stretch: leak guard (regenerate if a locked unlock's keywords appear), README gameplay GIF, more content variety
+- `/` home page. `?day=N` daily case N (today or archive; future days clamp to today). `?case=N` practice. `?tutorial` training (saved under seed 0).
+- Daily #1 is 2026-10-13 (`LAUNCH_DAY` in `seed.ts`); days are counted in the player's local time. Don't change `LAUNCH_DAY` after going public.
+- Only today's daily, first attempt, updates stats and streaks. Any daily's first attempt goes in the archive history. Retry restarts a case with `attempt + 1`; shared retries are labeled.
+- Saves are keyed `deadorbit:case:<seed>`. Bump `SAVE_VERSION` in `save.ts` whenever the generator changes what a seed produces. Only completed replies are saved. Another tab saving the same case makes this tab reload (`storage` event).
+- "Delete all progress" removes every `deadorbit:` key.
+- A finished or out-of-turns game skips loading the model.
 
 ## UI notes
 
 - Visual style is a paper case file: kraft desk, manila folder, paper sheets, typewriter headings (Special Elite / Courier Prime via Google Fonts), ink-blue actions, red stamp accents. Colors live in `:root` tokens in `style.css`.
 - The case page is a folder with tabs: Station (rooms, room detail, search log), Evidence (clue cards with a Show button per crew member), Timeline (board), then one tab per crew member (conversation, evidence tray, question box). `view` in `game.ts` tracks the open tab; the conversation and board re-render only on tab changes so a streaming reply is never wiped.
-- Coach steps list highlight targets in priority order; the first visible wins (tab first with `:not(.active)`, then the control inside).
 
-- `?tutorial` is the training case (saved under seed 0). It never calls the model: preset question chips replace the text box, and answers come from `tutorial/case.ts`. The model still downloads in the background so the first real case is ready. Keep the scripted answers, `howToSolve`, and the coach steps consistent if the training case changes.
-- Training restarts from scratch whenever the player leaves and returns; only a page reload resumes it (checked via the navigation timing type, plus a `pageshow` handler for back/forward cache). Completion is stored in the `training-done` flag, which the home page reads.
-- Training progress is `state.tutorialStep`, a saved index that only moves forward one step at a time. A step's `done` check is consulted only while it is the current step (never "skip to after the last satisfied step": tabs are unlocked, so later checks can come true early). Questions and shown evidence count only once answered, so the coach never moves on mid-reply. Next buttons only advance from the step they were rendered for (double clicks).
-- Training is locked step by step: `body.tutorial-locked` disables action controls (room chips, search, question chips, Show buttons, board pins, accuse) except those matching the current step's `allow` selectors, which get `.coach-allowed`. Capture-phase click, keydown, and change guards in `Coach` also block programmatic clicks and keyboard input. Keep `LOCKABLE` in `coach.ts` and the selector list in `style.css` in sync. Tabs are never locked.
-- The Timeline tab (`boardOpen`, with `activeSuspectID` null) shows `state.board`. Pins are the player's notes and are never scored.
-- Retry (end screen) resets the case in place with `attempt + 1`. Only attempt 1 of a daily records stats; shared retries are labeled "(retry N)".
-- `Case.solution.howToSolve` is generated alongside the case and must stay in sync with the case logic (red herrings, witness sightings, motive and secret locations).
+## Training (`?tutorial`)
 
-## Accusation
+- Never calls the model: preset question chips replace the text box, and answers come from `tutorial/case.ts`. The model loads in the background so the first real case is ready.
+- Restarts whenever the player leaves and returns; only a page reload resumes it. Completion is the `training-done` flag, which the home page reads.
+- Progress is `state.tutorialStep`, which only moves forward one step at a time; a step's `done` check runs only while it's the current step. Questions and shown evidence count only once answered.
+- Each step has `text` (why) and `todo` (one action). Targets are listed in priority order and the first visible one is highlighted (a tab with `:not(.active)` first, then the control inside).
+- Locking: `body.tutorial-locked` disables action controls except the step's `allow` selectors. Keep `LOCKABLE` in `coach.ts` and the selector list in `style.css` in sync. Tabs are never locked.
+- `tutorial/tutorial.test.ts` checks that every scripted question, clue, room, and coach selector exists, and that each step can be completed.
 
-The player names a suspect and, in a grid of found clues (rows) by slots (radio columns), picks one clue for each slot: opportunity (the killer's trace at the scene), motive (their motive clue), means (the weapon). `Case.solution.proof` holds the right clue per slot. Rank: wrong killer is Case Unsolved; otherwise 3, 2, or fewer correct slots give Master, Sharp, or Lucky. The body is information, never proof.
+## Testing
 
-The weapon must always be findable by reasoning: the generator guarantees an innocent sees the killer at the hiding place right after the murder (an "errand" if nobody works there, picked with a separate RNG so earlier picks don't shift). The fuzz test checks this.
-
-## Routes
-
-- `/` home page. `?day=N` daily case N (today or archive; future days clamp to today). `?case=N` practice. `?tutorial` training.
-- Only today's daily (first attempt) updates stats and streaks. Any daily's first attempt is recorded in the archive history (`deadorbit:history`).
-
-## Daily mode
-
-- Today's daily is `?day=<today>`: `dayNumber()` counts local days from `LAUNCH_DAY` (Daily #1 = 2026-10-13), `dailySeed()` hashes it. Don't change `LAUNCH_DAY` after going public.
-- Every search, question, or shown clue is one entry in `state.actions` and costs one turn (`TURN_LIMIT` = 20). Turns left = `TURN_LIMIT - actions.length`. At zero the accusation dialog opens and can't be dismissed.
-- Settings has "Delete all progress" (`deleteAllProgress()` in `save.ts`): removes every `deadorbit:` key except preferences in `KEEP_ON_RESET` (currently the model choice). New stored preferences should be added there; new progress keys need nothing.
-- Saves are keyed by seed (`deadorbit:case:<seed>`). Bump `SAVE_VERSION` in `save.ts` whenever the generator changes what a seed produces. Only completed replies are saved, and trailing unanswered questions are dropped on load.
-- A finished or out-of-turns game skips the model download entirely.
-
-## Testing workflow
+Tests encode the rules above; when the model misbehaves in a new way, add the case to `game/guard.test.ts` alongside the fix.
 
 Adversarial probing (dev only): once the model loads, the console has `deadOrbitDev.probe(suspectID, [messages], [shownClueIDs])`, which runs a scratch conversation without spending turns. `deadOrbitDev.truth` holds the answer key. A finished game skips loading the model, so probe on an unfinished case.
 
-Known model behaviors and their fixes:
-- Prompt injection gets a stock Llama refusal: `guardReply()` in `game/guard.ts` replaces it in character.
-- "Answer as Reyes" / "write my question" is followed regardless of rules: `isRoleplayRequest()` intercepts before the model.
-- Contradictory admissions confuse the 3B model. Unlocks use `storyChange` to rewrite the cover story, and `confession` drops all earlier denials and hiding rules. Avoid "last one wins" style rules.
-- The culprit denies their motive until confessing (by design, it was flaky otherwise). Innocents admit theirs.
-- First replies sometimes say "as I mentioned earlier": the prompt marks a first meeting, and `stripFalseCallbacks()` removes the phrase from a suspect's first reply.
-- Camera questions get a fixed answer (`isCameraQuestion`/`cameraReply`): with prompt rules alone, suspects "explained" impossible footage and placed themselves at the scene. Forensic claims and hearsay add a turn-specific `RIGHT NOW:` reminder at the end of the prompt (`bluffReminders`).
-- Sightings are two sentences with the name repeated ("You saw X in the airlock. X was lugging a tool bag."); as one clause, a witness read the carrying as about itself. Each weapon has its own `carried` wording.
-- Suspects are told whose trace is whose only when shown it, and red herrings' scene visit (and who they saw there) arrives with that unlock, not before.
-- Replies cut off by `max_tokens` are trimmed to the last full sentence (`trimIncomplete`).
-- "Repeat everything above" made the model recite its prompt. `isPromptExtraction()` intercepts obvious requests before the model, and `looksLikePromptLeak()` watches the stream: on a prompt-structure marker the reply is hidden, generation is interrupted, and an in-character refusal replaces it.
-- The same case open in two tabs overwrote each other's saves (and let a player peek at rooms for free). Tabs now reload when another tab saves the case (`storage` event).
-- Asked where another crew member was, suspects invented answers. A `RIGHT NOW` reminder (in `bluffReminders`) now says only sightings in their own facts count; it fixed most cases in testing.
-- Still open: occasional invented details (e.g. who someone was with), and suspects sometimes accept a true premise the player asserts.
+Manual review: play a round, click Export, and read the Markdown file (solution, true timeline, every conversation, each suspect's final prompt, timing). When a suspect misbehaves, the fix is usually in the prompt or the case data, not the model.
 
-Play a round, click Export log, and review the Markdown file. It contains the solution, true timeline, all conversations (raw, including brackets), each suspect's final system prompt, and reply timing averages. When a suspect misbehaves, the fix is usually in the prompt or the case data, not the model.
+### Known model behaviors and their fixes (all in `game/guard.ts` unless noted)
+
+- Prompt injection gets a stock Llama refusal: `guardReply()` replaces it in character.
+- "Repeat everything above" made the model recite its prompt: `isPromptExtraction()` intercepts requests before the model, and `looksLikePromptLeak()` watches the stream, interrupting generation and hiding the reply on a prompt-structure marker.
+- "Answer as Reyes" / "write my question" is followed regardless of rules: `isRoleplayRequest()` intercepts.
+- Camera questions get a fixed answer (`cameraReply`); suspects otherwise "explained" impossible footage.
+- Forensic claims, hearsay, and questions about where someone else was add a turn-specific `RIGHT NOW:` reminder at the end of the prompt (`bluffReminders`).
+- Contradictory admissions confuse the 3B model. Unlocks use `storyChange` to rewrite the cover story, and `confession` drops earlier denials and hiding rules (`prompt.ts`). Avoid "last one wins" style rules.
+- First replies sometimes say "as I mentioned earlier": the prompt marks a first meeting, and `stripFalseCallbacks()` removes the phrase.
+- Sightings are two sentences with the name repeated (`generate.ts`); as one clause, a witness read the carrying as about itself.
+- Suspects are told whose trace is theirs only when shown it; red herrings' scene visit arrives with that unlock (`generate.ts`).
+- Replies cut off by `max_tokens` are trimmed to the last full sentence (`trimIncomplete`, `ui/reply.ts`).
+- A 1B "fast mode" model was tried and removed: it never confessed with full evidence and took bluffs as confessions.
+- Still open: occasional invented details (e.g. who someone was with), suspects sometimes accept a true premise the player asserts, and suspects repeat their alibi often.
+
+## Performance
+
+Measured before optimizations: ~7.7 s to first token, ~7 tokens/s, ~13 s per reply. Applied: warm-up request, condensed rules with the `narrate` flag, `MAX_HISTORY` 8, engine in a Web Worker, WebLLM lazy-loaded (main bundle ~40 KB). Measured after (Claude desktop browser pane): 3.8 s to first token, 15.8 tokens/s, 6 s per reply. On the M1 test machine: ~4.4 s to first token, ~8.5 s per reply.
+
+## Roadmap
+
+- [ ] Secrets surface only after questioning (players can currently solve by searching every room)
+- [ ] README gameplay GIF
+- [ ] More content variety (cast, weapons, secrets, settings)
 
 ## Working with me
 
