@@ -108,3 +108,7 @@ Pushing to `main` runs `.github/workflows/deploy.yml`, which installs dependenci
 ## Credits
 
 Built with Llama: the suspects are played by Meta's Llama 3.2, used under the [Llama 3.2 Community License](https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE). In-browser inference by [WebLLM](https://github.com/mlc-ai/web-llm) from the MLC team. Fonts: Special Elite, Courier Prime, and Source Sans 3 from Google Fonts.
+
+## License
+
+The code is released under the [MIT License](LICENSE). The Llama 3.2 model is covered by its own license, linked above.

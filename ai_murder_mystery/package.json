@@ -21,5 +21,6 @@
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.85"
-  }
+  },
+  "license": "MIT"
 }
