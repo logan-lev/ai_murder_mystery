@@ -277,7 +277,7 @@ function showButton(clueID: ClueID, suspectID: SuspectID, label: string): HTMLBu
   btn.dataset.clue = clueID;
   btn.dataset.for = suspectID;
   btn.disabled = !canTalkNow() || state.shownClues[suspectID].has(clueID);
-  btn.title = state.shownClues[suspectID].has(clueID) ? `Already shown to ${suspectName(suspectID)}` : `Show to ${suspectName(suspectID)} (1 turn)`;
+  btn.title = state.shownClues[suspectID].has(clueID) ? `Already shown to ${suspectName(suspectID)}` : `Show to ${suspectName(suspectID)} (uses 1 turn)`;
   btn.addEventListener("click", () => void showEvidence(clueID, suspectID));
   return btn;
 }
@@ -289,7 +289,7 @@ function renderTray(): void {
   if (!id || isOver(state)) return;
   const unshown = theCase.clues.filter((cl) => state.foundClueIDs.has(cl.id) && !state.shownClues[id].has(cl.id));
   trayEl.replaceChildren(
-    el("span", "tray-label", unshown.length > 0 ? "Show evidence (1 turn):" : "No new evidence to show. Search rooms to find more."),
+    el("span", "tray-label", unshown.length > 0 ? "Show evidence (uses 1 turn):" : "No new evidence to show. Search rooms to find more."),
     ...unshown.map((cl) => showButton(cl.id, id, cl.name)),
   );
 }
@@ -299,7 +299,7 @@ function renderStorm(): void {
   const left = turnsLeft(state);
   stormLabel.replaceChildren();
   if (isOver(state)) {
-    stormLabel.textContent = `Case closed in ${state.actions.length} turns`;
+    stormLabel.textContent = `Case closed in ${state.actions.length} ${state.actions.length === 1 ? "turn" : "turns"}`;
   } else if (left === 0) {
     stormLabel.textContent = "The storm has cleared";
   } else {
@@ -341,7 +341,7 @@ function renderRoomDetail(): void {
       el("p", "hint", here.length > 0 ? `Searched. Found: ${here.map((cl) => cl.name).join(", ")}.` : "Searched. Nothing of interest here."),
     );
   } else {
-    const btn = el("button", "primary-btn", "Search this room (1 turn)");
+    const btn = el("button", "primary-btn", "Search this room (uses 1 turn)");
     btn.type = "button";
     btn.disabled = !canAct() || isGenerating;
     btn.addEventListener("click", () => doSearch(id));

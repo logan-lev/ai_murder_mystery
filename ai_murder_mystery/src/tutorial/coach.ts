@@ -11,7 +11,10 @@ export interface CoachContext {
 }
 
 interface Step {
+    // Why this step matters, in plain words
     text: string;
+    // The one thing to do now, shown on its own line so new players know exactly what to click
+    todo?: string;
     // Selectors to highlight, in priority order; the first one that's visible wins. Listing the tab
     // first (with :not(.active)) points at the tab until it's open, then at the control inside it.
     target?: string[];
@@ -42,138 +45,166 @@ const pinned = (s: GameState, suspectID: SuspectID, slot: number, roomID: string
 
 const STEPS: Step[] = [
     {
-        text: "Welcome to training. Priya Nair is dead, and one of three crew members killed her. Nothing here counts toward your stats. Read the briefing in the search log below, then press Next.",
+        text: "A crew member named Priya Nair has been killed, and your job is to find out who did it. This yellow note walks you through it one step at a time. Whatever you need to click is outlined in red. Nothing in training counts toward your stats.",
+        todo: "Press Next.",
+        target: ["#coach"],
+    },
+    {
+        text: "First, read the briefing in the search log below. It tells you who died and where.",
+        todo: "Read the briefing, then press Next.",
         target: ["#search-log"],
     },
     {
-        text: "This bar is the storm clock. Every search, question, or piece of evidence you show costs one turn. When it runs out, you have to make your accusation.",
+        text: "This bar shows how many turns you have left. Searching a room, asking a question, or showing evidence each uses up one turn. When the turns run out, you have to name the killer.",
+        todo: "Press Next.",
         target: ["#storm"],
     },
     {
-        text: "Start at the crime scene. In the Station tab, click Hydroponics Bay, then press Search this room.",
+        text: "Start where the body was found: the Hydroponics Bay.",
+        todo: "In the Rooms list, click Hydroponics Bay, then click Search this room.",
         target: ['[data-tab="station"]:not(.active)', '.room-chip[data-room="hydroponics"]'],
         allow: room("hydroponics"),
         done: ({ state }) => searched(state, "hydroponics"),
     },
     {
-        text: "Everything you find is logged here with its description, and filed in the Evidence tab. The body gives the time of death: 22:00. It's information, not proof against anyone. The other three items each point to a crew member who was in this room tonight. Can you tell whose is whose?",
+        text: "You found four things. They're listed here and saved in the Evidence tab. The Body tells you when Priya died: 22:00, but it doesn't point to anyone.\n\nThe other three items were dropped by three different crew members, so all three were in this room tonight.\n\nA medical stylus belongs to the doctor, Okafor. A coolant-stained glove belongs to the engineer, Reyes. A flake of synthetic skin belongs to the android, SABLE. One of them is the killer.",
+        todo: "Press Next.",
         target: ["#search-log"],
     },
     {
-        text: "Open the Timeline tab. It's your board for pinning where everyone was.",
+        text: "The Timeline tab is your notepad for where everyone was at each time. You'll fill it in as you learn things.",
+        todo: "Click the Timeline tab.",
         target: ['[data-tab="timeline"]'],
         done: ({ boardOpen }) => boardOpen,
     },
     {
-        text: "Now question someone. Open Dr. Mara Okafor's tab and ask where she was tonight.",
+        text: "Now talk to a suspect. Each crew member has their own tab. In training you pick questions from buttons; in real cases you type them.",
+        todo: "Click Dr. Okafor's tab, then click \"Where were you tonight?\"",
         target: ['[data-tab="okafor"]:not(.active)', "#question-chips"],
         allow: question("okafor-where"),
         done: ({ state }) => asked(state, "okafor-where"),
     },
     {
-        text: "She says she was in the Medbay all evening. Test that: in the evidence tray under the conversation, show her the Medical Stylus.",
+        text: "She says she never left the Medbay. But her stylus was found next to the body. Showing someone evidence makes them respond to it.",
+        todo: "Under the conversation, click Medical Stylus to show it to her.",
         target: ['[data-tab="okafor"]:not(.active)', "#evidence-tray"],
         allow: showTo("okafor", "trace-okafor"),
         done: ({ state }) => shown(state, "okafor", "trace-okafor"),
     },
     {
-        text: "Caught in a lie: she told you she never left the Medbay, but she visited the scene at 21:00. Ask her why she lied.",
+        text: "Now she admits she was there at 21:00. So her first answer was a lie.",
+        todo: "Click \"Why did you lie?\"",
         target: ['[data-tab="okafor"]:not(.active)', "#question-chips"],
         allow: question("okafor-why-lie"),
         done: ({ state }) => asked(state, "okafor-why-lie"),
     },
     {
-        text: "Innocent people lie too, usually to protect themselves. A lie isn't proof of murder; it tells you there's something to find. Now ask Okafor who else was there at 21:00.",
+        text: "Innocent people lie too, usually to avoid looking guilty. A lie doesn't prove someone is the killer. It tells you to dig deeper.",
+        todo: "Click \"Who else was in the Hydroponics Bay at 21:00?\"",
         target: ['[data-tab="okafor"]:not(.active)', "#question-chips"],
         allow: question("okafor-who-else"),
         done: ({ state }) => asked(state, "okafor-who-else"),
     },
     {
-        text: "Pin it. On the Timeline, set Dr. Okafor and SABLE to the Hydroponics Bay at 21:00.",
+        text: "Okafor and SABLE were both there at 21:00, and they saw each other. Write that down.",
+        todo: "Click the Timeline tab. In the 21:00 column, set Dr. Okafor and SABLE to Hydroponics Bay.",
         target: ['[data-tab="timeline"]:not(.active)', "#board"],
         allow: [...pin("okafor", 0), ...pin("sable", 0)],
         done: ({ state }) => pinned(state, "okafor", 0, "hydroponics") && pinned(state, "sable", 0, "hydroponics"),
     },
     {
-        text: "Two visitors who saw each other are probably harmless. Now open Tomas Reyes's tab and show him the Coolant-Stained Glove from the evidence tray.",
+        text: "Two people who saw each other there are probably telling the truth. Now check the third item.",
+        todo: "Click Tomas Reyes's tab, then click Coolant-Stained Glove under the conversation.",
         target: ['[data-tab="reyes"]:not(.active)', "#evidence-tray"],
         allow: showTo("reyes", "trace-reyes"),
         done: ({ state }) => shown(state, "reyes", "trace-reyes"),
     },
     {
-        text: "Reyes claims he was there at 21:00 too, but Okafor said only SABLE was there. Somebody is lying. Go back to Okafor and ask if she saw anyone else this evening.",
+        text: "Reyes says he was there at 21:00 too. But Okafor said only SABLE was there with her. Someone is lying.",
+        todo: "Go back to Dr. Okafor's tab and click \"Did you see anyone else this evening?\"",
         target: ['[data-tab="okafor"]:not(.active)', "#question-chips"],
         allow: question("okafor-saw"),
         done: ({ state }) => asked(state, "okafor-saw"),
     },
     {
-        text: "A witness! Reyes was in the Medbay at 21:30, clutching something small in one closed hand. Pin Reyes to the Medbay at 21:30 on the Timeline.",
+        text: "Okafor saw Reyes in the Medbay at 21:30, holding something small. The Medbay is where the poison is kept.",
+        todo: "Click the Timeline tab. In the 21:30 column, set Tomas Reyes to Medbay.",
         target: ['[data-tab="timeline"]:not(.active)', "#board"],
         allow: pin("reyes", 1),
         done: ({ state }) => pinned(state, "reyes", 1, "medbay"),
     },
     {
-        text: "Every case has one more layer. At the time of death, 22:00, everyone claims to have been at their post, and innocents are often hiding something about it. Open SABLE's tab and ask where exactly it was at 22:00.",
+        text: "Real cases have one more layer. At the time of death (22:00), innocent people are often hiding something unrelated, so they lie about where they were. Uncovering their secret proves they didn't do it.",
+        todo: "Click SABLE's tab, then click \"Where exactly were you at 22:00?\"",
         target: ['[data-tab="sable"]:not(.active)', "#question-chips"],
         allow: question("sable-2200"),
         done: ({ state }) => asked(state, "sable-2200"),
     },
     {
-        text: "\"Mostly\" is a tell. Secrets leave evidence too, often in the person's own cabin. Search SABLE's Charging Alcove.",
+        text: "SABLE said \"Mostly.\" That small word means it's hiding something. Secrets leave evidence too, often in the person's own room.",
+        todo: "Click the Station tab, then search SABLE's Charging Alcove.",
         target: ['[data-tab="station"]:not(.active)', "#room-list"],
         allow: room("sable-alcove"),
         done: ({ state }) => searched(state, "sable-alcove"),
     },
     {
-        text: "A recording made from the Observation Deck at 22:00, when SABLE claimed to be in the Galley. Show SABLE the Ring Recording.",
+        text: "You found a recording made from the Observation Deck at 22:00, when SABLE said it was in the Galley.",
+        todo: "Click SABLE's tab, then click Ring Recording under the conversation.",
         target: ['[data-tab="sable"]:not(.active)', "#evidence-tray"],
         allow: showTo("sable", "secret-sable"),
         done: ({ state }) => shown(state, "sable", "secret-sable"),
     },
     {
-        text: "That's a secret. SABLE lied about 22:00, but it was on the Observation Deck, nowhere near the Hydroponics Bay. Proving an innocent's secret clears them. Pin SABLE to the Observation Deck at 22:00.",
+        text: "SABLE was secretly on the Observation Deck at 22:00, far from the body. It lied, but not about murder. That clears SABLE.",
+        todo: "Click the Timeline tab. In the 22:00 column, set SABLE to Observation Deck.",
         target: ['[data-tab="timeline"]:not(.active)', "#board"],
         allow: pin("sable", 2),
         done: ({ state }) => pinned(state, "sable", 2, "observation"),
     },
     {
-        text: "Now find a motive. Motives hide in cabins: the victim's records, or a suspect's belongings. Search Nair's Cabin.",
+        text: "Now find out why Reyes would do it. Reasons, called motives, are found in cabins: the victim's papers or the suspect's own belongings.",
+        todo: "Click the Station tab, then search Nair's Cabin.",
         target: ['[data-tab="station"]:not(.active)', "#room-list"],
         allow: room("nair-cabin"),
         done: ({ state }) => searched(state, "nair-cabin"),
     },
     {
-        text: "The Inspection Audit gives Reyes a reason. Show it to him.",
+        text: "The Inspection Audit shows Priya was about to report Reyes for faking safety checks. That's his motive.",
+        todo: "Click Reyes's tab, then click Inspection Audit under the conversation.",
         target: ['[data-tab="reyes"]:not(.active)', "#evidence-tray"],
         allow: showTo("reyes", "motive-reyes"),
         done: ({ state }) => shown(state, "reyes", "motive-reyes"),
     },
     {
-        text: "Last piece: the weapon. Killers hide it right after the murder, so ask who was around at 22:30. Open SABLE's tab and ask if it saw anyone else this evening.",
+        text: "Last, the weapon. The killer hid it right after the murder, around 22:30, and someone may have seen where.",
+        todo: "Click SABLE's tab, then click \"Did you see anyone else this evening?\"",
         target: ['[data-tab="sable"]:not(.active)', "#question-chips"],
         allow: question("sable-saw"),
         done: ({ state }) => asked(state, "sable-saw"),
     },
     {
-        text: "SABLE saw Reyes in the Cargo Bay at 22:30, still clutching something small. Search the Cargo Bay.",
+        text: "SABLE saw Reyes in the Cargo Bay at 22:30, still holding something small. That's where the weapon is.",
+        todo: "Click the Station tab, then search the Cargo Bay.",
         target: ['[data-tab="station"]:not(.active)', "#room-list"],
         allow: room("cargo-bay"),
         done: ({ state }) => searched(state, "cargo-bay"),
     },
     {
-        text: "Show Reyes the Neurotoxin Vial. Faced with his trace, his motive, and the weapon, he may crack.",
+        text: "You now have all three: proof Reyes was there, why he did it, and what he used. See how he reacts.",
+        todo: "Click Reyes's tab, then click Neurotoxin Vial under the conversation.",
         target: ['[data-tab="reyes"]:not(.active)', "#evidence-tray"],
         allow: showTo("reyes", "weapon"),
         done: ({ state }) => shown(state, "reyes", "weapon"),
     },
     {
-        text: "Press Accuse next to the storm clock. Pick Reyes, then one piece of evidence for each: Opportunity, the Coolant-Stained Glove (it puts him at the scene). Motive, the Inspection Audit. Means, the Neurotoxin Vial.",
+        text: "Time to name the killer. Back it up with three pieces of evidence: Opportunity (proof they were there), Motive (why), and Means (the weapon).",
+        todo: "Click Accuse. Choose Tomas Reyes. Pick Coolant-Stained Glove for Opportunity, Inspection Audit for Motive, and Neurotoxin Vial for Means. Then click Accuse at the bottom.",
         target: ["#accuse-btn"],
         allow: ["#accuse-btn"],
         done: ({ state }) => state.verdict !== null,
     },
     {
-        text: "That's the whole loop. Real cases have five suspects, you type your own questions to an AI, and innocent crew also hide secrets about where they were at the time of death. Evidence of a secret clears them.",
+        text: "That's the whole loop. Real cases have five suspects and you type your own questions to an AI.",
     },
 ];
 
@@ -254,7 +285,9 @@ export class Coach {
         this.panel.hidden = false;
         this.panel.replaceChildren(
             el("p", "coach-step", `Training ${i + 1} of ${STEPS.length}`),
-            el("p", "coach-text", last ? this.finalText(state) : step.text),
+            // "\n\n" in a step's text starts a new paragraph, so long explanations come in small pieces
+            ...(last ? this.finalText(state) : step.text).split("\n\n").map((para) => el("p", "coach-text", para)),
+            ...(step.todo && !last ? [el("p", "coach-todo", "", [el("strong", "", "Do this: "), step.todo])] : []),
             el("div", "coach-actions", "", actions),
         );
 

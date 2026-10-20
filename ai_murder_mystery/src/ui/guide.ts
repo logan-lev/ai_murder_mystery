@@ -1,10 +1,10 @@
 // How a case is built, told to the player. Rules like Wordle's: knowing the logic is the point,
-// the puzzle is applying it with limited turns.
+// the puzzle is applying it with limited turns. Plain words, one idea per step, in the order to play.
 export const SOLVING_GUIDE: string[] = [
-    "Search the crime scene first. The body tells you the time of death, and items left there tell you who has been in the room. Work out whose they are from what they are.",
-    "More than one person left something at the scene. The innocent ones visited earlier and saw each other there. Ask them when they visited and who they saw. The killer will claim the same visit, but nobody will back it up.",
-    "Everyone lies about where they were at the time of death. Innocents are hiding something else, and evidence of their secret clears them.",
-    "Ask the crew who they saw this evening. Someone spotted the killer carrying the weapon, and right after the murder someone saw where it went.",
-    "Motives are hidden in cabins: the victim's records, or the suspect's own belongings.",
-    "To win, name the killer and back it up with one piece of evidence each: opportunity (what they left at the scene), motive, and means (the weapon). The body tells you what happened, but it isn't proof against anyone.",
+    "Search the room where the body was found first. The body tells you what time the victim died. Any other items there were left behind by crew members, which means those people were in the room tonight. Match each item to its owner by their job: a medical stylus belongs to the doctor, an engineering glove to the engineer.",
+    "Usually three people left something behind. Two of them visited earlier, harmlessly, and saw each other there. Show each person their item, then ask who else they saw. The killer will claim they visited at the same time, but the other two won't remember seeing them.",
+    "Everyone lies about where they were at the time of death, even innocent people. The innocent ones are hiding an unrelated secret. If you find evidence of someone's secret, it proves they weren't at the murder.",
+    "Ask the crew who they saw during the evening. Someone saw the killer carrying the weapon before the murder, and someone else saw where they took it afterwards.",
+    "Motives, the reasons someone wanted the victim dead, are hidden in cabins: in the victim's papers or in the suspect's own belongings.",
+    "When you're ready, press Accuse. Name the killer and pick one piece of evidence for each: Opportunity (the item that puts them at the scene), Motive (why they did it), and Means (the weapon). The body explains what happened, but it doesn't count as proof against anyone.",
 ];

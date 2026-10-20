@@ -992,6 +992,14 @@ button:disabled {
   margin: 0.25rem 0 0.5rem;
 }
 
+/* The single action for this step, set apart so it's the obvious thing to read */
+.coach-todo {
+  margin: 0 0 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(255, 255, 255, 0.55);
+  border-left: 4px solid var(--red);
+}
+
 .coach-actions {
   display: flex;
   justify-content: flex-end;
@@ -1235,11 +1243,16 @@ select {
   list-style: none;
 }
 
+/* The label column fits the longest label ("Opportunity" in the typewriter font) with room to spare */
 .result {
   display: grid;
-  grid-template-columns: 1.5rem 6rem 1fr;
+  grid-template-columns: 1.5rem 8.5rem minmax(0, 1fr);
   gap: 0.4rem;
   padding: 0.3rem 0;
+}
+
+.result span:last-child {
+  overflow-wrap: anywhere;
 }
 
 .result strong {
@@ -1396,6 +1409,16 @@ select {
 
   .rank-row {
     grid-template-columns: 8rem 1fr;
+  }
+
+  /* Too narrow for three columns: the detail goes under its label */
+  .result {
+    grid-template-columns: 1.5rem minmax(0, 1fr);
+    row-gap: 0;
+  }
+
+  .result span:last-child {
+    grid-column: 2;
   }
 
   .proof-grid td {

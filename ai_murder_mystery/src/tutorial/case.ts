@@ -68,7 +68,7 @@ export const TUTORIAL_CASE: Case = {
     victim: nair.name,
     victimID: nair.id,
     sceneRoomID: "hydroponics",
-    intro: "Training case. 23:00 station time. Priya Nair, the station botanist, has been found dead in the Hydroponics Bay. Three crew members are aboard: Dr. Okafor, Tomas Reyes, and SABLE. One of them did it. The coach above will walk you through how to find out who.",
+    intro: "Training case. 23:00 station time. Priya Nair, the station botanist, has been found dead in the Hydroponics Bay. Three crew members are aboard: Dr. Okafor, Tomas Reyes, and SABLE. One of them did it. The yellow note above will walk you through how to find out who.",
     sharedFacts: [],
     rooms: ROOMS,
     clues: CLUES,
