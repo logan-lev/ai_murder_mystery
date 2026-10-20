@@ -95,9 +95,9 @@ export interface Pronouns {
     his: string;
 }
 
-export const HE: Pronouns = { he: "he", him: "him", his: "his" };
-export const SHE: Pronouns = { he: "she", him: "her", his: "her" };
-export const IT: Pronouns = { he: "it", him: "it", his: "its" };
+const HE: Pronouns = { he: "he", him: "him", his: "his" };
+const SHE: Pronouns = { he: "she", him: "her", his: "her" };
+const IT: Pronouns = { he: "it", him: "it", his: "its" };
 
 // Motive clues live either in the victim's cabin (the victim's own records about the suspect)
 // or in the suspect's own cabin. Never at the crime scene, so one search can't solve the case.

@@ -30,7 +30,6 @@ import { parseReply, renderWithActions } from "./ui/reply";
 import { el, $, formatCountdown } from "./ui/dom";
 import { renderEnd, renderStats, COUNTDOWN_CLASS } from "./ui/results";
 import { SOLVING_GUIDE } from "./ui/guide";
-import { runDevChecks } from "./dev-checks";
 
 // ---------- Case setup ----------
 const info = getCaseInfo();
@@ -65,7 +64,6 @@ window.addEventListener("storage", (event) => {
 pruneSaves([info.seed, dailySeed(dayNumber()), 0]);
 
 if (import.meta.env.DEV) {
-  runDevChecks();
   console.log("Answer key (dev only):", truth);
 }
 

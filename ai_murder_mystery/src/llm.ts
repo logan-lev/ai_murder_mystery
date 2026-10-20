@@ -3,24 +3,9 @@ import { trimIncomplete } from "./ui/reply";
 
 export type Engine = MLCEngineInterface;
 
-export const MODELS = {
-  standard: "Llama-3.2-3B-Instruct-q4f16_1-MLC",
-  fast: "Llama-3.2-1B-Instruct-q4f16_1-MLC",
-} as const;
-
-export type ModelChoice = keyof typeof MODELS;
-
-// Fast mode (the 1B model) is switched off: in testing it never confessed with all the evidence
-// shown, accepted bluffs as confessions, and invented rooms. The model stays listed so it can be
-// re-enabled if a better small model comes along; until then everyone gets the standard model,
-// including players who switched it on earlier (their stored "fast" is ignored).
-export function getModelChoice(): ModelChoice {
-  return "standard";
-}
-
-export function currentModelID(): string {
-  return MODELS[getModelChoice()];
-}
+// The one model the crew runs on. (A smaller 1B model was tried as a "fast mode" and removed: it
+// never confessed with all the evidence shown, took bluffs as confessions, and invented rooms.)
+export const MODEL_ID = "Llama-3.2-3B-Instruct-q4f16_1-MLC";
 
 export async function loadEngine(
   onProgress: (text: string, progress: number) => void,
@@ -28,7 +13,7 @@ export async function loadEngine(
   // WebLLM is about 6 MB of JavaScript. Loading it lazily lets the page (and searching rooms) start immediately.
   const { CreateWebWorkerMLCEngine } = await import("@mlc-ai/web-llm");
   const worker = new Worker(new URL("./llm-worker.ts", import.meta.url), { type: "module" });
-  const engine = await CreateWebWorkerMLCEngine(worker, currentModelID(), {
+  const engine = await CreateWebWorkerMLCEngine(worker, MODEL_ID, {
     initProgressCallback: (report) => onProgress(report.text, report.progress),
   });
 

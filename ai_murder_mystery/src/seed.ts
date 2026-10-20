@@ -54,9 +54,6 @@ export function dailyURL(day: number): string {
     return `${window.location.pathname}?day=${day}`;
 }
 
-export function homeURL(): string {
-    return window.location.pathname;
-}
 
 // The calendar date a daily case belongs to, e.g. "Oct 13"
 export function dayDate(day: number): string {

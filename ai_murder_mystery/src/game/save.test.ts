@@ -135,16 +135,15 @@ describe("archive history", () => {
 });
 
 describe("deleteAllProgress", () => {
-    it("removes progress but keeps the model setting and other sites' keys", () => {
+    it("removes all progress but leaves other sites' keys alone", () => {
         saveGame(1, createGameState(c));
         recordDailyResult(1, solved);
         recordHistory(1, solved);
         writeFlag("training-done", true);
         writeFlag("seen-help", true);
-        localStorage.setItem("deadorbit:model", "fast");
         localStorage.setItem("other-app", "x");
         deleteAllProgress();
-        expect(Object.keys(localStorage).sort()).toEqual(["deadorbit:model", "other-app"]);
+        expect(Object.keys(localStorage)).toEqual(["other-app"]);
         expect(readFlag("training-done")).toBe(false);
         expect(loadStats().played).toBe(0);
     });

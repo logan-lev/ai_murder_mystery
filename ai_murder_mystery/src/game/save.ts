@@ -204,16 +204,14 @@ export function recordHistory(day: number, verdict: Verdict): void {
 
 // ---------- Reset ----------
 
-// Everything the game stores is under "deadorbit:". Preferences listed here survive a reset;
-// all progress (case saves, stats, archive history, training and help flags) is removed.
-const KEEP_ON_RESET = new Set(["deadorbit:model"]);
-
+// Everything the game stores is under "deadorbit:" (case saves, stats, archive history, training
+// and help flags), so a reset removes exactly those keys and leaves anything else on the site alone.
 export function deleteAllProgress(): void {
     try {
         const doomed: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key?.startsWith("deadorbit:") && !KEEP_ON_RESET.has(key)) doomed.push(key);
+            if (key?.startsWith("deadorbit:")) doomed.push(key);
         }
         doomed.forEach((key) => localStorage.removeItem(key));
     } catch {

@@ -1,7 +1,7 @@
 import type { Case } from "../case/types";
 import type { Truth } from "../case/generate";
 import { SLOTS } from "../case/content";
-import { currentModelID, type ReplyStats } from "../llm";
+import { MODEL_ID, type ReplyStats } from "../llm";
 import type { GameState } from "./state";
 import { buildSuspectPrompt } from "./prompt";
 
@@ -19,7 +19,7 @@ export function buildReport(c: Case, truth: Truth, state: GameState, stats: Repl
     `# ${c.title}`,
     "",
     `- Exported: ${new Date().toLocaleString()}`,
-    `- Model: ${currentModelID()}`,
+    `- Model: ${MODEL_ID}`,
     `- Replies: ${stats.length}`,
   ];
 
