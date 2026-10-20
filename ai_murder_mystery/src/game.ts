@@ -22,7 +22,10 @@ import { scoreAccusation, PROOF_SLOTS, type Accusation } from "./game/accuse";
 import { loadGame, saveGame, pruneSaves, loadStats, recordDailyResult, recordHistory, readFlag, writeFlag } from "./game/save";
 import { buildShareText, shareText } from "./game/share";
 import { buildReport, downloadText, type ReplyStat } from "./game/export";
-import { guardReply, isRoleplayRequest, roleplayRefusal, polishNarration, stripFalseCallbacks, isCameraQuestion, cameraReply } from "./game/guard";
+import {
+  guardReply, isRoleplayRequest, roleplayRefusal, polishNarration, stripFalseCallbacks,
+  isCameraQuestion, cameraReply, isPromptExtraction, extractionRefusal, looksLikePromptLeak,
+} from "./game/guard";
 import { parseReply, renderWithActions } from "./ui/reply";
 import { el, $, formatCountdown } from "./ui/dom";
 import { renderEnd, renderStats, COUNTDOWN_CLASS } from "./ui/results";
@@ -46,6 +49,17 @@ if (isTutorial) {
   });
 }
 const replyStats: ReplyStat[] = [];
+
+// The same case open in two tabs: each tab holds its own copy of the state and saves all of it,
+// so the last tab to save silently erased the other's progress (and refunded its turns, a way to
+// peek at rooms for free). Now, when another tab saves this case, this tab reloads to pick it up.
+// localStorage.clear() reports key null, so a "Delete all progress" in another tab is covered too.
+let reloadWhenIdle = false;
+window.addEventListener("storage", (event) => {
+  if (event.key !== null && event.key !== `deadorbit:case:${info.seed}`) return;
+  if (isGenerating) reloadWhenIdle = true;
+  else window.location.reload();
+});
 
 // Keep today's daily save even while playing a practice case
 pruneSaves([info.seed, dailySeed(dayNumber()), 0]);
@@ -521,6 +535,7 @@ async function ask(suspectID: SuspectID, text: string, kind: ActionKind, scripte
 
   const update = addSuspectReply(name);
   let shown = "";
+  let leaked = false;
   let ok = true;
 
   try {
@@ -532,10 +547,19 @@ async function ask(suspectID: SuspectID, text: string, kind: ActionKind, scripte
         ? { text: scripted, stats: noStats }
         : kind === "question" && isRoleplayRequest(text, others)
         ? { text: roleplayRefusal(name, narrate), stats: noStats }
+        : kind === "question" && isPromptExtraction(text)
+        ? { text: extractionRefusal(name, narrate), stats: noStats }
         : kind === "question" && isCameraQuestion(text)
         ? { text: cameraReply(name, narrate), stats: noStats }
         : await streamReply(engine!, buildMessages(state, theCase, suspectID, narrate), (piece) => {
             shown += piece;
+            // If the reply starts reciting the prompt, stop showing it and stop generating.
+            // guardReply below swaps the whole reply for an in-character refusal.
+            if (leaked || looksLikePromptLeak(shown)) {
+              if (!leaked) engine?.interruptGenerate();
+              leaked = true;
+              return;
+            }
             update(shown);
           });
     // Saving the guarded text keeps a broken reply out of the history the model sees next turn
@@ -556,6 +580,10 @@ async function ask(suspectID: SuspectID, text: string, kind: ActionKind, scripte
     setStatus(`Something went wrong: ${errorMessage(err)}`);
   } finally {
     isGenerating = false;
+    if (reloadWhenIdle) {
+      window.location.reload();
+      return ok;
+    }
     afterTurn();
     if (matchMedia("(pointer: fine)").matches && !input.disabled) input.focus();
   }

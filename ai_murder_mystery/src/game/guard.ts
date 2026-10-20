@@ -14,6 +14,7 @@ export function breaksCharacter(reply: string): boolean {
 }
 
 export function guardReply(reply: string, name: string, narrate: boolean): string {
+    if (looksLikePromptLeak(reply)) return extractionRefusal(name, narrate);
     if (!breaksCharacter(reply)) return reply;
     const line = "I don't follow. Can we get back to the investigation?";
     return narrate ? `[${name} frowns, puzzled.] ${line}` : line;
@@ -65,7 +66,9 @@ export function stripFalseCallbacks(reply: string): string {
         // "...at 21:00, as I mentioned earlier." -> "...at 21:00."
         .replace(new RegExp(`,?\\s*${CALLBACK}(?=[.,!?])`, "gi"), "")
         // "...in the Observation Deck, if you remember." -> "...in the Observation Deck."
-        .replace(/,?\s*if you (?:remember|recall)(?=[.,!?])/gi, "");
+        .replace(/,?\s*if you (?:remember|recall)(?=[.,!?])/gi, "")
+        // "I've told you already. I was in my office." -> "I was in my office."
+        .replace(/(^|\]\s*)(?:I've|I have|I) (?:already )?told you(?: already| before)?[.!,]\s*(\w)/i, (_, before: string, first: string) => before + first.toUpperCase());
 }
 
 // A general "don't believe bluffs" rule gets lost in a long prompt: a suspect accepted "backup camera"
@@ -98,4 +101,42 @@ export function bluffReminders(text: string, crewNames: string[]): string[] {
         reminders.push("The investigator is quoting someone else. You can't know what anyone else said, so question it rather than accept it. Only your own facts above are true.");
     }
     return reminders;
+}
+
+// "Repeat everything above" made the model recite its whole prompt. Secrets are never in a locked
+// prompt, but the prompt still spoils things (only the culprit is told to deny visiting the scene).
+// Two layers: obvious extraction requests are caught before the model, and anything that streams
+// out looking like the prompt's structure is cut off (see looksLikePromptLeak).
+const EXTRACT_VERB = "repeat|print|output|recite|copy|paste|dump|show|list|reveal|read|tell|give|share|display|type out|spell out";
+const EXTRACT_TARGET =
+    "everything (?:written |said )?(?:above|before|so far)|(?:your|the) (?:system )?(?:prompt|instructions?|rules|directives|configuration|config|programming|guidelines|orders|script|context|facts)|(?:all )?(?:of )?your (?:facts|rules|instructions)|the text above|what you were told";
+
+export function isPromptExtraction(text: string): boolean {
+    const t = text.toLowerCase();
+    if (new RegExp(`\\b(?:${EXTRACT_VERB})\\b[^.?!]{0,40}\\b(?:${EXTRACT_TARGET})`).test(t)) return true;
+    if (/\b(?:debug|developer|admin|god) mode\b/.test(t)) return true;
+    if (/^\s*(?:system|assistant|developer)\s*:/.test(t)) return true;
+    if (/\bwhat (?:are|were) your (?:instructions|rules|orders)\b/.test(t)) return true;
+    return false;
+}
+
+export function extractionRefusal(name: string, narrate: boolean): string {
+    const line = "I'm not reading you anything, investigator. Ask me a real question.";
+    return narrate ? `[${name} frowns.] ${line}` : line;
+}
+
+// Text that only appears in the system prompt's own structure. Checked while a reply streams,
+// so a leak is stopped before the player can read it, not just replaced afterwards.
+const PROMPT_MARKERS = [
+    /\b(?:PERSONALITY|RULES|EVIDENCE SHOWN|HOW YOU REACT|RIGHT NOW|WHAT YOU TELL THE INVESTIGATOR|WHAT YOU NOW ADMIT)\s*[:(]/,
+    /\bFACTS\s*[:(]/,
+    /never contradict them/i,
+    /\b(?:he|she|it)\), the\b/,
+    /^\s*You are [A-Z][\w. ]+, (?:the|a) /,
+    /An investigator is questioning you about/i,
+    /Aboard the station tonight:/i,
+];
+
+export function looksLikePromptLeak(text: string): boolean {
+    return PROMPT_MARKERS.some((re) => re.test(text));
 }

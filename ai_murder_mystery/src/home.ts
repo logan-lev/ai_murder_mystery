@@ -92,3 +92,8 @@ wireHelp("#home-help-btn");
 wireSettings("#home-settings-btn");
 tickCountdowns();
 setInterval(tickCountdowns, 1000);
+
+// A case finished (or progress deleted) in another tab: show the up-to-date status and stats
+window.addEventListener("storage", (event) => {
+    if (event.key === null || event.key.startsWith("deadorbit:")) window.location.reload();
+});

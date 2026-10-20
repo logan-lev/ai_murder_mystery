@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { generateCase } from "../case/generate";
 import { createGameState, searchRoom, showClue } from "./state";
 import {
@@ -147,5 +147,29 @@ describe("deleteAllProgress", () => {
         expect(Object.keys(localStorage).sort()).toEqual(["deadorbit:model", "other-app"]);
         expect(readFlag("training-done")).toBe(false);
         expect(loadStats().played).toBe(0);
+    });
+});
+
+describe("when storage is blocked (private browsing, disabled cookies)", () => {
+    it("every save function degrades quietly instead of crashing", () => {
+        const boom = () => {
+            throw new DOMException("blocked", "SecurityError");
+        };
+        vi.stubGlobal("localStorage", { getItem: boom, setItem: boom, removeItem: boom, key: boom, clear: boom, get length(): number { return boom(); } });
+        try {
+            expect(() => saveGame(1, createGameState(c))).not.toThrow();
+            expect(loadGame(1, c)).toBeNull();
+            expect(peekSave(1)).toBeNull();
+            expect(() => pruneSaves([1])).not.toThrow();
+            expect(loadStats().played).toBe(0);
+            expect(() => recordDailyResult(1, solved)).not.toThrow();
+            expect(() => recordHistory(1, solved)).not.toThrow();
+            expect(loadHistory()).toEqual({});
+            expect(readFlag("seen-help")).toBe(false);
+            expect(() => writeFlag("seen-help", true)).not.toThrow();
+            expect(() => deleteAllProgress()).not.toThrow();
+        } finally {
+            vi.unstubAllGlobals();
+        }
     });
 });
