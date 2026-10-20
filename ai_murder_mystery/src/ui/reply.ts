@@ -1,3 +1,6 @@
+// Turning a raw AI reply into what's shown: the optional [narration] line, styled actions, and
+// trimming a reply that was cut off mid-sentence.
+
 export interface ParsedReply {
     narration: string;
     speech: string;

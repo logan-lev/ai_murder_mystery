@@ -1,3 +1,5 @@
+// Tiny DOM helpers used everywhere.
+
 // Builds an element with text set via textContent, so model or case text is never parsed as HTML
 export function el<K extends keyof HTMLElementTagNameMap>(
     tag: K,

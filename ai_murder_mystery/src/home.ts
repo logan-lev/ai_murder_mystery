@@ -1,3 +1,6 @@
+// The home page: today's case, the archive of past dailies, training, and stats.
+// Loaded by main.ts when the URL has no parameters.
+
 import { generateCase } from "./case/generate";
 import { dayNumber, dailySeed, dailyURL, dayDate, msUntilNextDay, tutorialURL, practiceURL } from "./seed";
 import { peekSave, loadHistory, loadStats, readFlag } from "./game/save";
@@ -42,6 +45,7 @@ function renderToday(): void {
     );
 }
 
+// The training card: recommended until finished, then offered as a replay
 function renderTraining(): void {
     const done = readFlag("training-done");
     $<HTMLElement>("#home-training").replaceChildren(
@@ -56,6 +60,7 @@ function renderTraining(): void {
     );
 }
 
+// Every past daily, newest first, with the player's result if they played it
 function renderArchive(): void {
     const target = $<HTMLElement>("#home-archive");
     const past = Array.from({ length: today - 1 }, (_, i) => today - 1 - i);
@@ -87,6 +92,7 @@ function renderArchive(): void {
     );
 }
 
+// Updates every "next case in" countdown once a second
 function tickCountdowns(): void {
     const text = dayNumber() > today ? "now. Reload!" : formatCountdown(msUntilNextDay());
     document.querySelectorAll(`.${COUNTDOWN_CLASS}`).forEach((node) => (node.textContent = text));

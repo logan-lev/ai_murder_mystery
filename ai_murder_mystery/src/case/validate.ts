@@ -1,3 +1,6 @@
+// Sanity checks for a generated case: every clue, room, and unlock must point at something real.
+// Returns a list of problems (empty means the case is valid). Used by the tests.
+
 import type { Case } from "./types";
 
 export function validateCase(c: Case): string[] {

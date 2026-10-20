@@ -1,3 +1,6 @@
+// The ending screen (verdict, how the case could have been cracked, and the true timeline) and the
+// stats panel.
+
 import type { Case } from "../case/types";
 import type { Truth } from "../case/generate";
 import { SLOTS } from "../case/content";
@@ -7,7 +10,7 @@ import { TURN_LIMIT, type GameState } from "../game/state";
 import type { CaseInfo } from "../seed";
 import { el } from "./dom";
 
-// Elements with this class get their text refreshed every second by main.ts
+// Elements with this class get their text refreshed every second (by game.ts and home.ts)
 export const COUNTDOWN_CLASS = "countdown";
 
 function nextCaseBlock(info: CaseInfo): HTMLElement {

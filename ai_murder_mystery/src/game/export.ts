@@ -1,3 +1,6 @@
+// Dev-only "Export" button: a Markdown report of a round with the solution, true timeline, every
+// conversation, and each suspect's final prompt. The main tool for reviewing how the AI behaved.
+
 import type { Case } from "../case/types";
 import type { Truth } from "../case/generate";
 import { SLOTS } from "../case/content";

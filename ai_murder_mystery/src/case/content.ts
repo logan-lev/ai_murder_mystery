@@ -1,3 +1,8 @@
+// Case ingredients: the station, its rooms, the eight-person cast, and the motives, weapons, and
+// secrets that generate.ts combines into a case. All writing lives here; no logic.
+// Template keys like {victim}, {scene}, {time}, and pronouns ({he}, {his}) are filled in by generate.ts,
+// so every line must read correctly for any victim.
+
 import type { Room, RoomID } from "./types";
 
 export const TITLE = "Dead Orbit";

@@ -1,3 +1,6 @@
+// Checks for WebGPU, which the in-browser AI needs. Without it the game still runs, but suspects
+// can't be questioned.
+
 export type GpuCheck = { ok: true } | { ok: false; reason: string };
 
 export async function checkWebGPU(): Promise<GpuCheck> {

@@ -1,3 +1,6 @@
+// The training case and its scripted conversation. Written by hand rather than generated, so the
+// coach (coach.ts) can teach with exact answers and no AI is needed.
+
 import type { Case, Clue, Room, Suspect, SuspectID, ClueID } from "../case/types";
 import type { Truth } from "../case/generate";
 import { CHARACTERS, STATION_ROOMS, SETTING } from "../case/content";

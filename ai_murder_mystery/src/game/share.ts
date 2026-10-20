@@ -1,3 +1,5 @@
+// The spoiler-free result players paste into group chats, Wordle-style.
+
 import { caseLabel, caseURL, type CaseInfo } from "../seed";
 import type { Verdict } from "./accuse";
 import { TURN_LIMIT, type ActionKind, type GameState } from "./state";

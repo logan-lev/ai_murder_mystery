@@ -1,3 +1,6 @@
+// Talks to the in-browser AI (WebLLM). loadEngine() starts it in a Web Worker so the page stays
+// responsive; streamReply() sends one conversation and streams the reply back with timing stats.
+
 import type { MLCEngineInterface, ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 import { trimIncomplete } from "./ui/reply";
 

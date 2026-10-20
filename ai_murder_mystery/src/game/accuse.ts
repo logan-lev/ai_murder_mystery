@@ -1,3 +1,6 @@
+// Scoring an accusation: the right killer, plus one piece of evidence each for opportunity, motive,
+// and means. Three correct is Master Investigator; the wrong killer is always Case Unsolved.
+
 import type { Case, ClueID, SuspectID } from "../case/types";
 
 // Best to worst, used for the stats chart

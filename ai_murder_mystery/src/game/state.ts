@@ -1,3 +1,7 @@
+// The player's game state (what's been searched, found, shown, and said) and the basic rules:
+// every search, question, or shown clue uses up one turn, and buildMessages() assembles what the AI
+// sees for its next reply.
+
 import type { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 import type { Case, Clue, ClueID, RoomID, SuspectID } from "../case/types";
 import type { Accusation, Verdict } from "./accuse";
@@ -5,7 +9,7 @@ import { buildSuspectPrompt } from "./prompt";
 import { SLOTS } from "../case/content";
 import { bluffReminders } from "./guard";
 
-// Every search, question, or shown clue costs one turn. The storm clears when they run out.
+// Every search, question, or shown clue uses up one turn. The storm clears when they run out.
 export const TURN_LIMIT = 20;
 
 // Older turns are dropped from what the model sees. Fewer messages means less prefill per reply.

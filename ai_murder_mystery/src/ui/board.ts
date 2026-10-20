@@ -1,3 +1,6 @@
+// The Timeline tab: a grid where the player pins each suspect to a room at each time.
+// It's the player's own notes, never checked against the truth.
+
 import type { Case, SuspectID } from "../case/types";
 import { SLOTS } from "../case/content";
 import type { GameState } from "../game/state";

@@ -1,3 +1,6 @@
+// A small seeded random number generator. Math.random() can't be used for cases: everyone playing
+// the same daily needs the exact same "random" picks.
+
 export type RNG = () => number;
 
 export function mulberry32(seed: number): RNG {

@@ -1,3 +1,5 @@
+// The help and settings dialogs, shared by the home page and the case page.
+
 import { deleteAllProgress } from "../game/save";
 import { SOLVING_GUIDE } from "./guide";
 import { el, $ } from "./dom";

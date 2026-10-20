@@ -1,3 +1,5 @@
+// "How to crack the case": shown in the help dialog and the Station tab.
+
 // How a case is built, told to the player. Rules like Wordle's: knowing the logic is the point,
 // the puzzle is applying it with limited turns. Plain words, one idea per step, in the order to play.
 export const SOLVING_GUIDE: string[] = [

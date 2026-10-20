@@ -1,3 +1,7 @@
+// The training coach: the yellow sticky note that walks a new player through the training case,
+// one step at a time. Each step explains why, says exactly what to do, highlights where, and locks
+// every other action control so the player can't get ahead of the lesson.
+
 import type { ClueID, SuspectID } from "../case/types";
 import type { GameState } from "../game/state";
 import { el } from "../ui/dom";

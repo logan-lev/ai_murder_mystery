@@ -1,3 +1,7 @@
+// Builds a suspect's system prompt from the case data and the evidence shown to them so far.
+// Rebuilt from scratch every turn. A secret only appears once its evidence has been shown, so the
+// model can't leak what it was never told.
+
 import type { Case, Suspect, ClueID } from "../case/types";
 
 // Kept short on purpose: the whole system prompt is re-read (prefilled) on every turn,

@@ -1,3 +1,13 @@
+// The case page: wires the case, the saved game, the AI, and the page together.
+//
+// Sections, in order: case setup, page elements, rendering (conversation, Station / Evidence /
+// Timeline tabs, folder tabs), player actions (search, question, show evidence), the accusation and
+// ending, dialogs, and startup (which loads the AI in the background).
+//
+// The flow of one turn: an action changes `state` (game/state.ts), the AI reply streams in for
+// questions, then afterTurn() saves and re-renders. The model never decides anything; it only
+// voices what the case data says (see game/prompt.ts).
+
 import { checkWebGPU } from "./gpu";
 import { loadEngine, streamReply, type Engine } from "./llm";
 import { wireHelp, wireSettings, closeOnBackdrop } from "./ui/common";
@@ -144,6 +154,7 @@ function setStatus(text: string): void {
 }
 
 let toastTimer = 0;
+// A short message at the bottom of the screen that fades after 2.5 seconds
 function toast(text: string): void {
     toastEl.textContent = text;
     toastEl.hidden = false;
@@ -151,6 +162,7 @@ function toast(text: string): void {
     toastTimer = window.setTimeout(() => (toastEl.hidden = true), 2500);
 }
 
+// Saves the game. Called after every change the player makes.
 function persist(): void {
     // Mid-reply the conversation ends in an unanswered question; the completed turn saves instead
     if (!isGenerating) saveGame(info.seed, state);
@@ -199,6 +211,7 @@ function addLine(speaker: string, text: string, className: string, styleActions 
 // for the model. On screen, the short version reads better.
 const SHOW_PREFIX = "(The investigator shows you the ";
 
+// One line of the player's side of a conversation (a question, or "You show X the Y")
 function addPlayerLine(text: string, suspectID: SuspectID): void {
     const clueName = text.startsWith(SHOW_PREFIX) ? text.slice(SHOW_PREFIX.length).split(":")[0] : "";
     // A typed imitation of the show format renders as a normal line, not as real evidence
@@ -243,6 +256,7 @@ function renderView(): void {
     coachRender();
 }
 
+// Rebuilds a crew member's whole conversation from the saved messages
 function renderConversation(id: SuspectID): void {
     chatLog.replaceChildren();
     const name = suspectName(id);
@@ -300,6 +314,7 @@ function renderSearchLog(): void {
     scrollLogToBottom();
 }
 
+// Fills the Timeline tab; pins are saved as soon as they change
 function renderBoardView(): void {
     renderBoard(boardEl, theCase, state, {
         // The body's description gives the time of death, so the column lights up once it's found
@@ -312,6 +327,8 @@ function renderBoardView(): void {
     });
 }
 
+// A "show this clue to this person" button, used in both the Evidence tab and the evidence tray.
+// Disabled while a reply is streaming, when out of turns, or if they've already seen it.
 function showButton(clueID: ClueID, suspectID: SuspectID, label: string): HTMLButtonElement {
     const btn = el("button", "show-btn", label);
     btn.type = "button";
@@ -356,6 +373,7 @@ function renderStorm(): void {
     stormFill.classList.toggle("low", left <= 5);
 }
 
+// The room buttons in the Station tab, marked as searched / evidence found / selected
 function renderRooms(): void {
     roomListEl.replaceChildren(
         ...theCase.rooms.map((r) => {
@@ -381,6 +399,7 @@ function renderRooms(): void {
     );
 }
 
+// The selected room's description, and either its Search button or what was found there
 function renderRoomDetail(): void {
     const id = state.selectedRoomID;
     roomDetailEl.dataset.room = id ?? "";
@@ -461,6 +480,7 @@ function folderTab(
     return btn;
 }
 
+// The folder tabs: Station, Evidence, Timeline, then one per crew member
 function renderTabs(): void {
     const found = state.foundClueIDs.size;
     tabsEl.replaceChildren(
@@ -491,6 +511,7 @@ function renderTabs(): void {
     );
 }
 
+// The hint inside the question box, explaining why it's disabled when it is
 function chatPlaceholder(): string {
     if (isOver(state)) return "The case is closed.";
     if (turnsLeft(state) === 0) return "The storm has cleared. Make your accusation.";
@@ -500,6 +521,7 @@ function chatPlaceholder(): string {
     return state.activeSuspectID ? `Question ${suspectName(state.activeSuspectID)}...` : "Ask a question...";
 }
 
+// Enables or disables controls to match the current state (loading, streaming, out of turns, case over)
 function updateControls(): void {
     input.disabled = !canTalk();
     sendBtn.disabled = !canTalk();
@@ -548,6 +570,7 @@ function renderChips(): void {
     );
 }
 
+// Re-renders everything except the open conversation and board (see renderView for why)
 function renderStation(): void {
     renderStorm();
     renderRooms();
@@ -565,6 +588,7 @@ function afterTurn(): void {
     if (!isOver(state) && turnsLeft(state) === 0) openAccuse(true);
 }
 
+// Shows a room's details without searching it (free)
 function selectRoom(id: RoomID): void {
     state.selectedRoomID = id;
     persist();
@@ -573,6 +597,7 @@ function selectRoom(id: RoomID): void {
     coachRender();
 }
 
+// Searches a room: uses a turn, files what's found, and shows it in the search log
 function doSearch(id: RoomID): void {
     if (!canAct() || isGenerating) return;
     const found = searchRoom(state, theCase, id);
@@ -584,6 +609,7 @@ function doSearch(id: RoomID): void {
     afterTurn();
 }
 
+// Switches folder tabs (and, for a crew tab, which person you're talking to)
 function selectView(next: View, suspectID?: SuspectID): void {
     if (isGenerating) return;
     view = next;
@@ -736,6 +762,7 @@ accuseDialog.addEventListener("cancel", (event) => {
     if (accuseForced) event.preventDefault();
 });
 
+// Opens the accusation dialog. `forced` means the turns ran out, so it can't be closed.
 function openAccuse(forced: boolean): void {
     if (isOver(state)) {
         openEnd();
@@ -836,6 +863,7 @@ accuseForm.addEventListener("submit", (event) => {
     openEnd();
 });
 
+// Shows the ending screen for a finished case
 function openEnd(): void {
     if (!state.verdict) return;
     renderEnd($<HTMLElement>("#end-content"), theCase, truth, info, state, state.verdict);

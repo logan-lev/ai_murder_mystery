@@ -1,3 +1,8 @@
+// Builds a whole case from a seed: who died, who did it, how, where everyone really was, what each
+// suspect knows, which evidence unlocks which admission, and the solution. The same seed always gives
+// the same case, which is what makes a shared daily puzzle possible.
+// The rules every case must follow are listed in CLAUDE.md and checked by generate.test.ts.
+
 import type { Case, Clue, Suspect, Unlock, Room, RoomID } from "./types";
 import {
     TITLE,

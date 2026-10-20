@@ -1,3 +1,6 @@
+// Which case is open, from the URL: the home page, a daily case (?day=N), a practice case (?case=N),
+// or training (?tutorial). Also turns a calendar day into that day's seed, the same for everyone.
+
 import { mulberry32 } from "./case/random";
 
 const MAX_SEED = 99999;

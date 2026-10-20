@@ -1,3 +1,6 @@
+// Dev-only console tool, loaded only by `npm run dev`. Lets you question a suspect in a throwaway
+// conversation (no turns spent, nothing saved) to test how the AI handles tricky questions.
+
 import type { Case, ClueID, SuspectID } from "./case/types";
 import type { Truth } from "./case/generate";
 import { createGameState, buildMessages } from "./game/state";

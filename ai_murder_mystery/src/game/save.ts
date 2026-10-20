@@ -1,3 +1,7 @@
+// Everything stored in the browser (localStorage): saved cases, daily stats and streaks, the archive
+// history, and small flags. All keys start with "deadorbit:". Every read and write is wrapped so the
+// game still works, just without saving, when storage is blocked.
+
 import type { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 import type { Case } from "../case/types";
 import type { Accusation, Verdict } from "./accuse";

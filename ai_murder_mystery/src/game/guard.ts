@@ -1,3 +1,7 @@
+// Code-level fixes for things the small model gets wrong no matter how the prompt is worded.
+// Each function here exists because of a real failure in playtesting (all listed in guard.test.ts):
+// some check the player's message before it reaches the model, others repair or replace the reply.
+
 // Llama's safety tuning sometimes answers prompt-injection attempts with a stock refusal
 // ("I can't assist with that request.") that breaks character. Prompt rules reduce this but
 // can't rule it out, so code checks the finished reply and swaps in an in-character deflection.

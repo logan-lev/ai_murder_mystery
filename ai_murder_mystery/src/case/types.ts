@@ -1,3 +1,5 @@
+// The shape of a generated case. Everything the game or the AI knows comes from one of these.
+
 export type RoomID = string;
 export type ClueID = string;
 export type SuspectID = string;
