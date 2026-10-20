@@ -12,7 +12,10 @@ A browser-based AI murder mystery game set on a space station. Every case is pro
 ## Commands (run inside `ai_murder_mystery/`)
 
 - `npm run dev` starts the dev server. Dev checks and the answer key log to the browser console.
-- `npx tsc --noEmit` type-checks the project.
+- `npx tsc --noEmit` type-checks the project (including tests).
+- `npm test` runs the Vitest suite (`src/**/*.test.ts`, happy-dom environment). The deploy workflow runs it before building.
+
+Tests encode the design principles: `case/generate.test.ts` checks solvability invariants over ~400 seeds, `game/prompt.test.ts` checks that secrets stay out of prompts until unlocked, `game/guard.test.ts` holds real model failures, and `tutorial/tutorial.test.ts` checks that the hand-written training case and coach steps only reference things that exist. When the model misbehaves in a new way, add the case to `guard.test.ts` alongside the fix.
 
 ## Architecture
 

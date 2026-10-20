@@ -10,7 +10,7 @@ export interface CoachContext {
     save: () => void;
 }
 
-interface Step {
+export interface Step {
     // Why this step matters, in plain words
     text: string;
     // The one thing to do now, shown on its own line so new players know exactly what to click
@@ -43,7 +43,7 @@ const shown = (s: GameState, suspectID: SuspectID, clueID: ClueID) => {
 const searched = (s: GameState, roomID: string) => s.searchedRoomIDs.has(roomID);
 const pinned = (s: GameState, suspectID: SuspectID, slot: number, roomID: string) => s.board[suspectID]?.[slot] === roomID;
 
-const STEPS: Step[] = [
+export const STEPS: Step[] = [
     {
         text: "A crew member named Priya Nair has been killed, and your job is to find out who did it. This yellow note walks you through it one step at a time. Whatever you need to click is outlined in red. Nothing in training counts toward your stats.",
         todo: "Press Next.",
